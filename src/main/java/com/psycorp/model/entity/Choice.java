@@ -6,6 +6,10 @@ import lombok.Data;
 
 import javax.validation.constraints.NotNull;
 
+/**
+ * Сравнение пары шкал в одном из трех полей. Если chosenScale=null тест еще не пройден
+ */
+
 @Data
 public class Choice {
     @NotNull
