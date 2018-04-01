@@ -10,4 +10,5 @@ public class UserAnswersDto {
     private List<ChoiceDto> goal;
     private List<ChoiceDto> quality;
     private List<ChoiceDto> state;
+    private Boolean passed;
 }

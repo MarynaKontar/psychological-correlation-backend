@@ -11,7 +11,7 @@ import javax.validation.constraints.NotNull;
  */
 
 @Data
-public class Choice {
+public class Choice extends AbstractEntity {
     @NotNull
     private Area area;
     @NotNull

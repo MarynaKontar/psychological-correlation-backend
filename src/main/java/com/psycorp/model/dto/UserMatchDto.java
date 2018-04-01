@@ -1,6 +1,9 @@
 package com.psycorp.model.dto;
 
-public class UserMatchDto {
+import lombok.Data;
+
+@Data
+public class UserMatchDto extends AbstractDto{
     private SimpleUserDto userOne;
     private SimpleUserDto userTwo;
     private String totalMatch;
