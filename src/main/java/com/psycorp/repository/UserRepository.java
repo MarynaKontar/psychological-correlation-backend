@@ -1,11 +1,11 @@
 package com.psycorp.repository;
 
-import com.psycorp.model.entity.UserAnswers;
+import com.psycorp.model.entity.User;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.data.rest.core.annotation.RepositoryRestResource;
 import org.springframework.stereotype.Repository;
 
 @Repository
-@RepositoryRestResource(collectionResourceRel = "userAnswers", path = "userAnswers")
-public interface UserAnswersRepository extends MongoRepository<UserAnswers, Long> {
+@RepositoryRestResource(collectionResourceRel = "user", path = "user")
+public interface UserRepository extends MongoRepository<User, Long> {
 }

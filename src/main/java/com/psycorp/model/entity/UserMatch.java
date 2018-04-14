@@ -1,12 +1,12 @@
 package com.psycorp.model.entity;
 
-import javax.persistence.Entity;
+
+import lombok.Data;
 
 /**
  * Расчитанные результаты совместимости двух юзеров
  */
-
-@Entity
+@Data
 public class UserMatch extends AbstractEntity {
     private User userOne;
     private User userTwo;

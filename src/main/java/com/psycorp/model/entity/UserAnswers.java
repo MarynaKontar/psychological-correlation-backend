@@ -2,8 +2,6 @@ package com.psycorp.model.entity;
 
 import lombok.Data;
 
-import javax.persistence.Entity;
-import javax.persistence.Table;
 import java.time.LocalDateTime;
 import java.util.Set;
 
@@ -12,8 +10,6 @@ import java.util.Set;
  */
 
 @Data
-@Entity
-@Table(name = "user_answers")
 public class UserAnswers extends AbstractEntity{
     private User user;
     private Set<Choice> userAnswers;
