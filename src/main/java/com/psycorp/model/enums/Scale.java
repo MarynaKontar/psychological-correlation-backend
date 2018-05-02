@@ -7,4 +7,12 @@ public enum Scale {
     FOUR,
     FIVE,
     SIX
+
+
+    //HEALTH
+    //PLEASURE
+    //ACHIEVEMENTS
+    //HARMONIOUS_RELATIONSHIP
+    //CREATIVITY
+    //DEVELOPMENT
 }

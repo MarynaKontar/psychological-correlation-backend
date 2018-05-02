@@ -4,7 +4,11 @@ import com.psycorp.model.enums.Area;
 import lombok.Data;
 
 @Data
-public class AreaDto extends AbstractDto {
+public class AreaDto
+//        extends AbstractDto
+{
     private Area area;
     private String areaName;
+
+
 }

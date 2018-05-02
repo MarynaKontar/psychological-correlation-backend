@@ -12,9 +12,14 @@ public class UserServiceImpl implements UserService {
     @Autowired
     private UserRepository userRepository;
 
-
+    //TODO добавить проверку всех значений и соответствуюшии им Exceptions
     @Override
     public User insert(User user) {
         return userRepository.insert(user);
+    }
+
+    @Override
+    public User findFirstUserByEmail(String email) {
+        return userRepository.findFirstByEmail(email);
     }
 }

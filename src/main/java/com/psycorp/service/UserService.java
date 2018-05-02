@@ -4,4 +4,5 @@ import com.psycorp.model.entity.User;
 
 public interface UserService {
     User insert(User user);
+    User findFirstUserByEmail(String email);
 }
