@@ -94,30 +94,30 @@ public class TestDb {
 //
 //        }
 
-    @PostConstruct
-    public void createSecondUserAnswers() {
-        User user1 = userService.findFirstUserByEmail("email2");
-        User user2 = userService.findFirstUserByEmail("email3");
-
-//        UserAnswers userAnswers1 = Entity.createUserAnswers(user1);
-//        userAnswersService.insert(userAnswers1);
+//    @PostConstruct
+//    public void createSecondUserAnswers() {
+//        User user1 = userService.findFirstUserByEmail("email2");
+//        User user2 = userService.findFirstUserByEmail("email3");
 //
-//        UserAnswers userAnswers2 = Entity.createUserAnswers(user3);
-//        userAnswersService.insert(userAnswers2);
-
-        Set<UserAnswers> userAnswersSet1 = userAnswersService.findAllUserAnswersByUser_IdOrderByPassDateDesc(user1.getId());
-        Set<UserAnswers> userAnswersSet3 = userAnswersService.findAllUserAnswersByUser_IdOrderByPassDateDesc(user2.getId());
-
-        UserAnswersDtoConverter userAnswersDtoConverter = new UserAnswersDtoConverter();
-        List<UserAnswersDto> userAnswersDtos1 = userAnswersDtoConverter.transform(userAnswersSet1);
-        List<UserAnswersDto> userAnswersDtos2 = userAnswersDtoConverter.transform(userAnswersSet3);
-
-
-        System.out.println("+++++++++++++++++++++++++++++++++");
-        userAnswersDtos1.forEach(System.out::println);
-        System.out.println("+++++++++++++++++++++++++++++++++");
-        userAnswersDtos2.forEach(System.out::println);
-
-    }
+////        UserAnswers userAnswers1 = Entity.createUserAnswers(user1);
+////        userAnswersService.insert(userAnswers1);
+////
+////        UserAnswers userAnswers2 = Entity.createUserAnswers(user3);
+////        userAnswersService.insert(userAnswers2);
+//
+//        Set<UserAnswers> userAnswersSet1 = userAnswersService.findAllUserAnswersByUser_IdOrderByPassDateDesc(user1.getId());
+//        Set<UserAnswers> userAnswersSet3 = userAnswersService.findAllUserAnswersByUser_IdOrderByPassDateDesc(user2.getId());
+//
+//        UserAnswersDtoConverter userAnswersDtoConverter = new UserAnswersDtoConverter();
+//        List<UserAnswersDto> userAnswersDtos1 = userAnswersDtoConverter.transform(userAnswersSet1);
+//        List<UserAnswersDto> userAnswersDtos2 = userAnswersDtoConverter.transform(userAnswersSet3);
+//
+//
+//        System.out.println("+++++++++++++++++++++++++++++++++");
+//        userAnswersDtos1.forEach(System.out::println);
+//        System.out.println("+++++++++++++++++++++++++++++++++");
+//        userAnswersDtos2.forEach(System.out::println);
+//
+//    }
 
 }

@@ -1,0 +1,59 @@
+ @Value("${goal.area}")
+    private String area;
+    @Value("${goal.area.name}")
+    private String areaName;
+    @Value("${goal.health}")
+    private String goalHealth;
+    @Value("${goal.pleasure}")
+    private String goalPleasure ;
+    @Value("${goal.achievements}")
+    private String goalAchievements;
+    @Value("${goal.harmoniousrelationship}")
+    private String goalHarmoniousRelationship;
+    @Value("${goal.creativity}")
+    private String goalCreativity;
+    @Value("${goal.development}")
+    private String goalDevelopment;
+
+    @Value("${goal.scale_health}")
+    private String goalScaleHealth;
+    @Value("${goal.scale_pleasure}")
+    private String goalScalePleasure;
+
+
+//        switch (area){
+//            case "goal": area = "goal.area"; areaName = "goal.area.name"; break;
+//            case "quality": area = "quality.area"; areaName = "quality.area.name"; break;
+//            case "state": area = "state.area"; areaName = "state.area.name"; break;
+//            default:area = "Invalid area type."; break;
+//            }
+//        switch (scaleNameOne){
+//            case "health" : scaleNameOne =
+//        }
+
+
+
+
+
+
+ChoiceDto choiceDto1 = new ChoiceDto();
+
+        AreaDto areaDto = new AreaDto();
+        areaDto.setArea(Area.valueOf(env.getProperty("goal.area")));
+        areaDto.setAreaName(env.getProperty("goal.area.name"));
+
+        choiceDto1.setArea(areaDto);
+
+
+        ScaleDto scaleDto1 = new ScaleDto();
+        scaleDto1.setScaleName(env.getProperty("goal.health"));
+        scaleDto1.setScale(Scale.valueOf(env.getProperty("goal.scale_health")));
+
+        choiceDto1.setFirstScale(scaleDto1);
+
+        ScaleDto scaleDto2 = new ScaleDto();
+        scaleDto2.setScaleName(env.getProperty("goal.pleasure"));
+        scaleDto2.setScale(Scale.valueOf(env.getProperty("goal.scale_pleasure")));
+
+        choiceDto1.setSecondScale(scaleDto2);
+        return choiceDto1;

@@ -24,7 +24,8 @@ public abstract class AbstractDtoConverter<Entity extends AbstractEntity, Dto ex
     }
 
     public Entity transform(Dto dto) {
-        Entity entity = createEntity(dto);
+//        Entity entity = createEntity(dto);
+        Entity entity = createNewEntity();
         doDtoToEntityTransform(dto, entity);
         return entity;
     }
@@ -51,13 +52,13 @@ public abstract class AbstractDtoConverter<Entity extends AbstractEntity, Dto ex
         }
     }
 
-    private Entity createEntity(Dto dto) {
-        Entity entity = createNewEntity();
-//        if (dto.getId() != null) {
-//            entity = (Entity) em.find(entity.getClass(), dto.getId());
-//        }
-        return entity;
-    }
+//    private Entity createEntity(Dto dto) {
+//        Entity entity = createNewEntity();
+////        if (dto.getId() != null) {
+////            entity = (Entity) em.find(entity.getClass(), dto.getId());
+////        }
+//        return entity;
+//    }
 
     private void doEntityToDtoTransform(Entity entity, Dto dto) {
         if (entity == null) return;

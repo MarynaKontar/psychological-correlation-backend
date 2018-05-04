@@ -7,6 +7,7 @@ import com.psycorp.model.dto.ScaleDto;
 import com.psycorp.model.entity.Choice;
 
 public class ChoiceDtoConverter extends AbstractDtoConverter<Choice, ChoiceDto>{
+
     @Override
     protected ChoiceDto createNewDto() {
         return new ChoiceDto();
@@ -44,4 +45,5 @@ public class ChoiceDtoConverter extends AbstractDtoConverter<Choice, ChoiceDto>{
     protected void convertFromDto(ChoiceDto dto, Choice entity) {
         throw  new BadRequestException("!!!!!НЕ НАПИСАН МЕТОД convertFromDto для Choice");
     }
+
 }
