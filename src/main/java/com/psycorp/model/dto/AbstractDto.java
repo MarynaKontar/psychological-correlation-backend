@@ -5,8 +5,8 @@ import lombok.Data;
 import org.bson.types.ObjectId;
 
 @Data
-@JsonInclude(JsonInclude.Include.NON_NULL)
+//@JsonInclude(JsonInclude.Include.NON_NULL)
 public abstract class AbstractDto {
 
-    private ObjectId id;
+
 }

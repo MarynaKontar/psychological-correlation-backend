@@ -4,9 +4,6 @@ import com.psycorp.model.dto.AbstractDto;
 import com.psycorp.model.entity.AbstractEntity;
 
 import org.apache.commons.collections.CollectionUtils;
-
-//import javax.persistence.EntityManager;
-//import javax.persistence.PersistenceContext;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -14,8 +11,6 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 
 public abstract class AbstractDtoConverter<Entity extends AbstractEntity, Dto extends AbstractDto> {
-//    @PersistenceContext
-//    protected EntityManager em;
 
     public Dto transform(Entity entity) {
         Dto dto = createNewDto();
@@ -24,8 +19,8 @@ public abstract class AbstractDtoConverter<Entity extends AbstractEntity, Dto ex
     }
 
     public Entity transform(Dto dto) {
-//        Entity entity = createEntity(dto);
-        Entity entity = createNewEntity();
+        Entity entity = createEntity(dto);
+//        Entity entity = createNewEntity();
         doDtoToEntityTransform(dto, entity);
         return entity;
     }
@@ -48,17 +43,17 @@ public abstract class AbstractDtoConverter<Entity extends AbstractEntity, Dto ex
 
     private void updateEntitySystemFields(Dto dto, Entity entity) {
         if (Objects.nonNull(dto) && Objects.nonNull(entity)) {
-            entity.setId(dto.getId());
+//            entity.setId(dto.getId());
         }
     }
 
-//    private Entity createEntity(Dto dto) {
-//        Entity entity = createNewEntity();
-////        if (dto.getId() != null) {
-////            entity = (Entity) em.find(entity.getClass(), dto.getId());
-////        }
-//        return entity;
-//    }
+    private Entity createEntity(Dto dto) {
+        Entity entity = createNewEntity();
+//        if (dto.getId() != null) {
+//            entity = (Entity) em.find(entity.getClass(), dto.getId());
+//        }
+        return entity;
+    }
 
     private void doEntityToDtoTransform(Entity entity, Dto dto) {
         if (entity == null) return;
@@ -68,7 +63,7 @@ public abstract class AbstractDtoConverter<Entity extends AbstractEntity, Dto ex
 
     private void updateDtoSystemFields(Entity entity, Dto dto) {
         if (Objects.nonNull(entity) && Objects.nonNull(dto)) {
-            dto.setId(entity.getId());
+//            dto.setId(entity.getId());
         }
     }
 

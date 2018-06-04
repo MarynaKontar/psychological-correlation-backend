@@ -8,7 +8,11 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 @RepositoryRestResource(collectionResourceRel = "user", path = "user")
-public interface UserRepository extends MongoRepository<User, ObjectId> {
+public interface UserRepository extends MongoRepository<User, String> {
 
     User findFirstByEmail(String email);
+
+    User findFirstByName(String name);
+
+    void removeByName(String name);
 }

@@ -57,3 +57,861 @@ ChoiceDto choiceDto1 = new ChoiceDto();
 
         choiceDto1.setSecondScale(scaleDto2);
         return choiceDto1;
+
+
+
+
+
+
+
+
+
+        @Override
+            public List<Choice> choiceList(){
+
+                //TODO переделять на Map<String, List<ChoiceDto>>, где ключ - goal, quality, state
+
+                //GOAL
+                List<ChoiceDto> choiceDtoGoal = new ArrayList<>();
+                choiceDtoGoal.add(getChoiceDto("goal", "health","pleasure"));
+                choiceDtoGoal.add(getChoiceDto("goal", "health","achievements"));
+                choiceDtoGoal.add(getChoiceDto("goal", "health","harmoniousrelationship"));
+                choiceDtoGoal.add(getChoiceDto("goal", "health","creativity"));
+                choiceDtoGoal.add(getChoiceDto("goal", "health","development"));
+
+                choiceDtoGoal.add(getChoiceDto("goal", "pleasure","achievements"));
+                choiceDtoGoal.add(getChoiceDto("goal", "pleasure","harmoniousrelationship"));
+                choiceDtoGoal.add(getChoiceDto("goal", "pleasure","creativity"));
+                choiceDtoGoal.add(getChoiceDto("goal", "pleasure","development"));
+
+                choiceDtoGoal.add(getChoiceDto("goal", "achievements","harmoniousrelationship"));
+                choiceDtoGoal.add(getChoiceDto("goal", "achievements","creativity"));
+                choiceDtoGoal.add(getChoiceDto("goal", "achievements","development"));
+
+                choiceDtoGoal.add(getChoiceDto("goal", "harmoniousrelationship","creativity"));
+                choiceDtoGoal.add(getChoiceDto("goal", "harmoniousrelationship","development"));
+
+                choiceDtoGoal.add(getChoiceDto("goal", "creativity","development"));
+
+                Collections.shuffle(choiceDtoGoal);
+
+
+                //QUALITY
+                List<ChoiceDto> choiceDtoQuality = new ArrayList<>();
+                choiceDtoQuality.add(getChoiceDto("quality", "durability","hedonism"));
+                choiceDtoQuality.add(getChoiceDto("quality", "durability","willpower"));
+                choiceDtoQuality.add(getChoiceDto("quality", "durability","goodwill"));
+                choiceDtoQuality.add(getChoiceDto("quality", "durability","creativity"));
+                choiceDtoQuality.add(getChoiceDto("quality", "durability","wisdom"));
+
+                choiceDtoQuality.add(getChoiceDto("quality", "hedonism","willpower"));
+                choiceDtoQuality.add(getChoiceDto("quality", "hedonism","goodwill"));
+                choiceDtoQuality.add(getChoiceDto("quality", "hedonism","creativity"));
+                choiceDtoQuality.add(getChoiceDto("quality", "hedonism","wisdom"));
+
+                choiceDtoQuality.add(getChoiceDto("quality", "willpower","goodwill"));
+                choiceDtoQuality.add(getChoiceDto("quality", "willpower","creativity"));
+                choiceDtoQuality.add(getChoiceDto("quality", "willpower","wisdom"));
+
+                choiceDtoQuality.add(getChoiceDto("quality", "goodwill","creativity"));
+                choiceDtoQuality.add(getChoiceDto("quality", "goodwill","wisdom"));
+
+                choiceDtoQuality.add(getChoiceDto("quality", "creativity","wisdom"));
+
+                Collections.shuffle(choiceDtoQuality);
+
+                //STATE
+                List<ChoiceDto> choiceDtoState = new ArrayList<>();
+                choiceDtoState.add(getChoiceDto("state", "sense_of_security","comfort"));
+                choiceDtoState.add(getChoiceDto("state", "sense_of_security","self_confidence"));
+                choiceDtoState.add(getChoiceDto("state", "sense_of_security","love"));
+                choiceDtoState.add(getChoiceDto("state", "sense_of_security","enthusiasm"));
+                choiceDtoState.add(getChoiceDto("state", "sense_of_security","clarity"));
+
+                choiceDtoState.add(getChoiceDto("state", "comfort","self_confidence"));
+                choiceDtoState.add(getChoiceDto("state", "comfort","love"));
+                choiceDtoState.add(getChoiceDto("state", "comfort","enthusiasm"));
+                choiceDtoState.add(getChoiceDto("state", "comfort","clarity"));
+
+                choiceDtoState.add(getChoiceDto("state", "self_confidence","love"));
+                choiceDtoState.add(getChoiceDto("state", "self_confidence","enthusiasm"));
+                choiceDtoState.add(getChoiceDto("state", "self_confidence","clarity"));
+
+                choiceDtoState.add(getChoiceDto("state", "love","enthusiasm"));
+                choiceDtoState.add(getChoiceDto("state", "love","clarity"));
+
+                choiceDtoState.add(getChoiceDto("state", "enthusiasm","clarity"));
+
+                Collections.shuffle(choiceDtoState);
+
+
+                List<ChoiceDto> choiceDto = new ArrayList<>(choiceDtoGoal);
+                choiceDto.addAll(choiceDtoQuality);
+                choiceDto.addAll(choiceDtoState);
+
+                return choiceDto;
+            }
+
+
+            private ChoiceDto getChoiceDto(String area, String scaleNameOne, String scaleNameTwo) {
+
+                String scaleOne = area + ".scale_" + scaleNameOne;//"goal.scale_health"
+                String scaleTwo = area + ".scale_" + scaleNameTwo;//"goal.scale_pleasure"
+
+                String scaleTextOne = area + "." + scaleNameOne;//"goal.health"
+                String scaleTextTwo = area + "." + scaleNameTwo;//"goal.pleasure"
+
+                area = area + ".area";//"goal.area"
+                String areaName = area + ".name";//"goal.area.name"
+
+                //TODO  или сделать метод createNewDto() public или просто писать new ChoiceDto()
+                ChoiceDto choiceDto1 = new ChoiceDto();
+
+                AreaDto areaDto = new AreaDto();
+                areaDto.setArea(Area.valueOf(env.getProperty(area)));
+                areaDto.setAreaName(env.getProperty(areaName));
+
+                choiceDto1.setArea(areaDto);
+
+
+                ScaleDto scaleDto1 = new ScaleDto();
+                scaleDto1.setScaleName(env.getProperty(scaleTextOne));
+                scaleDto1.setScale(Scale.valueOf(env.getProperty(scaleOne)));
+
+                choiceDto1.setFirstScale(scaleDto1);
+
+                ScaleDto scaleDto2 = new ScaleDto();
+                scaleDto2.setScaleName(env.getProperty(scaleTextTwo));
+                scaleDto2.setScale(Scale.valueOf(env.getProperty(scaleTwo)));
+
+                choiceDto1.setSecondScale(scaleDto2);
+                return choiceDto1;
+            }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+            @Override
+                public List<Choice> choiceList(){
+
+                    //TODO переделять на Map<String, List<ChoiceDto>>, где ключ - goal, quality, state
+
+                    //GOAL
+                    List<Choice> choiceGoal = new ArrayList<>();
+                    choiceGoal.add(getChoice("goal", "health","pleasure"));
+                    choiceGoal.add(getChoice("goal", "health","achievements"));
+                    choiceGoal.add(getChoice("goal", "health","harmoniousrelationship"));
+                    choiceGoal.add(getChoice("goal", "health","creativity"));
+                    choiceGoal.add(getChoice("goal", "health","development"));
+
+                    choiceGoal.add(getChoice("goal", "pleasure","achievements"));
+                    choiceGoal.add(getChoice("goal", "pleasure","harmoniousrelationship"));
+                    choiceGoal.add(getChoice("goal", "pleasure","creativity"));
+                    choiceGoal.add(getChoice("goal", "pleasure","development"));
+
+                    choiceGoal.add(getChoice("goal", "achievements","harmoniousrelationship"));
+                    choiceGoal.add(getChoice("goal", "achievements","creativity"));
+                    choiceGoal.add(getChoice("goal", "achievements","development"));
+
+                    choiceGoal.add(getChoice("goal", "harmoniousrelationship","creativity"));
+                    choiceGoal.add(getChoice("goal", "harmoniousrelationship","development"));
+
+                    choiceGoal.add(getChoice("goal", "creativity","development"));
+
+                    Collections.shuffle(choiceGoal);
+
+
+                    //QUALITY
+                    List<Choice> choiceQuality = new ArrayList<>();
+                    choiceQuality.add(getChoice("quality", "durability","hedonism"));
+                    choiceQuality.add(getChoice("quality", "durability","willpower"));
+                    choiceQuality.add(getChoice("quality", "durability","goodwill"));
+                    choiceQuality.add(getChoice("quality", "durability","creativity"));
+                    choiceQuality.add(getChoice("quality", "durability","wisdom"));
+
+                    choiceQuality.add(getChoice("quality", "hedonism","willpower"));
+                    choiceQuality.add(getChoice("quality", "hedonism","goodwill"));
+                    choiceQuality.add(getChoice("quality", "hedonism","creativity"));
+                    choiceQuality.add(getChoice("quality", "hedonism","wisdom"));
+
+                    choiceQuality.add(getChoice("quality", "willpower","goodwill"));
+                    choiceQuality.add(getChoice("quality", "willpower","creativity"));
+                    choiceQuality.add(getChoice("quality", "willpower","wisdom"));
+
+                    choiceQuality.add(getChoice("quality", "goodwill","creativity"));
+                    choiceQuality.add(getChoice("quality", "goodwill","wisdom"));
+
+                    choiceQuality.add(getChoice("quality", "creativity","wisdom"));
+
+                    Collections.shuffle(choiceQuality);
+
+                    //STATE
+                    List<Choice> choiceState = new ArrayList<>();
+                    choiceState.add(getChoice("state", "sense_of_security","comfort"));
+                    choiceState.add(getChoice("state", "sense_of_security","self_confidence"));
+                    choiceState.add(getChoice("state", "sense_of_security","love"));
+                    choiceState.add(getChoice("state", "sense_of_security","enthusiasm"));
+                    choiceState.add(getChoice("state", "sense_of_security","clarity"));
+
+                    choiceState.add(getChoice("state", "comfort","self_confidence"));
+                    choiceState.add(getChoice("state", "comfort","love"));
+                    choiceState.add(getChoice("state", "comfort","enthusiasm"));
+                    choiceState.add(getChoice("state", "comfort","clarity"));
+
+                    choiceState.add(getChoice("state", "self_confidence","love"));
+                    choiceState.add(getChoice("state", "self_confidence","enthusiasm"));
+                    choiceState.add(getChoice("state", "self_confidence","clarity"));
+
+                    choiceState.add(getChoice("state", "love","enthusiasm"));
+                    choiceState.add(getChoice("state", "love","clarity"));
+
+                    choiceState.add(getChoice("state", "enthusiasm","clarity"));
+
+                    Collections.shuffle(choiceState);
+
+
+                    List<Choice> choices = new ArrayList<>(choiceGoal);
+                    choices.addAll(choiceQuality);
+                    choices.addAll(choiceState);
+
+                    return choices;
+                }
+
+
+                private Choice getChoice(String area, String scaleNameOne, String scaleNameTwo) {
+
+                    String scaleOne = area + ".scale." + scaleNameOne;//"goal.scale_health"
+                    String scaleTwo = area + ".scale." + scaleNameTwo;//"goal.scale_pleasure"
+
+            //        String scaleTextOne = area + "." + scaleNameOne;//"goal.health"
+            //        String scaleTextTwo = area + "." + scaleNameTwo;//"goal.pleasure"
+
+            //        area = area + ".area";//"goal.area"
+            //        String areaName = area + ".name";//"goal.area.name"
+
+                    Choice choice1 = new Choice();
+                    choice1.setArea(Area.valueOf(env.getProperty(area.toUpperCase())));
+                    choice1.setFirstScale(Scale.valueOf(env.getProperty(scaleOne)));
+                    choice1.setSecondScale(Scale.valueOf(env.getProperty(scaleTwo)));
+                    return choice1;
+                }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                //GOAL
+                        List<Choice> choiceGoal = new ArrayList<>();
+                        choiceGoal.add(getChoice("goal", "one","two"));
+                        choiceGoal.add(getChoice("goal", "one","three"));
+                        choiceGoal.add(getChoice("goal", "one","four"));
+                        choiceGoal.add(getChoice("goal", "one","five"));
+                        choiceGoal.add(getChoice("goal", "one","six"));
+
+                        choiceGoal.add(getChoice("goal", "two","three"));
+                        choiceGoal.add(getChoice("goal", "two","four"));
+                        choiceGoal.add(getChoice("goal", "two","five"));
+                        choiceGoal.add(getChoice("goal", "two","six"));
+
+                        choiceGoal.add(getChoice("goal", "three","four"));
+                        choiceGoal.add(getChoice("goal", "three","five"));
+                        choiceGoal.add(getChoice("goal", "three","six"));
+
+                        choiceGoal.add(getChoice("goal", "four","five"));
+                        choiceGoal.add(getChoice("goal", "four","six"));
+
+                        choiceGoal.add(getChoice("goal", "five","six"));
+
+                        Collections.shuffle(choiceGoal);
+
+
+                        //QUALITY
+                        List<Choice> choiceQuality = new ArrayList<>();
+                        choiceQuality.add(getChoice("quality", "one","two"));
+                        choiceQuality.add(getChoice("quality", "one","three"));
+                        choiceQuality.add(getChoice("quality", "one","four"));
+                        choiceQuality.add(getChoice("quality", "one","five"));
+                        choiceQuality.add(getChoice("quality", "one","six"));
+
+                        choiceQuality.add(getChoice("quality", "two","three"));
+                        choiceQuality.add(getChoice("quality", "two","four"));
+                        choiceQuality.add(getChoice("quality", "two","five"));
+                        choiceQuality.add(getChoice("quality", "two","six"));
+
+                        choiceQuality.add(getChoice("quality", "three","four"));
+                        choiceQuality.add(getChoice("quality", "three","five"));
+                        choiceQuality.add(getChoice("quality", "three","six"));
+
+                        choiceQuality.add(getChoice("quality", "four","five"));
+                        choiceQuality.add(getChoice("quality", "four","six"));
+
+                        choiceQuality.add(getChoice("quality", "five","six"));
+
+                        Collections.shuffle(choiceQuality);
+
+                        //STATE
+                        List<Choice> choiceState = new ArrayList<>();
+                        choiceState.add(getChoice("state", "one","two"));
+                        choiceState.add(getChoice("state", "one","three"));
+                        choiceState.add(getChoice("state", "one","four"));
+                        choiceState.add(getChoice("state", "one","five"));
+                        choiceState.add(getChoice("state", "one","six"));
+
+                        choiceState.add(getChoice("state", "two","three"));
+                        choiceState.add(getChoice("state", "two","four"));
+                        choiceState.add(getChoice("state", "two","five"));
+                        choiceState.add(getChoice("state", "two","six"));
+
+                        choiceState.add(getChoice("state", "three","four"));
+                        choiceState.add(getChoice("state", "three","five"));
+                        choiceState.add(getChoice("state", "three","six"));
+
+                        choiceState.add(getChoice("state", "four","five"));
+                        choiceState.add(getChoice("state", "four","six"));
+
+                        choiceState.add(getChoice("state", "five","six"));
+
+                        Collections.shuffle(choiceState);
+
+
+                        List<Choice> choices = new ArrayList<>(choiceGoal);
+                        choices.addAll(choiceQuality);
+                        choices.addAll(choiceState);
+
+                        return choices;
+                    }
+
+
+                    private Choice getChoice(String area, String scaleNameOne, String scaleNameTwo) {
+
+                        String scaleOne = area + ".scale." + scaleNameOne;//"goal.scale.one"
+                        String scaleTwo = area + ".scale." + scaleNameTwo;//"goal.scale.one"
+
+                        area = area + ".area";//"goal.area"
+
+                        Choice choice = new Choice();
+                        choice.setArea(Area.valueOf(env.getProperty(area)));
+                        choice.setFirstScale(Scale.valueOf(env.getProperty(scaleOne)));
+                        choice.setSecondScale(Scale.valueOf(env.getProperty(scaleTwo)));
+                        choice.setId(new ObjectId());
+                        return choice;
+                    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+@Override
+    public String goalMatch(User user1, User user2) {
+        validateUsers(user1, user2);
+
+        //последний сохраненный UserAnswers
+        UserAnswers userAnswers1 = userAnswersRepository.findAllByUser_IdOrderByPassDateDesc(user1.getId()).get(0);
+        UserAnswers userAnswers2 = userAnswersRepository.findAllByUser_IdOrderByPassDateDesc(user2.getId()).get(0);
+
+        Set<Choice> choices1 =  userAnswers1.getUserAnswers();
+        Set<Choice> choices2 =  userAnswers2.getUserAnswers();
+
+        choices1.removeIf(choice -> !choice.getArea().equals(Area.GOAL));
+        choices2.removeIf(choice -> !choice.getArea().equals(Area.GOAL));
+
+        choices1.removeAll(choices2);
+        double goalMatchPercentInt = 100 * choices1.size()/choices2.size();
+
+        return String.valueOf(goalMatchPercentInt);
+    }
+
+    @Override
+    public String qualityMatch(User user1, User user2) {
+        validateUsers(user1, user2);
+
+        //последний сохраненный UserAnswers
+        UserAnswers userAnswers1 = userAnswersRepository.findAllByUser_IdOrderByPassDateDesc(user1.getId()).get(0);
+        UserAnswers userAnswers2 = userAnswersRepository.findAllByUser_IdOrderByPassDateDesc(user2.getId()).get(0);
+
+        Set<Choice> choices1 =  userAnswers1.getUserAnswers();
+        Set<Choice> choices2 =  userAnswers2.getUserAnswers();
+
+        choices1.removeIf(choice -> !choice.getArea().equals(Area.QUALITY));
+        choices2.removeIf(choice -> !choice.getArea().equals(Area.QUALITY));
+
+        choices1.removeAll(choices2);
+        double qualityMatchPercentInt = 100 * choices1.size()/choices2.size();
+
+        return String.valueOf(qualityMatchPercentInt);
+
+    }
+
+    @Override
+    public String stateMatch(User user1, User user2) {
+        validateUsers(user1, user2);
+
+        //последний сохраненный UserAnswers
+        UserAnswers userAnswers1 = userAnswersRepository.findAllByUser_IdOrderByPassDateDesc(user1.getId()).get(0);
+        UserAnswers userAnswers2 = userAnswersRepository.findAllByUser_IdOrderByPassDateDesc(user2.getId()).get(0);
+
+        Set<Choice> choices1 =  userAnswers1.getUserAnswers();
+        Set<Choice> choices2 =  userAnswers2.getUserAnswers();
+
+        choices1.removeIf(choice -> !choice.getArea().equals(Area.STATE));
+        choices2.removeIf(choice -> !choice.getArea().equals(Area.STATE));
+
+        choices1.removeAll(choices2);
+        double stateMatchPercentInt = 100 * choices1.size()/choices2.size();
+
+        return String.valueOf(stateMatchPercentInt);
+        }
+
+    @Override
+    public String totalMatch(User user1, User user2) {
+        validateUsers(user1, user2);
+
+        //последний сохраненный UserAnswers
+        UserAnswers userAnswers1 = userAnswersRepository.findAllByUser_IdOrderByPassDateDesc(user1.getId()).get(0);
+        UserAnswers userAnswers2 = userAnswersRepository.findAllByUser_IdOrderByPassDateDesc(user2.getId()).get(0);
+
+        Set<Choice> choices1 =  userAnswers1.getUserAnswers();
+        Set<Choice> choices2 =  userAnswers2.getUserAnswers();
+
+        choices1.removeAll(choices2);
+        double totalMatchPercentInt = 100 * choices1.size()/choices2.size();
+
+        return String.valueOf(totalMatchPercentInt);
+
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    UserMatch userMatch = new UserMatch();
+
+            userMatch.setUserOne(user1);
+            userMatch.setUserTwo(user2);
+            userMatch.setGoalMatch(userMatchService.goalMatch(user1, user2));
+            userMatch.setQualityMatch(userMatchService.qualityMatch(user1, user2));
+            userMatch.setStateMatch(userMatchService.stateMatch(user1, user2));
+            userMatch.setTotalMatch(userMatchService.totalMatch(user1, user2));
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+package com.psycorp.service.implementation;
+
+import com.psycorp.exception.BadRequestException;
+import com.psycorp.model.entity.*;
+import com.psycorp.model.enums.Area;
+import com.psycorp.model.enums.MatchMethod;
+import com.psycorp.repository.UserAnswersRepository;
+import com.psycorp.repository.UserMatchRepository;
+import com.psycorp.repository.UserRepository;
+import com.psycorp.service.UserMatchService;
+import org.springframework.context.annotation.PropertySource;
+import org.springframework.core.env.Environment;
+import org.springframework.stereotype.Service;
+
+import java.util.*;
+
+@Service
+@PropertySource("classpath:errormessages.properties")
+public class UserMatchServiceImpl implements UserMatchService {
+
+    private final UserMatchRepository userMatchRepository;
+
+    private final UserRepository userRepository;
+
+    private final UserAnswersRepository userAnswersRepository;
+
+    private final Environment env;
+
+    public UserMatchServiceImpl(UserMatchRepository userMatchRepository, UserRepository userRepository,
+                                UserAnswersRepository userAnswersRepository, Environment env) {
+        this.userMatchRepository = userMatchRepository;
+        this.userRepository = userRepository;
+        this.userAnswersRepository = userAnswersRepository;
+        this.env = env;
+    }
+
+    //TODO добавить проверку всех значений и соответствуюшии им Exceptions
+
+    @Override
+    public UserMatch insert(UserMatch userMatch) {
+        return userMatchRepository.insert(userMatch);
+    }
+
+    @Override
+    public List<UserMatch> getAll(){return userMatchRepository.findAll();}
+
+    //TODO переделать метод так, чтобы расчитывал значения для всех методов
+    @Override
+    public UserMatch match(User user1, User user2, MatchMethod matchMethod){
+        validate(user1, user2);
+
+        //последний сохраненный UserAnswers
+//        UserAnswers userAnswers1 = userAnswersRepository.findAllByUser_IdOrderByPassDateDesc(user1.getId()).get(0);
+//        UserAnswers userAnswers2 = userAnswersRepository.findAllByUser_IdOrderByPassDateDesc(user2.getId()).get(0);
+
+//        UserAnswers userAnswers1 = userAnswersRepository.findAllByUser_NameOrderByPassDateDesc(user1.getName()).get(0);
+//        UserAnswers userAnswers2 = userAnswersRepository.findAllByUser_NameOrderByPassDateDesc(user2.getName()).get(0);
+//
+        UserAnswers userAnswers1 = userAnswersRepository.findAllByUser_NameOrderById(user1.getName()).get(0);
+        UserAnswers userAnswers2 = userAnswersRepository.findAllByUser_NameOrderById(user2.getName()).get(0);
+
+
+        Set<Choice> choices1 = userAnswers1.getUserAnswers();
+        Set<Choice> choices2 = userAnswers2.getUserAnswers();
+
+       List<Match> matches = matchMap(choices1, choices2, matchMethod);
+
+        Set<User> userNames = new HashSet<>();
+        userNames.add(user1);
+        userNames.add(user2);
+
+        UserMatch userMatch = new UserMatch();
+        userMatch.setUsers(userNames);
+
+
+        HashMap<MatchMethod, List<Match>> matchesMap = new HashMap<>();
+        matchesMap.put(matchMethod, matches);
+        userMatch.setMatches(matchesMap);
+//        userMatch.setMatchMethod(matchMethod);
+
+        userMatch = userMatchRepository.insert(userMatch);
+        return userMatch;
+    }
+
+    private List<Match> matchMap(Set<Choice> choices1, Set<Choice> choices2, MatchMethod matchMethod) {
+
+       List<Match> matches = new ArrayList<>();
+
+        for (Area area : Area.values()) {
+            matches.add(getMatchForMatchMethod(choices1, choices2, matchMethod, area));
+        }
+//            matches.add(getMatchForMatchMethod(choices1, choices2, matchMethod, Area.GOAL));
+//            matches.add(getMatchForMatchMethod(choices1, choices2, matchMethod, Area.QUALITY));
+//            matches.add(getMatchForMatchMethod(choices1, choices2, matchMethod, Area.STATE));
+//            matches.add(getMatchForMatchMethod(choices1, choices2, matchMethod, Area.TOTAL));
+
+         return matches;
+    }
+
+    private Match getMatchForMatchMethod(Set<Choice> choices1, Set<Choice> choices2, MatchMethod matchMethod, Area area) {
+        Match match = new Match();
+        match.setArea(area);
+
+        Result result = new Result();
+        if(matchMethod == MatchMethod.PERCENT){
+            result.setText(areaMatchPercent(choices1, choices2, area));}
+        else if(matchMethod == MatchMethod.PEARSONCORRELATION){
+            result.setText(areaMatchPearson(choices1, choices2, area));
+        } else throw new BadRequestException(env.getProperty("error.ThereIsn'tThatMatchMethod"));
+
+        match.setResult(result);
+        return match;
+    }
+
+    private String areaMatchPearson(Set<Choice> choices1, Set<Choice> choices2, Area area){
+
+        int totalSize = getTotalSize(area, choices1, choices2);
+
+        double numOfMatches = (double) numbOfSecondScaleMatchesInTwoSets(choices1, choices2, area) / totalSize;
+        double numOfSecondScaleMatchesForUser1 = (double) numOfSecondScaleMatches(choices1, area) / totalSize;
+        double numOfSecondScaleMatchesForUser2 = (double) numOfSecondScaleMatches(choices2, area) / totalSize;
+
+        double pearsonCorrelationCoefficient = getPearsonCorrelationCoefficient(numOfMatches,
+                numOfSecondScaleMatchesForUser1, numOfSecondScaleMatchesForUser2);
+
+        return String.valueOf(pearsonCorrelationCoefficient);
+    }
+
+    private double getPearsonCorrelationCoefficient(double numberOfMatches, double numOfSecondScaleMatchesForUser1,
+                                                    double numOfSecondScaleMatchesForUser2) {
+        if(numberOfMatches == 1.0) return 1.0;
+
+        //TODO что возвращать, если numOfSecondScaleMatchesForUser == 1.0?
+        if(numOfSecondScaleMatchesForUser1 == 1.0 || numOfSecondScaleMatchesForUser2 == 1.0) return 1.0;
+        if(numOfSecondScaleMatchesForUser1 == 0.0 && numOfSecondScaleMatchesForUser2 == 0.0) return 1.0;
+
+        return (numberOfMatches - numOfSecondScaleMatchesForUser1 * numOfSecondScaleMatchesForUser2)
+                    / (Math.sqrt(numOfSecondScaleMatchesForUser1 * numOfSecondScaleMatchesForUser2
+                    * (1 - numOfSecondScaleMatchesForUser1) * (1 - numOfSecondScaleMatchesForUser2)));
+    }
+
+    /**
+     * Count the number of choices for area, where chosenScale is secondScale for both choices1 and choices2
+     * @param choices1
+     * @param choices2
+     * @param area
+     * @return number of choices for area, where chosenScale is secondScale for both choices1 and choices2
+     */
+    private int numbOfSecondScaleMatchesInTwoSets(Set<Choice> choices1, Set<Choice> choices2, Area area) {
+
+        if(area == null || area == Area.TOTAL) {
+            return (int) choices1.stream()
+                    .filter(choice -> (choice.getChosenScale() == choice.getSecondScale()
+                            && choices2.contains(choice)) )
+                    .count();
+        }
+
+        return (int) choices1.stream()
+                .filter(choice -> (
+                        choice.getArea().equals(area)
+                                && choice.getChosenScale() == choice.getSecondScale()
+                                && choices2.contains(choice)) )
+                .count();
+        }
+
+    /**
+     * Count the number of choices for area, where chosenScale is secondScale
+     * @param choices
+     * @param area
+     * @return number of choices for area, where chosenScale is secondScale
+     */
+    private int numOfSecondScaleMatches(Set<Choice> choices, Area area) {
+
+        if(area == null || area == Area.TOTAL) {
+            return (int) choices.stream()
+                    .filter(choice -> choice.getChosenScale() == choice.getSecondScale())
+                    .count();
+        }
+
+        return (int) choices.stream()
+                .filter(choice -> choice.getArea().equals(area)
+                        && choice.getChosenScale() == choice.getSecondScale())
+                .count();
+    }
+
+    /**
+     * Calculate percent of matches in
+     * @param choices1
+     * @param choices2
+     * @param area
+     * @return
+     */
+    private String areaMatchPercent(Set<Choice> choices1, Set<Choice> choices2, Area area){
+
+        int totalSize = getTotalSize(area, choices1, choices2);
+
+        int numbOfMatches = numbOfMatchesInTwoSets(choices1, choices2, area);
+        double MatchPercent = (double) 100 * numbOfMatches / totalSize;
+        return String.valueOf(MatchPercent);
+    }
+
+    /**
+     * Get amount of choices in choices1 and choices2 that has area
+     * @param area
+     * @param choices1
+     * @param choices2
+     * @return amount of choices in choices1 and choices2 that has area;
+     * or size of biggest from choices1 and choices if area = null
+     */
+    private int getTotalSize(Area area, Set<Choice> choices1, Set<Choice> choices2) {
+        int totalSize1 = choices1.size();
+        int totalSize2 = choices2.size();
+        int totalSize;
+
+        if(area == null || area == Area.TOTAL) {
+            //TODO Как вариант, если не равны totalSize для choices1 и choices2, throw new BadRequestException(env.getProperty("error.ThereWrongTestResultForUser"))
+            //Вопрос в том, что делать, если по какой-то причине в бд сохранено не полный тест
+            // (ответы на 45 вопросов для Ценностно-смысловой совместимости), а только часть
+            totalSize = (totalSize1 > totalSize2) ? totalSize1 : totalSize2;
+        } else totalSize = (int) (choices2.stream().filter(choice -> choice.getArea().equals(area)).count());
+        return totalSize;
+    }
+
+    /**
+     * Count the number of choices for area, where chosenScale is equal for both choices1 and choices2
+     * @param choices1
+     * @param choices2
+     * @param area
+     * @return number of choices for area, where chosenScale is equal for both choices1 and choices2
+     */
+    private int numbOfMatchesInTwoSets(Set<Choice> choices1, Set<Choice> choices2, Area area) {
+
+        if(area == null || area == Area.TOTAL) {
+           return (int) choices1.stream()
+                    .filter(choice -> (choices2.contains(choice)))
+                    .count();
+        }
+
+       return (int) choices1.stream()
+                .filter(choice -> (
+                        choice.getArea().equals(area)
+                                && choices2.contains(choice)) )
+                .count();
+    }
+
+    private Boolean validate(User user1, User user2){
+        if (user1 == null || user2 == null || !userRepository.existsById(user1.getName())
+                || !userRepository.existsById(user2.getName()))
+            throw new BadRequestException(env.getProperty("error.noUserFind"));
+
+
+
+        if(userAnswersRepository.findAllByUser_NameOrderById(user1.getName()).get(0) == null ||
+                userAnswersRepository.findAllByUser_NameOrderById(user2.getName()).get(0) == null)
+            throw new BadRequestException(env.getProperty("error.noTestWasPassed"));
+
+        return true;
+    }
+
+}
+
+
+
+
+
+
+
+
+
+===================================INDEXES=========================
+INDEX users.$id
+index matches.result
+=> Index Intersection
+
+{'users.$id':{$in:['MarynaKontar']}, 'matches.result':-0.07142857142857144}
+использует оба индекса
+
+
+
+
+
+
+
+==================================Security=======================
+http://www.baeldung.com/get-user-in-spring-security
+
+public String currentUserName(Principal principal) {
+        return principal.getName();
+    }
+
+public String currentUserName(Authentication authentication) {
+        return authentication.getName();
+    }
+
+public String currentUserNameSimple(HttpServletRequest request) {
+        Principal principal = request.getUserPrincipal();
+        return principal.getName();
+    }
+
+
+    https://github.com/spring-projects/spring-security/blob/5.0.3.RELEASE/samples/boot/helloworld/src/main/java/org/springframework/security/samples/config/SecurityConfig.java
+
+    https://gigsterous.github.io/engineering/2017/03/01/spring-boot-4.html
+
+    https://octoperf.com/blog/2018/03/08/securing-rest-api-spring-security/
+
+    http://www.devglan.com/spring-security/spring-boot-security-rest-basic-authentication
+
+    https://stackoverflow.com/questions/32548372/how-to-secure-rest-api-with-spring-boot-and-spring-security
+
+    https://www.youtube.com/watch?v=k6v-LnpUQSs
+    https://dzone.com/articles/secure-spring-rest-with-spring-security-and-oauth2

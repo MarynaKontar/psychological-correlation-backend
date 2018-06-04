@@ -1,6 +1,6 @@
 package com.psycorp.service;
 
-import com.psycorp.model.dto.ChoiceDto;
+import com.psycorp.model.entity.Choice;
 import com.psycorp.model.entity.UserAnswers;
 import org.bson.types.ObjectId;
 
@@ -11,8 +11,9 @@ public interface UserAnswersService {
 
     UserAnswers insert(UserAnswers userAnswers);
 
+    UserAnswers findLastByUserName(String userName);
 
-    Set<UserAnswers> findAllUserAnswersByUser_IdOrderByPassDateDesc(ObjectId userId);
+    List<UserAnswers> findAllByUserNameOrderByCreationDateDesc(String userName);
 
-    List<ChoiceDto> choiceDtoList();
+    List<Choice> choiceList();
 }

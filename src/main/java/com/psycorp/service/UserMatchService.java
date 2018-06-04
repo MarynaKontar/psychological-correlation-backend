@@ -1,17 +1,22 @@
 package com.psycorp.service;
 
-import com.psycorp.model.entity.User;
 import com.psycorp.model.entity.UserMatch;
+import com.psycorp.model.enums.MatchMethod;
 
-public interface UserMatchService {
+import java.util.List;
 
-    UserMatch insert(UserMatch userAnswers);
+public interface UserMatchService extends Match{
 
-    String goalMatch(User user1, User user2);
+    UserMatch insert(UserMatch userMatch);
 
-    String totalMatch(User user1, User user2);
+    List<UserMatch> findByUserName(String userName);
 
-    String qualityMatch(User user1, User user2);
+    List<UserMatch> findByMatchMethod(MatchMethod matchMethod);
 
-    String stateMatch(User user1, User user2);
+    List<UserMatch> findByUserNameAndMatchMethod(String userName, MatchMethod matchMethod);
+
+    List<UserMatch> getAll();
+
+
+
 }

@@ -4,74 +4,92 @@ import com.psycorp.model.dto.UserAnswersDto;
 import com.psycorp.model.entity.User;
 import com.psycorp.model.entity.UserAnswers;
 import com.psycorp.model.entity.UserMatch;
+import com.psycorp.model.enums.MatchMethod;
 import com.psycorp.service.UserAnswersService;
 import com.psycorp.service.UserMatchService;
 import com.psycorp.service.UserService;
 import com.psycorp.util.Entity;
 import com.psycorp.сonverter.UserAnswersDtoConverter;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.PropertySource;
+import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
 import java.util.List;
-import java.util.Set;
 
 @Component
+//@PropertySource(value = {"classpath:scales/scalesukrainian.properties"}, encoding = "utf-8", ignoreResourceNotFound = true)
 public class TestDb {
+
+    private final Environment env;
 
     private final UserAnswersService userAnswersService;
     private final UserService userService;
     private final UserMatchService userMatchService;
 
-    //for testing. Delete in production
     private User user1 = new User();
     private User user2 = new User();
+    private User user3 = new User();
 
 
     @Autowired
-    public TestDb(UserAnswersService userAnswersService, UserService userService,
-                             UserMatchService userMatchService) {
+    public TestDb(Environment env, UserAnswersService userAnswersService, UserService userService,
+                  UserMatchService userMatchService) {
+        this.env = env;
         this.userAnswersService = userAnswersService;
         this.userService = userService;
         this.userMatchService = userMatchService;
     }
 
-
     //for testing. Delete in production
 //    @PostConstruct
 //    public void createInitEntities() {
 //
-//        user1.setName("user5");
-//        user1.setEmail("email5");
+//        user1.setName("user6");
+//        user1.setEmail("email6");
 //        user1 = userService.insert(user1);
 //
-//        UserAnswers userAnswers1 = Entity.createUserAnswers(user1);
+//        UserAnswers userAnswers1 = Entity.createRandomUserAnswers(user1);
 //        userAnswersService.insert(userAnswers1);
 //
-//
-//        user2.setName("user6");
-//        user2.setEmail("email6");
+//        user2.setName("user7");
+//        user2.setEmail("email7");
 //        user2 = userService.insert(user2);
 //
-//        UserAnswers userAnswers2 = Entity.createUserAnswers(user2);
+//        UserAnswers userAnswers2 = Entity.createRandomUserAnswers(user2);
 //        userAnswersService.insert(userAnswers2);
 //
+//
+//        user3.setName("user8");
+//        user3.setEmail("email8");
+//        user3 = userService.insert(user3);
+//
+//        UserAnswers userAnswers3 = Entity.createRandomUserAnswers(user3);
+//        userAnswersService.insert(userAnswers3);
+//
 //    }
+//
+//    //for testing. Delete in production
+//    @PostConstruct
+//    public void updateUser() {
+//
+//        user1 = userService.findFirstUserByName("user6");
+//        user1.setEmail("email6wwwww");
+//
+//        userService.update(user1);
+//
+//    }
+//
 //
 //    @PostConstruct()
 //    public void userMatch() {
 //
-//        UserMatch userMatch = new UserMatch();
-//
-//        userMatch.setUserOne(user1);
-//        userMatch.setUserTwo(user2);
-//        userMatch.setGoalMatch(userMatchService.goalMatch(user1, user2));
-//        userMatch.setQualityMatch(userMatchService.qualityMatch(user1, user2));
-//        userMatch.setStateMatch(userMatchService.stateMatch(user1, user2));
-//        userMatch.setTotalMatch(userMatchService.totalMatch(user1, user2));
-//
+//        UserMatch userMatch = userMatchService.match(user1,user2, MatchMethod.PEARSONCORRELATION);
 //        userMatchService.insert(userMatch);
 //
+//        UserMatch userMatch1 = userMatchService.match(user1, user2, MatchMethod.PEARSONCORRELATION);
+//        userMatchService.insert(userMatch1);
 //        }
 //
 //
@@ -79,36 +97,28 @@ public class TestDb {
 //    @PostConstruct()
 //    public void userMatch2() {
 //
-//        UserMatch userMatch = new UserMatch();
-//        User user1 = userService.findFirstUserByEmail("email5");
-//        User user2 = userService.findFirstUserByEmail("email6");
+//        User user1 = userService.findFirstUserByEmail("email7");
+//        User user2 = userService.findFirstUserByEmail("email8");
 //
-//        userMatch.setUserOne(user1);
-//        userMatch.setUserTwo(user2);
-//        userMatch.setGoalMatch(userMatchService.goalMatch(user1, user2));
-//        userMatch.setQualityMatch(userMatchService.qualityMatch(user1, user2));
-//        userMatch.setStateMatch(userMatchService.stateMatch(user1, user2));
-//        userMatch.setTotalMatch(userMatchService.totalMatch(user1, user2));
-//
+//        UserMatch userMatch = userMatchService.match(user1,user2, MatchMethod.PEARSONCORRELATION);
 //        userMatchService.insert(userMatch);
-//
 //        }
-
+//
 //    @PostConstruct
 //    public void createSecondUserAnswers() {
-//        User user1 = userService.findFirstUserByEmail("email2");
-//        User user2 = userService.findFirstUserByEmail("email3");
+//        User user1 = userService.findFirstUserByEmail("email7");
+//        User user2 = userService.findFirstUserByEmail("email8");
 //
-////        UserAnswers userAnswers1 = Entity.createUserAnswers(user1);
-////        userAnswersService.insert(userAnswers1);
-////
-////        UserAnswers userAnswers2 = Entity.createUserAnswers(user3);
-////        userAnswersService.insert(userAnswers2);
+//        UserAnswers userAnswers1 = Entity.createRandomUserAnswers(user1);
+//        userAnswersService.insert(userAnswers1);
 //
-//        Set<UserAnswers> userAnswersSet1 = userAnswersService.findAllUserAnswersByUser_IdOrderByPassDateDesc(user1.getId());
-//        Set<UserAnswers> userAnswersSet3 = userAnswersService.findAllUserAnswersByUser_IdOrderByPassDateDesc(user2.getId());
+//        UserAnswers userAnswers2 = Entity.createRandomUserAnswers(user2);
+//        userAnswersService.insert(userAnswers2);
 //
-//        UserAnswersDtoConverter userAnswersDtoConverter = new UserAnswersDtoConverter();
+//        List<UserAnswers> userAnswersSet1 = userAnswersService.findAllUserAnswersByUser_IdOrderByPassDateDesc(user1.getId());
+//        List<UserAnswers> userAnswersSet3 = userAnswersService.findAllUserAnswersByUser_IdOrderByPassDateDesc(user2.getId());
+//
+//        UserAnswersDtoConverter userAnswersDtoConverter = new UserAnswersDtoConverter(env);
 //        List<UserAnswersDto> userAnswersDtos1 = userAnswersDtoConverter.transform(userAnswersSet1);
 //        List<UserAnswersDto> userAnswersDtos2 = userAnswersDtoConverter.transform(userAnswersSet3);
 //

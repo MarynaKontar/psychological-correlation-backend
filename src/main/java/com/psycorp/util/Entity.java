@@ -21,7 +21,7 @@ public class Entity {
      * @param user
      * @return UserAnswers for user
      */
-    public static UserAnswers createUserAnswers(User user){
+    public static UserAnswers createRandomUserAnswers(User user){
         UserAnswers userAnswers = new UserAnswers();
         userAnswers.setUser(user);
 
@@ -39,104 +39,59 @@ public class Entity {
 
     private static Set<Choice> getChoices(Area area) {
 
-        Choice choice1 = new Choice();
-        choice1.setArea(area);
-        choice1.setFirstScale(Scale.ONE);
-        choice1.setSecondScale(Scale.TWO);
-        choice1.setChosenScale(chooseRandomScale(choice1));
+        Choice choice1 = getChoice(area, Scale.ONE, Scale.TWO);
+        Choice choice2 = getChoice(area, Scale.ONE, Scale.THREE);
+        Choice choice3 = getChoice(area, Scale.ONE, Scale.FOUR);
+        Choice choice4 = getChoice(area, Scale.ONE, Scale.FIVE);
+        Choice choice5 = getChoice(area, Scale.ONE, Scale.SIX);
 
-        Choice choice2 = new Choice();
-        choice2.setArea(area);
-        choice2.setFirstScale(Scale.ONE);
-        choice2.setSecondScale(Scale.THREE);
-        choice2.setChosenScale(chooseRandomScale(choice2));
+        Choice choice6 = getChoice(area, Scale.TWO, Scale.THREE);
+        Choice choice7 = getChoice(area, Scale.TWO, Scale.FOUR);
+        Choice choice8 = getChoice(area, Scale.TWO, Scale.FIVE);
+        Choice choice9 = getChoice(area, Scale.TWO, Scale.SIX);
 
-        Choice choice3 = new Choice();
-        choice3.setArea(area);
-        choice3.setFirstScale(Scale.ONE);
-        choice3.setSecondScale(Scale.FOUR);
-        choice3.setChosenScale(chooseRandomScale(choice3));
+        Choice choice10 = getChoice(area, Scale.THREE, Scale.FOUR);
+        Choice choice11 = getChoice(area, Scale.THREE, Scale.FIVE);
+        Choice choice12 = getChoice(area, Scale.THREE, Scale.SIX);
 
-        Choice choice4 = new Choice();
-        choice4.setArea(area);
-        choice4.setFirstScale(Scale.ONE);
-        choice4.setSecondScale(Scale.FIVE);
-        choice4.setChosenScale(chooseRandomScale(choice4));
+        Choice choice13 = getChoice(area, Scale.FOUR, Scale.FIVE);
+        Choice choice14 = getChoice(area, Scale.FOUR, Scale.SIX);
 
-        Choice choice5 = new Choice();
-        choice5.setArea(area);
-        choice5.setFirstScale(Scale.ONE);
-        choice5.setSecondScale(Scale.SIX);
-        choice5.setChosenScale(chooseRandomScale(choice5));
+        Choice choice15 = getChoice(area, Scale.FIVE, Scale.SIX);
 
-        Choice choice6 = new Choice();
-        choice6.setArea(area);
-        choice6.setFirstScale(Scale.TWO);
-        choice6.setSecondScale(Scale.THREE);
-        choice6.setChosenScale(chooseRandomScale(choice6));
-
-        Choice choice7 = new Choice();
-        choice7.setArea(area);
-        choice7.setFirstScale(Scale.TWO);
-        choice7.setSecondScale(Scale.FOUR);
-        choice7.setChosenScale(chooseRandomScale(choice7));
-
-        Choice choice8 = new Choice();
-        choice8.setArea(area);
-        choice8.setFirstScale(Scale.TWO);
-        choice8.setSecondScale(Scale.FIVE);
-        choice8.setChosenScale(chooseRandomScale(choice8));
-
-        Choice choice9 = new Choice();
-        choice9.setArea(area);
-        choice9.setFirstScale(Scale.TWO);
-        choice9.setSecondScale(Scale.SIX);
-        choice9.setChosenScale(chooseRandomScale(choice9));
-
-        Choice choice10 = new Choice();
-        choice10.setArea(area);
-        choice10.setFirstScale(Scale.THREE);
-        choice10.setSecondScale(Scale.FOUR);
-        choice10.setChosenScale(chooseRandomScale(choice10));
-
-        Choice choice11 = new Choice();
-        choice11.setArea(area);
-        choice11.setFirstScale(Scale.THREE);
-        choice11.setSecondScale(Scale.FIVE);
-        choice11.setChosenScale(chooseRandomScale(choice11));
-
-        Choice choice12 = new Choice();
-        choice12.setArea(area);
-        choice12.setFirstScale(Scale.THREE);
-        choice12.setSecondScale(Scale.SIX);
-        choice12.setChosenScale(chooseRandomScale(choice12));
-
-        Choice choice13 = new Choice();
-        choice13.setArea(area);
-        choice13.setFirstScale(Scale.FOUR);
-        choice13.setSecondScale(Scale.FIVE);
-        choice13.setChosenScale(chooseRandomScale(choice13));
-
-        Choice choice14 = new Choice();
-        choice14.setArea(area);
-        choice14.setFirstScale(Scale.FOUR);
-        choice14.setSecondScale(Scale.SIX);
-        choice14.setChosenScale(chooseRandomScale(choice14));
-
-        Choice choice15 = new Choice();
-        choice15.setArea(area);
-        choice15.setFirstScale(Scale.FIVE);
-        choice15.setSecondScale(Scale.SIX);
-        choice15.setChosenScale(chooseRandomScale(choice15));
+//        choice1.setChosenScale(Scale.TWO);
+//        choice2.setChosenScale(Scale.THREE);
+//        choice3.setChosenScale(Scale.FOUR);
+//        choice4.setChosenScale(Scale.FIVE);
+//        choice5.setChosenScale(Scale.SIX);
+//        choice6.setChosenScale(Scale.THREE);
+//        choice7.setChosenScale(Scale.FOUR);
+//        choice8.setChosenScale(Scale.FIVE);
+//        choice9.setChosenScale(Scale.SIX);
+//        choice10.setChosenScale(Scale.FOUR);
+//        choice11.setChosenScale(Scale.FIVE);
+//        choice12.setChosenScale(Scale.SIX);
+//        choice13.setChosenScale(Scale.FIVE);
+//        choice14.setChosenScale(Scale.SIX);
+//        choice15.setChosenScale(Scale.FIVE);
 
         return new HashSet<>(Arrays.asList(choice1, choice2, choice3, choice4, choice5,
                 choice6, choice7, choice8, choice9, choice10, choice11, choice12, choice13, choice14, choice15));
     }
 
+    private static Choice getChoice(Area area, Scale scaleOne, Scale scaleTwo) {
+        Choice choice = new Choice();
+        choice.setArea(area);
+        choice.setFirstScale(scaleOne);
+        choice.setSecondScale(scaleTwo);
+        choice.setChosenScale(chooseRandomScale(choice));
+        return choice;
+    }
 
     private static Scale chooseRandomScale(Choice choice){
         Boolean random = new Random().nextBoolean();
 
         return random ? choice.getFirstScale() : choice.getSecondScale();
+//        return choice.getFirstScale();
     }
 }

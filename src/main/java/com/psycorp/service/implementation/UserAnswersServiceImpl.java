@@ -1,163 +1,213 @@
 package com.psycorp.service.implementation;
 
-import com.psycorp.model.dto.AreaDto;
-import com.psycorp.model.dto.ChoiceDto;
-import com.psycorp.model.dto.ScaleDto;
+import com.mongodb.client.model.Updates;
+import com.mongodb.client.result.UpdateResult;
+import com.psycorp.exception.BadRequestException;
+import com.psycorp.model.entity.Choice;
+import com.psycorp.model.entity.User;
 import com.psycorp.model.entity.UserAnswers;
 import com.psycorp.model.enums.Area;
 import com.psycorp.model.enums.Scale;
 import com.psycorp.repository.UserAnswersRepository;
+import com.psycorp.repository.UserRepository;
 import com.psycorp.service.UserAnswersService;
-import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.PropertySource;
 import org.springframework.core.env.Environment;
+import org.springframework.data.mongodb.core.MongoOperations;
+import org.springframework.data.mongodb.core.aggregation.Fields;
+import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
 @Service
-@PropertySource(value = {"classpath:scales/scalesrussian.properties"}, encoding = "utf-8")
-@PropertySource(value = {"classpath:scales/scalesukrainian.properties"}, encoding = "utf-8", ignoreResourceNotFound = true)
+@PropertySource("classpath:errormessages.properties")
+@PropertySource(value = {"classpath:scales/scalesrussian.properties"}, encoding = "utf-8", ignoreResourceNotFound = true)
 public class UserAnswersServiceImpl implements UserAnswersService {
 
-    @Autowired
-    private UserAnswersRepository userAnswersRepository;
+    private final UserAnswersRepository userAnswersRepository;
+
+    private final UserRepository userRepository;
 
     @Autowired
-    private Environment env;
+    private  final MongoOperations mongoOperations;
+
+    private final Environment env;
+
+    @Autowired
+    public UserAnswersServiceImpl(UserAnswersRepository userAnswersRepository, UserRepository userRepository
+            , MongoOperations mongoOperations, Environment env) {
+        this.userAnswersRepository = userAnswersRepository;
+        this.userRepository = userRepository;
+        this.mongoOperations = mongoOperations;
+        this.env = env;
+    }
 
     //TODO добавить проверку всех значений и соответствуюшии им Exceptions
     @Override
-    public UserAnswers insert(UserAnswers userAnswers){
-        return userAnswersRepository.insert(userAnswers);
+    public UserAnswers insert(UserAnswers userAnswers
+//            , Principal principal
+    ){
+        //TODO Сделать Transactional - try-catch-finally
+
+
+        if(userAnswers.getId() != null && userAnswersRepository.findById(userAnswers.getId()).isPresent()){
+
+//        Set<Choice> choices =  userAnswers.getUserAnswers();
+//        Update update = new Update().push("userAnswers").each(choices);
+//        update.push("userAnswers").each(choices);
+//        push.each(choices);
+
+        mongoOperations.updateFirst(Query.query(Criteria.where(Fields.UNDERSCORE_ID).is(userAnswers.getId()))
+                , new Update().set("passDate", LocalDateTime.now()).push("userAnswers").each(userAnswers.getUserAnswers())
+                , UserAnswers.class);
+
+                return userAnswersRepository.findById(userAnswers.getId()).get();
+        }
+        else {
+            userAnswers.setPassDate(LocalDateTime.now());
+            userAnswers.setCreationDate(LocalDateTime.now());
+
+            // если с principal все в порядке, то назначаем userAnswers этого залогиненого пользователя (даже, если в userAnswers передается какой-то другой пользователь)
+//        if(principal != null && principal.getName() != null) {
+            if (userRepository.findFirstByName(userAnswers.getUser().getName()) != null) {//заменить на то, что на верхней строчке
+//            userAnswers.setUser(userRepository.findFirstByName(principal.getName()));
+
+            } else {
+                //если тестирование проходит еще не залогиненный пользователь, то на фронтенде обязываем его
+                // заполнить поля "name" и 'email' и проверяем, есть ли такой уже в бд (на фротенде это тоже надо как-то делать)
+                if (userAnswers.getUser() != null && userAnswers.getUser().getName() != null) {
+                    if (userRepository.findFirstByName(userAnswers.getUser().getName()) != null) {
+                        throw new BadRequestException(env.getProperty("error.UserAlreadyExists"));
+                    }
+                    //добавляем в бд нового пользователя (для не залогиненных пользователей)
+                    userRepository.insert(userAnswers.getUser());
+                } else throw new BadRequestException(env.getProperty("error.UserCan`tBeNull"));
+            }
+
+            return userAnswersRepository.insert(userAnswers);
+        }
     }
 
     @Override
-    public Set<UserAnswers> findAllUserAnswersByUser_IdOrderByPassDateDesc(ObjectId userId) {
-        return userAnswersRepository.findAllByUser_IdOrderByPassDateDesc(userId);
+    public UserAnswers findLastByUserName(String userName) {
+    return userAnswersRepository.findFirstByUser_NameOrderByIdDesc(userName);
     }
 
     @Override
-    public List<ChoiceDto> choiceDtoList(){
+    public List<UserAnswers> findAllByUserNameOrderByCreationDateDesc(String userName) {
+        if(userName == null) throw new BadRequestException(env.getProperty("error.noUserFind"));
+
+        User user = userRepository.findFirstByName(userName);
+        if(user == null) throw new BadRequestException(env.getProperty("error.noUserFind"));
+
+        //TODO может возникнуть проблема, если в _id в UserAnswers ObjectId когда-нибудь повторится.
+        // Вроде не должно, так как ObjectId  ("OrderById") отсортирован по дате создания
+        // правда с точностью 1 сек. Плюс - не надо индекс на PassDate/CreationDate в UserAnswers создавать
+        return userAnswersRepository.findAllByUser_NameOrderByIdDesc(user.getName());
+    }
+
+    @Override
+    public List<Choice>  choiceList(){
+
+        //TODO переделять на Map<String, List<ChoiceDto>>, где ключ - goal, quality, state
 
         //GOAL
-        List<ChoiceDto> choiceDtoGoal = new ArrayList<>();
-        choiceDtoGoal.add(getChoiceDto("goal", "health","pleasure"));
-        choiceDtoGoal.add(getChoiceDto("goal", "health","achievements"));
-        choiceDtoGoal.add(getChoiceDto("goal", "health","harmoniousrelationship"));
-        choiceDtoGoal.add(getChoiceDto("goal", "health","creativity"));
-        choiceDtoGoal.add(getChoiceDto("goal", "health","development"));
+        List<Choice> choiceGoal = new ArrayList<>();
+        choiceGoal.add(getChoice(Area.GOAL, Scale.ONE, Scale.TWO));
+        choiceGoal.add(getChoice(Area.GOAL, Scale.ONE, Scale.THREE));
+        choiceGoal.add(getChoice(Area.GOAL, Scale.ONE, Scale.FOUR));
+        choiceGoal.add(getChoice(Area.GOAL, Scale.ONE, Scale.FIVE));
+        choiceGoal.add(getChoice(Area.GOAL, Scale.ONE, Scale.SIX));
 
-        choiceDtoGoal.add(getChoiceDto("goal", "pleasure","achievements"));
-        choiceDtoGoal.add(getChoiceDto("goal", "pleasure","harmoniousrelationship"));
-        choiceDtoGoal.add(getChoiceDto("goal", "pleasure","creativity"));
-        choiceDtoGoal.add(getChoiceDto("goal", "pleasure","development"));
+        choiceGoal.add(getChoice(Area.GOAL, Scale.TWO, Scale.THREE));
+        choiceGoal.add(getChoice(Area.GOAL, Scale.TWO, Scale.FOUR));
+        choiceGoal.add(getChoice(Area.GOAL, Scale.TWO, Scale.FIVE));
+        choiceGoal.add(getChoice(Area.GOAL, Scale.TWO, Scale.SIX));
 
-        choiceDtoGoal.add(getChoiceDto("goal", "achievements","harmoniousrelationship"));
-        choiceDtoGoal.add(getChoiceDto("goal", "achievements","creativity"));
-        choiceDtoGoal.add(getChoiceDto("goal", "achievements","development"));
+        choiceGoal.add(getChoice(Area.GOAL, Scale.THREE, Scale.FOUR));
+        choiceGoal.add(getChoice(Area.GOAL, Scale.THREE, Scale.FIVE));
+        choiceGoal.add(getChoice(Area.GOAL, Scale.THREE, Scale.SIX));
 
-        choiceDtoGoal.add(getChoiceDto("goal", "harmoniousrelationship","creativity"));
-        choiceDtoGoal.add(getChoiceDto("goal", "harmoniousrelationship","development"));
+        choiceGoal.add(getChoice(Area.GOAL, Scale.FOUR, Scale.FIVE));
+        choiceGoal.add(getChoice(Area.GOAL, Scale.FOUR, Scale.SIX));
 
-        choiceDtoGoal.add(getChoiceDto("goal", "creativity","development"));
+        choiceGoal.add(getChoice(Area.GOAL, Scale.FIVE, Scale.SIX));
 
-        Collections.shuffle(choiceDtoGoal);
+        Collections.shuffle(choiceGoal);
 
 
         //QUALITY
-        List<ChoiceDto> choiceDtoQuality = new ArrayList<>();
-        choiceDtoQuality.add(getChoiceDto("quality", "durability","hedonism"));
-        choiceDtoQuality.add(getChoiceDto("quality", "durability","willpower"));
-        choiceDtoQuality.add(getChoiceDto("quality", "durability","goodwill"));
-        choiceDtoQuality.add(getChoiceDto("quality", "durability","creativity"));
-        choiceDtoQuality.add(getChoiceDto("quality", "durability","wisdom"));
+        List<Choice> choiceQuality = new ArrayList<>();
+        choiceQuality.add(getChoice(Area.QUALITY, Scale.ONE, Scale.TWO));
+        choiceQuality.add(getChoice(Area.QUALITY, Scale.ONE, Scale.THREE));
+        choiceQuality.add(getChoice(Area.QUALITY, Scale.ONE, Scale.FOUR));
+        choiceQuality.add(getChoice(Area.QUALITY, Scale.ONE, Scale.FIVE));
+        choiceQuality.add(getChoice(Area.QUALITY, Scale.ONE, Scale.SIX));
 
-        choiceDtoQuality.add(getChoiceDto("quality", "hedonism","willpower"));
-        choiceDtoQuality.add(getChoiceDto("quality", "hedonism","goodwill"));
-        choiceDtoQuality.add(getChoiceDto("quality", "hedonism","creativity"));
-        choiceDtoQuality.add(getChoiceDto("quality", "hedonism","wisdom"));
+        choiceQuality.add(getChoice(Area.QUALITY, Scale.TWO, Scale.THREE));
+        choiceQuality.add(getChoice(Area.QUALITY, Scale.TWO, Scale.FOUR));
+        choiceQuality.add(getChoice(Area.QUALITY, Scale.TWO, Scale.FIVE));
+        choiceQuality.add(getChoice(Area.QUALITY, Scale.TWO, Scale.SIX));
 
-        choiceDtoQuality.add(getChoiceDto("quality", "willpower","goodwill"));
-        choiceDtoQuality.add(getChoiceDto("quality", "willpower","creativity"));
-        choiceDtoQuality.add(getChoiceDto("quality", "willpower","wisdom"));
+        choiceQuality.add(getChoice(Area.QUALITY, Scale.THREE, Scale.FOUR));
+        choiceQuality.add(getChoice(Area.QUALITY, Scale.THREE, Scale.FIVE));
+        choiceQuality.add(getChoice(Area.QUALITY, Scale.THREE, Scale.SIX));
 
-        choiceDtoQuality.add(getChoiceDto("quality", "goodwill","creativity"));
-        choiceDtoQuality.add(getChoiceDto("quality", "goodwill","wisdom"));
+        choiceQuality.add(getChoice(Area.QUALITY, Scale.FOUR, Scale.FIVE));
+        choiceQuality.add(getChoice(Area.QUALITY, Scale.FOUR, Scale.SIX));
 
-        choiceDtoQuality.add(getChoiceDto("quality", "creativity","wisdom"));
+        choiceQuality.add(getChoice(Area.QUALITY, Scale.FIVE, Scale.SIX));
 
-        Collections.shuffle(choiceDtoQuality);
+        Collections.shuffle(choiceQuality);
 
         //STATE
-        List<ChoiceDto> choiceDtoState = new ArrayList<>();
-        choiceDtoState.add(getChoiceDto("state", "sense_of_security","comfort"));
-        choiceDtoState.add(getChoiceDto("state", "sense_of_security","self_confidence"));
-        choiceDtoState.add(getChoiceDto("state", "sense_of_security","love"));
-        choiceDtoState.add(getChoiceDto("state", "sense_of_security","enthusiasm"));
-        choiceDtoState.add(getChoiceDto("state", "sense_of_security","clarity"));
+        List<Choice> choiceState = new ArrayList<>();
+        choiceState.add(getChoice(Area.STATE, Scale.ONE, Scale.TWO));
+        choiceState.add(getChoice(Area.STATE, Scale.ONE, Scale.THREE));
+        choiceState.add(getChoice(Area.STATE, Scale.ONE, Scale.FOUR));
+        choiceState.add(getChoice(Area.STATE, Scale.ONE, Scale.FIVE));
+        choiceState.add(getChoice(Area.STATE, Scale.ONE, Scale.SIX));
 
-        choiceDtoState.add(getChoiceDto("state", "comfort","self_confidence"));
-        choiceDtoState.add(getChoiceDto("state", "comfort","love"));
-        choiceDtoState.add(getChoiceDto("state", "comfort","enthusiasm"));
-        choiceDtoState.add(getChoiceDto("state", "comfort","clarity"));
+        choiceState.add(getChoice(Area.STATE, Scale.TWO, Scale.THREE));
+        choiceState.add(getChoice(Area.STATE, Scale.TWO, Scale.FOUR));
+        choiceState.add(getChoice(Area.STATE, Scale.TWO, Scale.FIVE));
+        choiceState.add(getChoice(Area.STATE, Scale.TWO, Scale.SIX));
 
-        choiceDtoState.add(getChoiceDto("state", "self_confidence","love"));
-        choiceDtoState.add(getChoiceDto("state", "self_confidence","enthusiasm"));
-        choiceDtoState.add(getChoiceDto("state", "self_confidence","clarity"));
+        choiceState.add(getChoice(Area.STATE, Scale.THREE, Scale.FOUR));
+        choiceState.add(getChoice(Area.STATE, Scale.THREE, Scale.FIVE));
+        choiceState.add(getChoice(Area.STATE, Scale.THREE, Scale.SIX));
 
-        choiceDtoState.add(getChoiceDto("state", "love","enthusiasm"));
-        choiceDtoState.add(getChoiceDto("state", "love","clarity"));
+        choiceState.add(getChoice(Area.STATE, Scale.FOUR, Scale.FIVE));
+        choiceState.add(getChoice(Area.STATE, Scale.FOUR, Scale.SIX));
 
-        choiceDtoState.add(getChoiceDto("state", "enthusiasm","clarity"));
+        choiceState.add(getChoice(Area.STATE, Scale.FIVE, Scale.SIX));
 
-        Collections.shuffle(choiceDtoState);
+        Collections.shuffle(choiceState);
 
 
-        List<ChoiceDto> choiceDto = new ArrayList<>(choiceDtoGoal);
-        choiceDto.addAll(choiceDtoQuality);
-        choiceDto.addAll(choiceDtoState);
+        List<Choice> choices = new ArrayList<>(choiceGoal);
+        choices.addAll(choiceQuality);
+        choices.addAll(choiceState);
 
-        return choiceDto;
+        return choices;
     }
 
 
-    private ChoiceDto getChoiceDto(String area, String scaleNameOne, String scaleNameTwo) {
-
-        String scaleOne = area + ".scale_" + scaleNameOne;//"goal.scale_health"
-        String scaleTwo = area + ".scale_" + scaleNameTwo;//"goal.scale_pleasure"
-
-        String scaleTextOne = area + "." + scaleNameOne;//"goal.health"
-        String scaleTextTwo = area + "." + scaleNameTwo;//"goal.pleasure"
-
-        area = area + ".area";//"goal.area"
-        String areaName = area + ".name";//"goal.area.name"
-
-        //TODO  или сделать метод createNewDto() public или просто писать new ChoiceDto()
-        ChoiceDto choiceDto1 = new ChoiceDto();
-
-        AreaDto areaDto = new AreaDto();
-        areaDto.setArea(Area.valueOf(env.getProperty(area)));
-        areaDto.setAreaName(env.getProperty(areaName));
-
-        choiceDto1.setArea(areaDto);
-
-
-        ScaleDto scaleDto1 = new ScaleDto();
-        scaleDto1.setScaleName(env.getProperty(scaleTextOne));
-        scaleDto1.setScale(Scale.valueOf(env.getProperty(scaleOne)));
-
-        choiceDto1.setFirstScale(scaleDto1);
-
-        ScaleDto scaleDto2 = new ScaleDto();
-        scaleDto2.setScaleName(env.getProperty(scaleTextTwo));
-        scaleDto2.setScale(Scale.valueOf(env.getProperty(scaleTwo)));
-
-        choiceDto1.setSecondScale(scaleDto2);
-        return choiceDto1;
+    private Choice getChoice(Area area, Scale scaleOne, Scale scaleTwo) {
+//TODO разабраться с id
+        Choice choice = new Choice();
+        choice.setArea(area);
+        choice.setFirstScale(scaleOne);
+        choice.setSecondScale(scaleTwo);
+//        choice.setId(new ObjectId());
+        return choice;
     }
 }
