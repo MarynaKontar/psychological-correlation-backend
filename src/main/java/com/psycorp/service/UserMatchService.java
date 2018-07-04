@@ -17,6 +17,4 @@ public interface UserMatchService extends Match{
 
     List<UserMatch> getAll();
 
-
-
 }

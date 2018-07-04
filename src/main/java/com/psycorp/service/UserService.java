@@ -3,6 +3,7 @@ package com.psycorp.service;
 import com.psycorp.model.entity.User;
 
 import java.security.Principal;
+import java.util.List;
 
 public interface UserService {
     User insert(User user);
@@ -17,4 +18,8 @@ public interface UserService {
     User findFirstUserByEmail(String email);
 
     User findFirstUserByName(String name);
+
+    //TODO delete in production
+    List<User> findAll();
+
 }

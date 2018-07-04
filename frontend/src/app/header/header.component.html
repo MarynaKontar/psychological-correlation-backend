@@ -1,0 +1,62 @@
+
+<!--Navigation-->
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
+  <!--You can change background color of navbar by adding style="background-color: #e3f2fd;" and deleting bg-dark: <nav class="navbar navbar-expand-lg navbar-dark fixed-top" style="background-color: #e3f2fd;" >-->
+
+  <!--Brand-->
+  <a class="navbar-brand" href="#">Сумісність</a>
+
+  <!--Collapse button-->
+  <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavAltMarkup" aria-controls="navbarNavAltMarkup" aria-expanded="false" aria-label="Toggle navigation">
+    <span class="navbar-toggler-icon"></span>
+  </button>
+  <!--Collapse button-->
+
+  <!--Collapsed navbar-->
+  <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
+
+    <!--Right navbar-->
+    <div class="navbar-nav">
+      <a class="nav-item nav-link active" href="#">Home <span class="sr-only">(current)</span></a>
+      <div class="nav-item dropdown">
+        <a class="nav-link dropdown-toggle" routerLink="/user-test" id="navbarDropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+          Тест
+        </a>
+        <div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
+          <a class="dropdown-item" routerLink="/user-test" routerLinkActive="active">Ціннісна сумісність</a>
+          <a class="dropdown-item" href="#">Сексуальна сумісність</a>
+          <a class="dropdown-item" href="#">Психологічна сумісність</a>
+          <a class="dropdown-item" href="#">Сімейна сумісність</a>
+        </div>
+      </div>
+      <a class="nav-item nav-link" href="#">Порівняти профілі</a>
+    </div>
+    <!--Right navbar-->
+
+    <!--Left navbar-->
+    <div class="navbar-nav ml-auto">
+      <!--<ul class="navbar-nav nav-flex-icons">-->
+        <!--<li class="nav-item waves-light" mdbRippleRadius>-->
+          <!--<a class="nav-link"><i class="fa fa-facebook"></i></a>-->
+        <!--</li>-->
+        <!--<li class="nav-item waves-light" mdbRippleRadius>-->
+          <!--<a class="nav-link"><i class="fa fa-twitter"></i></a>-->
+        <!--</li>-->
+        <!--<li class="nav-item waves-light" mdbRippleRadius>-->
+          <!--<a class="nav-link"><i class="fa fa-instagram"></i></a>-->
+        <!--</li>-->
+      <!--</ul>-->
+
+      <a class="nav-item nav-link my-2 my-lg-0" href="#"><i class="fa fa-facebook"></i></a>
+
+      <a class="nav-item nav-link  my-2 my-lg-0" href="#">Account</a>
+      <a class="nav-item nav-link  my-2 my-lg-0" href="#">Login</a>
+      <a class="nav-item nav-link disabled my-2 my-lg-0" routerLink="/register" routerLinkActive="active">Register</a>
+    </div>
+    <!--Left navbar-->
+
+  </div>
+  <!--Collapsed navbar-->
+
+</nav>
+<!--Navigation-->

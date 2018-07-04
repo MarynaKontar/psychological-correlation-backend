@@ -2,19 +2,23 @@ package com.psycorp.controller.api;
 
 import com.psycorp.model.dto.SimpleUserDto;
 import com.psycorp.model.entity.User;
+import com.psycorp.service.UserAnswersService;
+import com.psycorp.service.UserMatchService;
 import com.psycorp.service.UserService;
 import com.psycorp.сonverter.UserDtoConverter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.validation.Valid;
+import javax.validation.constraints.NotNull;
 import java.security.Principal;
+import java.util.List;
 
 @RestController
-@RequestMapping("/api/user")
+@RequestMapping("/user")
 public class ApiUserController {
 
     private final UserService userService;
@@ -30,9 +34,9 @@ public class ApiUserController {
     }
 
     @PostMapping(value = "/add", produces = "application/json")
-    public ResponseEntity<SimpleUserDto> save(@RequestBody SimpleUserDto userDto) {
+    public ResponseEntity<SimpleUserDto> save(@RequestBody @NotNull @Valid SimpleUserDto userDto) {
         //TODO посмотреть как сделать это аннотациями (@NotEmpty @NotNull не помогают - в базу сохраняется документ с _id=ObjectId)
-        if(userDto == null || userDto.getUserName().isEmpty()) return ResponseEntity.badRequest().build();
+//        if(userDto == null || userDto.getUserName().isEmpty()) return ResponseEntity.badRequest().build();
 
         User user = userService.insert(userDtoConverter.transform(userDto));
 
@@ -45,15 +49,21 @@ public class ApiUserController {
     }
 
     @GetMapping(value = "/{userName}", produces = "application/json")
-    public ResponseEntity<SimpleUserDto> get(@PathVariable String userName
+    public ResponseEntity<SimpleUserDto> get(@PathVariable @NotNull String userName
 //            , Principal principal
     ){
+        //TODO notnull with PathVar
 //        if( principal == null || !principal.getName().equals(userName)) return ResponseEntity.badRequest().build();
 //        return ResponseEntity.notFound().build();
 //        return ResponseEntity.ok().headers(httpHeaders).body(userService.findFirstUserByName(principal.getName()));
         return ResponseEntity.ok()
                 .headers(httpHeaders)
                 .body(userDtoConverter.transform(userService.findFirstUserByName(userName)));
+    }
+
+    @GetMapping(value = "/getAll", produces = "application/json")
+    public ResponseEntity<List<SimpleUserDto>> getAll(){
+        return ResponseEntity.ok().headers(httpHeaders).body(userDtoConverter.transform(userService.findAll()));
     }
 
     @GetMapping(value = "/email/{email}", produces = "application/json")
@@ -70,7 +80,7 @@ public class ApiUserController {
     @PostMapping(value = "/{userName}/update", produces = "application/json")
     public ResponseEntity<SimpleUserDto> update(@RequestBody SimpleUserDto userDto, @PathVariable String userName
             , Principal principal) {
-        if(!userDto.getUserName().equals(userName)
+        if(!userDto.getName().equals(userName)
 //                 principal == null || !userName().equals(principal.getName())
                 ) return ResponseEntity.badRequest().build();
 //        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
@@ -111,7 +121,6 @@ public class ApiUserController {
 //            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
 //        }
 
-
         return ResponseEntity.ok()
                 .headers(httpHeaders)
                 .body(userDtoConverter.transform(userService.delete(userName)));
@@ -121,6 +130,8 @@ public class ApiUserController {
     public ResponseEntity<HttpHeaders> handleException(RuntimeException ex, HttpServletRequest request) {
         HttpHeaders httpHeaders = new HttpHeaders();
         httpHeaders.add("success", "false");
+        //TODO Body<CustomException>
+//        (CustomExeption)ex
         httpHeaders.add("messageError", "Something wrong: " + ex.getMessage());
         return ResponseEntity.badRequest().headers(httpHeaders).build();
     }

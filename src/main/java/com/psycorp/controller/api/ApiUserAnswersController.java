@@ -21,7 +21,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/test")
+@RequestMapping("/test")
 public class ApiUserAnswersController {
 
     private final UserAnswersService userAnswersService;
@@ -85,7 +85,6 @@ public class ApiUserAnswersController {
                 userAnswersService.findAllByUserNameOrderByCreationDateDesc(userName)));
 
     }
-
 
     @GetMapping(value = "/{userName}", produces = "application/json")
     public ResponseEntity<UserAnswersDto> getLastTest(@PathVariable String userName){

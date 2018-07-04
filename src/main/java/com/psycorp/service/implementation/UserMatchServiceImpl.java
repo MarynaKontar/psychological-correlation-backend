@@ -64,7 +64,6 @@ public class UserMatchServiceImpl implements UserMatchService {
     @Override
     public List<UserMatch> getAll(){return userMatchRepository.findAll();}
 
-    //TODO переделать метод так, чтобы расчитывал значения для всех методов
     @Override
     public UserMatch match(User user1, User user2, MatchMethod matchMethod){
         validate(user1);

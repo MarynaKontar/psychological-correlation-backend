@@ -25,7 +25,7 @@ import java.util.List;
 import java.util.Objects;
 
 @RestController
-@RequestMapping("/api")
+@RequestMapping
 public class ApiTestController {
     private final UserAnswersService userAnswersService;
     private final UserService userService;

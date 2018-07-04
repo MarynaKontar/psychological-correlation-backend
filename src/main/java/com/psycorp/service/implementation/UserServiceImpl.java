@@ -1,15 +1,18 @@
 package com.psycorp.service.implementation;
 
 import com.psycorp.model.entity.User;
+import com.psycorp.model.entity.UserAnswers;
+import com.psycorp.model.entity.UserMatch;
+import com.psycorp.repository.UserAnswersRepository;
+import com.psycorp.repository.UserMatchRepository;
 import com.psycorp.repository.UserRepository;
 import com.psycorp.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Primary;
-import org.springframework.context.annotation.Scope;
 
 import org.springframework.stereotype.Service;
 
 import java.security.Principal;
+import java.util.List;
 
 @Service
 //@Primary
@@ -17,10 +20,16 @@ import java.security.Principal;
 public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
+    private final UserAnswersRepository userAnswersRepository;
+    private final UserMatchRepository userMatchRepository;
+
 
     @Autowired
-    public UserServiceImpl(UserRepository userRepository) {
+    public UserServiceImpl(UserRepository userRepository, UserAnswersRepository userAnswersRepository
+            , UserMatchRepository userMatchRepository) {
         this.userRepository = userRepository;
+        this.userAnswersRepository = userAnswersRepository;
+        this.userMatchRepository = userMatchRepository;
     }
 
     //TODO добавить проверку всех значений и соответствуюшии им Exceptions
@@ -54,6 +63,21 @@ public class UserServiceImpl implements UserService {
         //TODO после введения security, поменять сигнатуру метода и передавать Principal principal
         //TODO сделать Transactional (try-catch-finally).
         //TODO удалить каждый документ в коллекций userAnswers и userMatch, в котором userName было principal.getName()
+
+
+        //        try (ClientSession clientSession = client.startSession()) {
+//            clientSession.startTransaction();
+//            try {
+//                collection.insertOne(clientSession, docOne);
+//                collection.insertOne(clientSession, docTwo);
+//                clientSession.commitTransaction();
+//            } catch (Exception e) {
+//                clientSession.abortTransaction();
+//            }
+//        }
+
+        userAnswersRepository.removeAllByUserName(userName);
+        userMatchRepository.removeAllByUserName(userName);
         userRepository.removeByName(userName);
         return user;
     }
@@ -65,7 +89,13 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public User findFirstUserByName(String name) {
+//        if(userRepository.findFirstByName(name) == null){throw  }
         return userRepository.findFirstByName(name);
+    }
+
+    @Override
+    public List<User> findAll() {
+        return userRepository.findAll();
     }
 
 }

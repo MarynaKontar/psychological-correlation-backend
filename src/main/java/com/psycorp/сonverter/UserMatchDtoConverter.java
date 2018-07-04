@@ -58,7 +58,7 @@ public class UserMatchDtoConverter extends AbstractDtoConverter<UserMatch, UserM
     protected void convertFromDto(UserMatchDto dto, UserMatch entity) {
         if(entity == null || dto == null) throw new BadRequestException(env.getProperty("error.UserMatchCan`tBeNull"));
         if(dto.getUsers().stream()
-                .allMatch(simpleUserDto -> userService.findFirstUserByName(simpleUserDto.getUserName()) == null))
+                .allMatch(simpleUserDto -> userService.findFirstUserByName(simpleUserDto.getName()) == null))
         { throw new BadRequestException(env.getProperty("error.noUserFind")); }
 
             Set<User> users = new HashSet<>(userDtoConverter.transform(dto.getUsers()));

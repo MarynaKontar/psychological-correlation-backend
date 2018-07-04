@@ -17,4 +17,5 @@ public class User extends AbstractEntity
     private String name;
     @Indexed
     private String email;
+    private String password;
 }

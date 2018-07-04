@@ -36,7 +36,6 @@ public class UserAnswersServiceImpl implements UserAnswersService {
 
     private final UserRepository userRepository;
 
-    @Autowired
     private  final MongoOperations mongoOperations;
 
     private final Environment env;
@@ -55,9 +54,6 @@ public class UserAnswersServiceImpl implements UserAnswersService {
     public UserAnswers insert(UserAnswers userAnswers
 //            , Principal principal
     ){
-        //TODO Сделать Transactional - try-catch-finally
-
-
         if(userAnswers.getId() != null && userAnswersRepository.findById(userAnswers.getId()).isPresent()){
 
 //        Set<Choice> choices =  userAnswers.getUserAnswers();
@@ -199,7 +195,6 @@ public class UserAnswersServiceImpl implements UserAnswersService {
 
         return choices;
     }
-
 
     private Choice getChoice(Area area, Scale scaleOne, Scale scaleTwo) {
 //TODO разабраться с id
