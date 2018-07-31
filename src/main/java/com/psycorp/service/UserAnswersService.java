@@ -15,6 +15,8 @@ public interface UserAnswersService {
 
     List<UserAnswers> findAllByUserNameOrderByCreationDateDesc(String userName);
 
+    UserAnswers getInitUserAnswers();
+
     List<Choice> choiceList();
 
 }

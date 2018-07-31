@@ -25,7 +25,7 @@ public class Entity {
         UserAnswers userAnswers = new UserAnswers();
         userAnswers.setUser(user);
 
-        Set<Choice> choices = new HashSet<>();
+        List<Choice> choices = new ArrayList<>();
         choices.addAll(getChoices(Area.GOAL));
         choices.addAll(getChoices(Area.QUALITY));
         choices.addAll(getChoices(Area.STATE));

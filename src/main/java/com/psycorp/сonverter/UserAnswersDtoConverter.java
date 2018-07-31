@@ -11,6 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Component;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -47,19 +48,19 @@ public class UserAnswersDtoConverter extends AbstractDtoConverter<UserAnswers, U
 
         ChoiceDtoConverter choiceDtoConverter = new ChoiceDtoConverter(env);
 
-        Set<Choice> choices = entity.getUserAnswers();
+        List<Choice> choices = entity.getUserAnswers();
 
-        Set<Choice> goal =  new HashSet<>(choices);
+        List<Choice> goal =  new ArrayList<>(choices);
 //        goal.stream().filter(choice -> choice.getArea() == Area.GOAL);
         goal.removeIf(choice -> choice.getArea()!= Area.GOAL);
         List<ChoiceDto> goalDto = choiceDtoConverter.transform(goal);
 
-        Set<Choice> quality =  new HashSet<>(choices);
+        List<Choice> quality  =  new ArrayList<>(choices);
 //        quality.stream().filter(choice -> choice.getArea() == Area.QUALITY);
         quality.removeIf(choice -> choice.getArea()!= Area.QUALITY);
         List<ChoiceDto> qualityDto = choiceDtoConverter.transform(quality);
 
-        Set<Choice> state =  new HashSet<>(choices);
+        List<Choice> state  =  new ArrayList<>(choices);
 //        state.stream().filter(choice -> choice.getArea() == Area.STATE);
         state.removeIf(choice -> choice.getArea()!= Area.STATE);
         List<ChoiceDto> stateDto = choiceDtoConverter.transform(state);
@@ -68,16 +69,20 @@ public class UserAnswersDtoConverter extends AbstractDtoConverter<UserAnswers, U
         dto.setQuality(qualityDto);
         dto.setState(stateDto);
         dto.setPassed(true);
+        if(entity.getUser() != null){
         dto.setUserName(entity.getUser().getName());
+        }
         dto.setPassDate(entity.getPassDate());
-        dto.setId(entity.getId());
+        if(entity.getId() != null) {
+            dto.setId(entity.getId());
+        }
     }
 
     @Override
     protected void convertFromDto(UserAnswersDto dto, UserAnswers entity) {
         if(entity == null || dto == null) throw new BadRequestException(env.getProperty("error.UserAnswersCan`tBeNull"));
         ChoiceDtoConverter choiceDtoConverter = new ChoiceDtoConverter(env);
-        Set<Choice> choices = new HashSet<>(choiceDtoConverter.transform(dto.getGoal()));
+        List<Choice> choices = new ArrayList<>(choiceDtoConverter.transform(dto.getGoal()));
         choices.addAll(choiceDtoConverter.transform(dto.getQuality()));
         choices.addAll(choiceDtoConverter.transform(dto.getState()));
 

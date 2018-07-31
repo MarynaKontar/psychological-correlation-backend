@@ -8,6 +8,7 @@ import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.mongodb.core.mapping.DBRef;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -20,7 +21,7 @@ public class UserAnswers extends AbstractEntity{
     private ObjectId id;
     @DBRef
     private User user;
-    private Set<Choice> userAnswers;
+    private List<Choice> userAnswers;
     @CreatedDate
     private LocalDateTime creationDate;//можно убрать так как дата содержится в ObjectId
     @LastModifiedDate

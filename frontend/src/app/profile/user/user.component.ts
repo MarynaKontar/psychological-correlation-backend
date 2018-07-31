@@ -9,22 +9,18 @@ import {User} from "./user";
 })
 export class UserComponent implements OnInit {
 
-  users: Array<any>;
-  user: User;
-  registeredUser={};
+  users: Array<User>;
 
   constructor(public userService: UserService) { }
 
   ngOnInit() {
 
-    this.userService.getUsers().subscribe(res => this.users = res
+    this.userService.getUsers().subscribe(res => {this.users = res;
+    console.log(res);}
       //   error => console.log(error)
     );
   }
 
-  registerUser(){
-    this.userService.add(<User>this.registeredUser)
-      .subscribe(res => this.registeredUser === res);
-  }
+
 
 }

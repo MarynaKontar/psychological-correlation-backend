@@ -82,8 +82,8 @@ public class UserMatchServiceImpl implements UserMatchService {
         UserAnswers userAnswers2 = userAnswersRepository.findAllByUser_NameOrderByIdDesc(user2.getName()).get(0);
 
 
-        Set<Choice> choices1 = userAnswers1.getUserAnswers();
-        Set<Choice> choices2 = userAnswers2.getUserAnswers();
+        List<Choice> choices1 = userAnswers1.getUserAnswers();
+        List<Choice> choices2 = userAnswers2.getUserAnswers();
 
        List<Match> matches = matchMap(choices1, choices2, matchMethod);
 
@@ -107,7 +107,7 @@ public class UserMatchServiceImpl implements UserMatchService {
         return userMatch;
     }
 
-    private List<Match> matchMap(Set<Choice> choices1, Set<Choice> choices2, MatchMethod matchMethod) {
+    private List<Match> matchMap(List<Choice> choices1, List<Choice> choices2, MatchMethod matchMethod) {
 
        List<Match> matches = new ArrayList<>();
 
@@ -122,7 +122,7 @@ public class UserMatchServiceImpl implements UserMatchService {
          return matches;
     }
 
-    private Match getMatchForMatchMethod(Set<Choice> choices1, Set<Choice> choices2, MatchMethod matchMethod, Area area) {
+    private Match getMatchForMatchMethod(List<Choice> choices1, List<Choice> choices2, MatchMethod matchMethod, Area area) {
         Match match = new Match();
         match.setArea(area);
 
@@ -142,7 +142,7 @@ public class UserMatchServiceImpl implements UserMatchService {
         return match;
     }
 
-    private Double areaMatchPearson(Set<Choice> choices1, Set<Choice> choices2, Area area){
+    private Double areaMatchPearson(List<Choice> choices1, List<Choice> choices2, Area area){
 
         int totalSize = getTotalSize(area, choices1, choices2);
 
@@ -176,7 +176,7 @@ public class UserMatchServiceImpl implements UserMatchService {
      * @param area
      * @return number of choices for area, where chosenScale is secondScale for both choices1 and choices2
      */
-    private int numbOfSecondScaleMatchesInTwoSets(Set<Choice> choices1, Set<Choice> choices2, Area area) {
+    private int numbOfSecondScaleMatchesInTwoSets(List<Choice> choices1, List<Choice> choices2, Area area) {
 
         if(area == null || area == Area.TOTAL) {
             return (int) choices1.stream()
@@ -199,7 +199,7 @@ public class UserMatchServiceImpl implements UserMatchService {
      * @param area
      * @return number of choices for area, where chosenScale is secondScale
      */
-    private int numOfSecondScaleMatches(Set<Choice> choices, Area area) {
+    private int numOfSecondScaleMatches(List<Choice> choices, Area area) {
 
         if(area == null || area == Area.TOTAL) {
             return (int) choices.stream()
@@ -220,7 +220,7 @@ public class UserMatchServiceImpl implements UserMatchService {
      * @param area
      * @return
      */
-    private Double areaMatchPercent(Set<Choice> choices1, Set<Choice> choices2, Area area){
+    private Double areaMatchPercent(List<Choice> choices1, List<Choice> choices2, Area area){
 
         int totalSize = getTotalSize(area, choices1, choices2);
 
@@ -237,7 +237,7 @@ public class UserMatchServiceImpl implements UserMatchService {
      * @return amount of choices in choices1 and choices2 that has area;
      * or size of biggest from choices1 and choices if area = null
      */
-    private int getTotalSize(Area area, Set<Choice> choices1, Set<Choice> choices2) {
+    private int getTotalSize(Area area, List<Choice> choices1, List<Choice> choices2) {
         int totalSize1 = choices1.size();
         int totalSize2 = choices2.size();
         int totalSize;
@@ -258,7 +258,7 @@ public class UserMatchServiceImpl implements UserMatchService {
      * @param area
      * @return number of choices for area, where chosenScale is equal for both choices1 and choices2
      */
-    private int numbOfMatchesInTwoSets(Set<Choice> choices1, Set<Choice> choices2, Area area) {
+    private int numbOfMatchesInTwoSets(List<Choice> choices1, List<Choice> choices2, Area area) {
 
         if(area == null || area == Area.TOTAL) {
            return (int) choices1.stream()

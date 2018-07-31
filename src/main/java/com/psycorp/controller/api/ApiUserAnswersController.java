@@ -43,11 +43,25 @@ public class ApiUserAnswersController {
         httpHeaders.add("success", "true");
     }
 
+//    @GetMapping(value = "/testlist", produces = "application/json")
+//    public ResponseEntity<List<ChoiceDto>> testlist(){
+//        //TODO возвращать UserAnswers
+//        return ResponseEntity.ok().headers(httpHeaders).body(choiceDtoConverter.transform(userAnswersService.choiceList()));
+//    }
+
     @GetMapping(value = "/testlist", produces = "application/json")
-    public ResponseEntity<List<ChoiceDto>> testlist(){
-        //TODO возвращать UserAnswers
-        return ResponseEntity.ok().headers(httpHeaders).body(choiceDtoConverter.transform(userAnswersService.choiceList()));
+    public ResponseEntity<UserAnswersDto> testlist(){
+
+        return ResponseEntity.ok().headers(httpHeaders).body(userAnswersDtoConverter.transform(userAnswersService.getInitUserAnswers()));
     }
+
+
+
+
+
+
+
+
 
     @PostMapping(value= "/{userName}")
     public ResponseEntity<UserAnswersDto> test(@PathVariable String userName

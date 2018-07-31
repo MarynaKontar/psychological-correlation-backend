@@ -111,7 +111,14 @@ public class UserAnswersServiceImpl implements UserAnswersService {
     }
 
     @Override
-    public List<Choice>  choiceList(){
+    public UserAnswers getInitUserAnswers(){
+        UserAnswers userAnswers = new UserAnswers();
+        userAnswers.setUserAnswers(choiceList());
+        return userAnswers;
+    }
+
+    @Override
+    public List<Choice> choiceList(){
 
         //TODO переделять на Map<String, List<ChoiceDto>>, где ключ - goal, quality, state
 

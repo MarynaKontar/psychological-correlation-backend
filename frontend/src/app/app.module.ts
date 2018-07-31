@@ -1,7 +1,7 @@
 import { BrowserModule } from '@angular/platform-browser';
 import { NgModule } from '@angular/core';
 import {LoginModule} from "./login/login.module";
-import {UserModule} from "./user/user.module";
+import {UserModule} from "./profile/user.module";
 import {UserAnswersModule} from "./user-answers/user-answers.module";
 import {UserMatchModule} from "./user-match/user-match.module";
 
@@ -13,13 +13,15 @@ import { AppComponent } from './app.component';
 import {HeaderComponent} from "./header/header.component";
 import {FooterComponent} from "./footer/footer.component";
 import {HomeComponent} from "./home/home.component";
+import {RegistrationComponent} from "./registration/registration.component";
 
 @NgModule({
   declarations: [
     AppComponent,
     HeaderComponent,
     FooterComponent,
-    HomeComponent
+    HomeComponent,
+    RegistrationComponent
 
   ],
   imports: [

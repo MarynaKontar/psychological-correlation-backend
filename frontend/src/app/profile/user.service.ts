@@ -22,12 +22,12 @@ export class UserService {
   /** POST: add a new user to the server (database) */
   add(user: User): Observable<User> {
     const url='http://localhost:4200/api/user/add';
-    return this.http.post<User>(url, user, httpOptions)
+    return this.http.post<User>(url, user, httpOptions);
     // .pipe(
     //   catchError(this.handleError('add', user))
   }
 
-  /** GET users from the server */
+  /** GET user from the server */
   getUser(userName: string): Observable<User> {
     const url = `${this.userUrl}/${userName}`;
     return this.http.get<User>(this.userUrl);
