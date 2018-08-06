@@ -73,7 +73,8 @@ public class UserAnswersServiceImpl implements UserAnswersService {
 
             // если с principal все в порядке, то назначаем userAnswers этого залогиненого пользователя (даже, если в userAnswers передается какой-то другой пользователь)
 //        if(principal != null && principal.getName() != null) {
-            if (userRepository.findFirstByName(userAnswers.getUser().getName()) != null) {//заменить на то, что на верхней строчке
+            if ( userAnswers.getUser() != null &&
+                    userRepository.findFirstByName(userAnswers.getUser().getName()) != null) {//заменить на то, что на верхней строчке
 //            userAnswers.setUser(userRepository.findFirstByName(principal.getName()));
 
             } else {

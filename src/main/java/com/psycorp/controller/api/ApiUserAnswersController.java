@@ -3,6 +3,7 @@ package com.psycorp.controller.api;
 
 import com.psycorp.model.dto.ChoiceDto;
 import com.psycorp.model.dto.UserAnswersDto;
+import com.psycorp.model.entity.Choice;
 import com.psycorp.model.entity.User;
 import com.psycorp.model.entity.UserAnswers;
 import com.psycorp.service.UserAnswersService;
@@ -59,10 +60,6 @@ public class ApiUserAnswersController {
 
 
 
-
-
-
-
     @PostMapping(value= "/{userName}")
     public ResponseEntity<UserAnswersDto> test(@PathVariable String userName
             , @RequestBody UserAnswersDto userAnswersDto, Principal principal
@@ -78,6 +75,57 @@ public class ApiUserAnswersController {
 
         userAnswersDto = userAnswersDtoConverter.transform(userAnswers);
         return ResponseEntity.ok().headers(httpHeaders).body(userAnswersDto);
+    }
+
+
+    //save only goals
+    @PostMapping(value= "/goal/{userName}")
+    public ResponseEntity<UserAnswersDto> testGoal(@PathVariable String userName
+            , @RequestBody List<ChoiceDto> choicesDto, Principal principal
+    ){
+        UserAnswersDto userAnswersDto = saveChoices(userName, choicesDto, principal);
+        return ResponseEntity.ok().headers(httpHeaders).body(userAnswersDto);
+    }
+
+    //save only states
+    @PostMapping(value= "/state/{userName}")
+    public ResponseEntity<UserAnswersDto> testState(@PathVariable String userName
+            , @RequestBody List<ChoiceDto> choicesDto, Principal principal
+    ) {
+        UserAnswersDto userAnswersDto = saveChoices(userName, choicesDto, principal);
+        return ResponseEntity.ok().headers(httpHeaders).body(userAnswersDto);
+    }
+
+    //save only qualities
+    @PostMapping(value= "/quality/{userName}")
+    public ResponseEntity<UserAnswersDto> testQuality(@PathVariable String userName
+            , @RequestBody List<ChoiceDto> choicesDto, Principal principal
+    ) {
+        UserAnswersDto userAnswersDto = saveChoices(userName, choicesDto, principal);
+        return ResponseEntity.ok().headers(httpHeaders).body(userAnswersDto);
+    }
+
+    private UserAnswersDto saveChoices(String userName, List<ChoiceDto> choicesDto, Principal principal){
+        //TODO Надо переделать, учитывая как передать пользователя в userAnswersDto (через Principal?). В transform добавить principal
+        // Убрать @PathVariable
+//        if(!Objects.equals(principal.getName(), userName)) throw new BadRequestException("error.badrequest");
+
+        User user = userService.findFirstUserByName(userName);
+//        User user = userService.findFirstUserByName(principal.getName());
+        List<Choice> choices = choiceDtoConverter.transform(choicesDto);
+        // TODO добавить логику для 1-го,  второго... прохождения теста
+        UserAnswers userAnswers = userAnswersService.findLastByUserName(userName);
+        if(userAnswers == null){
+            userAnswers = new UserAnswers();
+            userAnswers.setUser(user);
+        }
+
+        userAnswers.setUserAnswers(choices);
+        userAnswers = userAnswersService.insert(userAnswers);
+//        userAnswers = userAnswersService.insert(userAnswers, principal);
+
+        return userAnswersDtoConverter.transform(userAnswers);
+
     }
 
     @PostMapping(value= "random/{userName}")
