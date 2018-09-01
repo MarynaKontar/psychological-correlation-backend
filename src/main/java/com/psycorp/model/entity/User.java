@@ -1,6 +1,7 @@
 package com.psycorp.model.entity;
 
 import lombok.Data;
+import org.bson.types.ObjectId;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
@@ -13,9 +14,10 @@ import javax.validation.constraints.NotNull;
 public class User extends AbstractEntity
 {
 
-    @Id @NotEmpty @NotNull
+    @Id
+    private ObjectId id;
+    @NotEmpty
     private String name;
-    @Indexed
+    @NotEmpty
     private String email;
-    private String password;
 }

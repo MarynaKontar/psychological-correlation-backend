@@ -34,14 +34,13 @@ public class UserDtoConverter extends AbstractDtoConverter<User, SimpleUserDto>{
         if(entity == null || dto == null) throw new BadRequestException(env.getProperty("error.UserCan`tBeNull"));
         dto.setName(entity.getName());
         dto.setEmail(entity.getEmail());
-        dto.setPassword(entity.getPassword());
-//        dto.setId(entity.getId());
+        dto.setId(entity.getId());
     }
 
     @Override
     protected void convertFromDto(SimpleUserDto dto, User entity) {
         entity.setName(dto.getName());
         entity.setEmail(dto.getEmail());
-        entity.setPassword(dto.getPassword());
+        entity.setId(dto.getId());
     }
 }

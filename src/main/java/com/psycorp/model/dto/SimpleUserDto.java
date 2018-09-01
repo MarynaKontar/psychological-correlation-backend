@@ -9,12 +9,12 @@ import javax.validation.constraints.NotNull;
 
 @Data
 public class SimpleUserDto extends AbstractDto{
-//    private ObjectId id;
+
+    private ObjectId id;
     @NotEmpty
     private String name;
     @NotEmpty
     @Email
     private String email;
-    private String password;
 //    private Byte[] userPhoto;
 }
