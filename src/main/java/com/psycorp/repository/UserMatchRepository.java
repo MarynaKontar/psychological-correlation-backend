@@ -23,6 +23,6 @@ public interface UserMatchRepository extends MongoRepository<UserMatch, ObjectId
     List<UserMatch> findByUserNameAndMatchMethod(String userName, MatchMethod matchMethod);
 
     @DeleteQuery("{'users.$id': ?0}")
-    void removeAllByUserName(String userName);
+    void removeAllByUserId(String userId);
 
 }

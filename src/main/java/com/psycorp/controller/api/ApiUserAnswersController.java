@@ -70,7 +70,7 @@ public class ApiUserAnswersController {
 
         UserAnswers userAnswers = userAnswersDtoConverter.transform(userAnswersDto);
         userAnswers = userAnswersService.insert(userAnswers);
-//        userAnswers = userAnswersService.insert(userAnswers, principal);
+//        userAnswers = userAnswersService.createUser(userAnswers, principal);
 
 
         userAnswersDto = userAnswersDtoConverter.transform(userAnswers);
@@ -122,7 +122,7 @@ public class ApiUserAnswersController {
 
         userAnswers.setUserAnswers(choices);
         userAnswers = userAnswersService.insert(userAnswers);
-//        userAnswers = userAnswersService.insert(userAnswers, principal);
+//        userAnswers = userAnswersService.createUser(userAnswers, principal);
 
         return userAnswersDtoConverter.transform(userAnswers);
 
@@ -136,7 +136,7 @@ public class ApiUserAnswersController {
 
         UserAnswers userAnswers = Entity.createRandomUserAnswers(user);
         userAnswers = userAnswersService.insert(userAnswers);
-//        userAnswers = userAnswersService.insert(userAnswers, principal);
+//        userAnswers = userAnswersService.createUser(userAnswers, principal);
         UserAnswersDto userAnswersDto = userAnswersDtoConverter.transform(userAnswers);
         return ResponseEntity.ok().headers(httpHeaders).body(userAnswersDto);
     }

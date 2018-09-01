@@ -57,8 +57,8 @@ public class UserAnswersServiceImpl implements UserAnswersService {
         if(userAnswers.getId() != null && userAnswersRepository.findById(userAnswers.getId()).isPresent()){
 
 //        Set<Choice> choices =  userAnswers.getUserAnswers();
-//        Update update = new Update().push("userAnswers").each(choices);
-//        update.push("userAnswers").each(choices);
+//        Update updateUser = new Update().push("userAnswers").each(choices);
+//        updateUser.push("userAnswers").each(choices);
 //        push.each(choices);
 
         mongoOperations.updateFirst(Query.query(Criteria.where(Fields.UNDERSCORE_ID).is(userAnswers.getId()))
@@ -102,7 +102,7 @@ public class UserAnswersServiceImpl implements UserAnswersService {
     public List<UserAnswers> findAllByUserNameOrderByCreationDateDesc(String userName) {
         if(userName == null) throw new BadRequestException(env.getProperty("error.noUserFind"));
 
-        User user = userRepository.findFirstByName(userName);
+        User user = userRepository.findFirstByName(userName).orElseThrow(() -> new BadRequestException("User not Found"));
         if(user == null) throw new BadRequestException(env.getProperty("error.noUserFind"));
 
         //TODO может возникнуть проблема, если в _id в UserAnswers ObjectId когда-нибудь повторится.

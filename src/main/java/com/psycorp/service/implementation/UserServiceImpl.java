@@ -1,17 +1,17 @@
 package com.psycorp.service.implementation;
 
+import com.psycorp.exception.BadRequestException;
 import com.psycorp.model.entity.User;
-import com.psycorp.model.entity.UserAnswers;
-import com.psycorp.model.entity.UserMatch;
 import com.psycorp.repository.UserAnswersRepository;
 import com.psycorp.repository.UserMatchRepository;
 import com.psycorp.repository.UserRepository;
 import com.psycorp.service.UserService;
+import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
-import java.security.Principal;
 import java.util.List;
 
 @Service
@@ -34,68 +34,43 @@ public class UserServiceImpl implements UserService {
 
     //TODO добавить проверку всех значений и соответствуюшии им Exceptions
     @Override
-    public User insert(User user) {
+    public User createUser(User user) {
         return userRepository.insert(user);
     }
 
     @Override
-    public User update(User user) {
-
-        return userRepository.save(user); }
-
-    @Override
-    public User changeUserName(User user, Principal principal, String userName) {
-
-        //TODO сделать Transactional (try-catch-finally).  Или поставить @Transactional, если она появится в след. релизе для MongoDb
-        //TODO поменять userName в каждом документе коллекций userAnswers и userMatch, в котором userName было principal.getName()
-//        if(principal == null || !principal.getName().equals(user.getName())){
-            user = userRepository.insert(user);
-//            userRepository.removeByName(principal.getName());
-            userRepository.removeByName(userName);
-//        } else user = userRepository.save(user);
-
-        return user;
-    }
-
-    @Override
-    public User delete(String userName) {
-        User user = userRepository.findFirstByName(userName);
-        //TODO после введения security, поменять сигнатуру метода и передавать Principal principal
-        //TODO сделать Transactional (try-catch-finally).
-        //TODO удалить каждый документ в коллекций userAnswers и userMatch, в котором userName было principal.getName()
-
-
-        //        try (ClientSession clientSession = client.startSession()) {
-//            clientSession.startTransaction();
-//            try {
-//                collection.insertOne(clientSession, docOne);
-//                collection.insertOne(clientSession, docTwo);
-//                clientSession.commitTransaction();
-//            } catch (Exception e) {
-//                clientSession.abortTransaction();
-//            }
-//        }
-
-        userAnswersRepository.removeAllByUserName(userName);
-        userMatchRepository.removeAllByUserName(userName);
-        userRepository.removeByName(userName);
-        return user;
-    }
-
-    @Override
     public User findFirstUserByEmail(String email) {
-        return userRepository.findFirstByEmail(email);
+        return userRepository.findFirstByEmail(email).orElseThrow(() -> new BadRequestException("User not found"));
     }
 
     @Override
     public User findFirstUserByName(String name) {
-//        if(userRepository.findFirstByName(name) == null){throw  }
-        return userRepository.findFirstByName(name);
+        return userRepository.findFirstByName(name).orElseThrow(() -> new BadRequestException("User not found"));
+    }
+
+    @Override
+    public User findById(ObjectId userId) {
+        return userRepository.findById(userId.toString()).orElseThrow(() -> new BadRequestException("User not found"));
     }
 
     @Override
     public List<User> findAll() {
         return userRepository.findAll();
+    }
+
+    @Override
+    @Transactional
+    public User deleteUser(ObjectId userId) {
+        User user = userRepository.findById(userId.toString()).orElseThrow(() -> new BadRequestException("User not found"));
+        userAnswersRepository.removeAllByUser_Id(userId);
+        userMatchRepository.removeAllByUserId(userId.toString());
+        userRepository.delete(user);
+        return user;
+    }
+
+    @Override
+    public User updateUser(User user) {
+        return userRepository.save(user);
     }
 
 }

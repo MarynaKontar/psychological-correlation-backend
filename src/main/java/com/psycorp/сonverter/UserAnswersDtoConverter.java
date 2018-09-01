@@ -87,7 +87,7 @@ public class UserAnswersDtoConverter extends AbstractDtoConverter<UserAnswers, U
         choices.addAll(choiceDtoConverter.transform(dto.getState()));
 
         entity.setUserAnswers(choices);
-        entity.setUser(userRepository.findFirstByName(dto.getUserName()));
+        entity.setUser(userRepository.findFirstByName(dto.getUserName()).get());
         entity.setId(dto.getId());
     }
 }

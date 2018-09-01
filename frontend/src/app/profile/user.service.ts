@@ -45,7 +45,7 @@ export class UserService {
     //   );
   }
 
-  /** POST: delete the user from the server */
+  /** POST: deleteUser the user from the server */
   deleteUser(userName: string): Observable<{}> {
     const url = `${this.userUrl}/${userName}/"delete"`; // DELETE api/heroes/42
     return this.http.post(url, httpOptions)
@@ -54,12 +54,12 @@ export class UserService {
     // );
   }
 
-  /** POST: update the user on the server. Returns the updated user upon success. */
+  /** POST: updateUser the user on the server. Returns the updated user upon success. */
   updateUser(user: User): Observable<User> {
     // httpOptions.headers =
     //   httpOptions.headers.set('Authorization', 'my-new-auth-token');
 
-    return this.http.post<User>(this.userUrl + user.name + "/update", user, httpOptions)
+    return this.http.post<User>(this.userUrl + user.name + "/updateUser", user, httpOptions)
     // .pipe(
     //   catchError(this.handleError('updateUser', user))
     // );

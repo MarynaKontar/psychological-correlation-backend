@@ -48,25 +48,25 @@ public class TestDb {
 //
 //        user1.setName("user6");
 //        user1.setEmail("email6");
-//        user1 = userService.insert(user1);
+//        user1 = userService.createUser(user1);
 //
 //        UserAnswers userAnswers1 = Entity.createRandomUserAnswers(user1);
-//        userAnswersService.insert(userAnswers1);
+//        userAnswersService.createUser(userAnswers1);
 //
 //        user2.setName("user7");
 //        user2.setEmail("email7");
-//        user2 = userService.insert(user2);
+//        user2 = userService.createUser(user2);
 //
 //        UserAnswers userAnswers2 = Entity.createRandomUserAnswers(user2);
-//        userAnswersService.insert(userAnswers2);
+//        userAnswersService.createUser(userAnswers2);
 //
 //
 //        user3.setName("user8");
 //        user3.setEmail("email8");
-//        user3 = userService.insert(user3);
+//        user3 = userService.createUser(user3);
 //
 //        UserAnswers userAnswers3 = Entity.createRandomUserAnswers(user3);
-//        userAnswersService.insert(userAnswers3);
+//        userAnswersService.createUser(userAnswers3);
 //
 //    }
 //
@@ -77,7 +77,7 @@ public class TestDb {
 //        user1 = userService.findFirstUserByName("user6");
 //        user1.setEmail("email6wwwww");
 //
-//        userService.update(user1);
+//        userService.updateUser(user1);
 //
 //    }
 //
@@ -86,10 +86,10 @@ public class TestDb {
 //    public void userMatch() {
 //
 //        UserMatch userMatch = userMatchService.match(user1,user2, MatchMethod.PEARSONCORRELATION);
-//        userMatchService.insert(userMatch);
+//        userMatchService.createUser(userMatch);
 //
 //        UserMatch userMatch1 = userMatchService.match(user1, user2, MatchMethod.PEARSONCORRELATION);
-//        userMatchService.insert(userMatch1);
+//        userMatchService.createUser(userMatch1);
 //        }
 //
 //
@@ -101,7 +101,7 @@ public class TestDb {
 //        User user2 = userService.findFirstUserByEmail("email8");
 //
 //        UserMatch userMatch = userMatchService.match(user1,user2, MatchMethod.PEARSONCORRELATION);
-//        userMatchService.insert(userMatch);
+//        userMatchService.createUser(userMatch);
 //        }
 //
 //    @PostConstruct
@@ -110,10 +110,10 @@ public class TestDb {
 //        User user2 = userService.findFirstUserByEmail("email8");
 //
 //        UserAnswers userAnswers1 = Entity.createRandomUserAnswers(user1);
-//        userAnswersService.insert(userAnswers1);
+//        userAnswersService.createUser(userAnswers1);
 //
 //        UserAnswers userAnswers2 = Entity.createRandomUserAnswers(user2);
-//        userAnswersService.insert(userAnswers2);
+//        userAnswersService.createUser(userAnswers2);
 //
 //        List<UserAnswers> userAnswersSet1 = userAnswersService.findAllUserAnswersByUser_IdOrderByPassDateDesc(user1.getId());
 //        List<UserAnswers> userAnswersSet3 = userAnswersService.findAllUserAnswersByUser_IdOrderByPassDateDesc(user2.getId());

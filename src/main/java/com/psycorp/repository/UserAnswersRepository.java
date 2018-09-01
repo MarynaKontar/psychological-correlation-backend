@@ -22,5 +22,5 @@ public interface UserAnswersRepository extends MongoRepository<UserAnswers, Obje
 
     UserAnswers findFirstByUser_NameOrderByIdDesc(String name);
 
-    void removeAllByUserName(String name);
+    void removeAllByUser_Id (ObjectId userId);
 }

@@ -6,13 +6,13 @@ import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.data.rest.core.annotation.RepositoryRestResource;
 import org.springframework.stereotype.Repository;
 
+import java.util.Optional;
+
 @Repository
 @RepositoryRestResource(collectionResourceRel = "user", path = "user")
 public interface UserRepository extends MongoRepository<User, String> {
 
-    User findFirstByEmail(String email);
+    Optional<User> findFirstByEmail(String email);
 
-    User findFirstByName(String name);
-
-    void removeByName(String name);
+    Optional<User> findFirstByName(String name);
 }
