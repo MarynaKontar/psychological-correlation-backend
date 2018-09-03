@@ -6,6 +6,7 @@ import com.psycorp.service.UserService;
 import com.psycorp.сonverter.UserDtoConverter;
 import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.PropertySource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -19,6 +20,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/user")
+@PropertySource("classpath:errormessages.properties")
 public class ApiUserController {
 
     @Autowired
@@ -50,7 +52,7 @@ public class ApiUserController {
     }
 
     @PutMapping()
-    public ResponseEntity<SimpleUserDto> update(@RequestBody SimpleUserDto userDto) {
+    public ResponseEntity<SimpleUserDto> update(@RequestBody @NotNull SimpleUserDto userDto) {
 
         User user = userService.updateUser(userDtoConverter.transform(userDto));
         return ResponseEntity.ok().body(userDtoConverter.transform(user));
@@ -65,10 +67,11 @@ public class ApiUserController {
     @ExceptionHandler(RuntimeException.class)
     public ResponseEntity<HttpHeaders> handleException(RuntimeException ex, HttpServletRequest request) {
         HttpHeaders httpHeaders = new HttpHeaders();
-        httpHeaders.add("success", "false");
+//        httpHeaders.add("success", "false");
         //TODO Body<CustomException>
 //        (CustomExeption)ex
-        httpHeaders.add("messageError", "Something wrong: " + ex.getMessage());
+        httpHeaders.add("messageError", "Something wrong: " + ex.getMessage()
+                + "; path: " + request.getServletPath());
         return ResponseEntity.badRequest().headers(httpHeaders).build();
     }
 }

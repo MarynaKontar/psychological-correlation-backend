@@ -5,24 +5,20 @@ import com.psycorp.model.dto.AreaDto;
 import com.psycorp.model.dto.ChoiceDto;
 import com.psycorp.model.dto.ScaleDto;
 import com.psycorp.model.entity.Choice;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Component;
 
 @Component
 public class ChoiceDtoConverter extends AbstractDtoConverter<Choice, ChoiceDto>{
 
-    //TODO если не прописывать здесь  @Autowired Environment, а только в AreaDtoConverter и ScaleDtoConverter,
-    // то почему то не подтягивает Environment (env=null),  хотя в обоих классах стоит @Component и  @Autowired Environment
-    //Могу в areaDtoConverter.convertFromEntity и scaleDtoConverter.convertFromEntity передавать env, но єто как-то не правильно
+    //TODO если не передавать Environment через конструктор (а просто @Autowired), то почему-то
+    // не подтягивает Environment (env=null)
 
     private final Environment env;
 
-    @Autowired
-    public ChoiceDtoConverter(Environment env) {
+    ChoiceDtoConverter(Environment env) {
         this.env = env;
     }
-
 
     @Override
     protected ChoiceDto createNewDto() {
@@ -54,17 +50,17 @@ public class ChoiceDtoConverter extends AbstractDtoConverter<Choice, ChoiceDto>{
         dto.setFirstScale(firstScaleDto);
         dto.setSecondScale(secondScaleDto);
         dto.setChosenScale(chosenScaleDto);
-//        dto.setId(entity.getId());
     }
 
     @Override
     protected void convertFromDto(ChoiceDto dto, Choice entity) {
         if(entity == null || dto == null) throw new BadRequestException(env.getProperty("error.ChoiceCan`tBeNull"));
+        if(dto.getArea() == null || dto.getFirstScale() == null || dto.getSecondScale() == null)
+            throw new BadRequestException(env.getProperty("error.ScaleAndAreaCan`tBeNull"));
 
         entity.setArea(dto.getArea().getArea());
         entity.setFirstScale(dto.getFirstScale().getScale());
         entity.setSecondScale(dto.getSecondScale().getScale());
         entity.setChosenScale(dto.getChosenScale().getScale());
     }
-
 }

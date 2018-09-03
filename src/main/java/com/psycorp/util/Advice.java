@@ -12,7 +12,6 @@ public class Advice {
 
         for (Match match : userMatch.getMatches()) {
             if(match.getArea().equals(Area.GOAL) && match.getMatchMethod().equals(MatchMethod.PEARSONCORRELATION)
-//            && match.getResult() >= 0.7){
             && match.getResult().getNumber() >= 0.7){
                 advice.append(Area.GOAL.toString()).append(" ")
                         .append(MatchMethod.PEARSONCORRELATION).append("....СОВПАДАЕТЕ  ");
@@ -22,7 +21,6 @@ public class Advice {
 
         for (Match match : userMatch.getMatches()) {
             if(match.getArea().equals(Area.QUALITY) && match.getMatchMethod().equals(MatchMethod.PEARSONCORRELATION)
-//                    && match.getResult() >= 0.7){
                     && match.getResult().getNumber() >= 0.7){
                 advice.append(Area.QUALITY.toString()).append(" ")
                         .append(MatchMethod.PEARSONCORRELATION).append("....СОВПАДАЕТЕ  ");
@@ -32,7 +30,6 @@ public class Advice {
 
         for (Match match : userMatch.getMatches()) {
             if(match.getArea().equals(Area.STATE) && match.getMatchMethod().equals(MatchMethod.PEARSONCORRELATION)
-//                    && match.getResult() >= 0.7){
                     && match.getResult().getNumber() >= 0.7){
                 advice.append(Area.STATE.toString()).append(" ")
                         .append(MatchMethod.PEARSONCORRELATION).append("....СОВПАДАЕТЕ  ");

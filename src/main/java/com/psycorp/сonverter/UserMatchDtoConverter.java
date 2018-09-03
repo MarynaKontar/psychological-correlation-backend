@@ -7,7 +7,6 @@ import com.psycorp.model.entity.UserMatch;
 import com.psycorp.service.UserService;
 import com.psycorp.util.Advice;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.PropertySource;
 import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Component;
 
@@ -15,7 +14,6 @@ import java.util.HashSet;
 import java.util.Set;
 
 @Component
-@PropertySource("classpath:errormessages.properties")
 public class UserMatchDtoConverter extends AbstractDtoConverter<UserMatch, UserMatchDto> {
 
     private final UserDtoConverter userDtoConverter;
@@ -43,7 +41,7 @@ public class UserMatchDtoConverter extends AbstractDtoConverter<UserMatch, UserM
     protected void convertFromEntity(UserMatch entity, UserMatchDto dto) {
         if(entity == null || dto == null) throw new BadRequestException(env.getProperty("error.UserMatchCan`tBeNull"));
 
-        UserDtoConverter userDtoConverter = new UserDtoConverter(env);
+        UserDtoConverter userDtoConverter = new UserDtoConverter();
 //        dto.setId(entity.getId());
         dto.setMatches(entity.getMatches());
 //        dto.setMatchMethod(entity.getMatchMethod());

@@ -4,19 +4,13 @@ import com.psycorp.exception.BadRequestException;
 import com.psycorp.model.dto.ScaleDto;
 import com.psycorp.model.enums.Area;
 import com.psycorp.model.enums.Scale;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.PropertySource;
 import org.springframework.core.env.Environment;
-import org.springframework.stereotype.Component;
 
-@Component
-@PropertySource("classpath:errormessages.properties")
-public class ScaleDtoConverter {
+class ScaleDtoConverter {
 
     private final Environment env;
 
-    @Autowired
-    protected ScaleDtoConverter(Environment env) {
+    ScaleDtoConverter(Environment env) {
         this.env = env;
     }
 
@@ -24,18 +18,17 @@ public class ScaleDtoConverter {
         return new ScaleDto();
     }
 
-//    protected void convertFromEntity(Scale entity, ScaleDto dto) {
-//        dto.setScale(entity);
-//        dto.setScaleName(entity.name());
-//    }
-
     protected void convertFromEntity(Scale entity, Area area, ScaleDto dto) {
-        if(entity == null || dto == null || area == null) return;
-//            throw new BadRequestException(env.getProperty("error.ScaleAndAreaCan`tBeNull"));
+        if(area == null) throw new BadRequestException(env.getProperty("error.AreaCan`tBeNull"));
+        if(entity == null || dto == null) return; //chosenScale can be null, so "return"
 
         String scaleName = area.toString().toLowerCase() + "." + entity.toString().toLowerCase();//goal.one
         dto.setScale(entity);
         dto.setScaleName(env.getProperty(scaleName));
     }
 
+    protected Scale convertFromDto(ScaleDto dto) {
+        if(dto == null) return null;
+        return dto.getScale();
+    }
 }

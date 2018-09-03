@@ -1,7 +1,5 @@
 package com.psycorp.service.implementation;
 
-import com.mongodb.client.model.Updates;
-import com.mongodb.client.result.UpdateResult;
 import com.psycorp.exception.BadRequestException;
 import com.psycorp.model.entity.Choice;
 import com.psycorp.model.entity.User;
@@ -11,8 +9,8 @@ import com.psycorp.model.enums.Scale;
 import com.psycorp.repository.UserAnswersRepository;
 import com.psycorp.repository.UserRepository;
 import com.psycorp.service.UserAnswersService;
+import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.PropertySource;
 import org.springframework.core.env.Environment;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.aggregation.Fields;
@@ -20,95 +18,138 @@ import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.security.Principal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Set;
+import java.util.Optional;
 
 @Service
-@PropertySource("classpath:errormessages.properties")
-@PropertySource(value = {"classpath:scales/scalesrussian.properties"}, encoding = "utf-8", ignoreResourceNotFound = true)
 public class UserAnswersServiceImpl implements UserAnswersService {
-
-    private final UserAnswersRepository userAnswersRepository;
-
-    private final UserRepository userRepository;
-
-    private  final MongoOperations mongoOperations;
-
-    private final Environment env;
-
     @Autowired
-    public UserAnswersServiceImpl(UserAnswersRepository userAnswersRepository, UserRepository userRepository
-            , MongoOperations mongoOperations, Environment env) {
-        this.userAnswersRepository = userAnswersRepository;
-        this.userRepository = userRepository;
-        this.mongoOperations = mongoOperations;
-        this.env = env;
+    private UserAnswersRepository userAnswersRepository;
+    @Autowired
+    private UserRepository userRepository;
+    @Autowired
+    private MongoOperations mongoOperations;
+    @Autowired
+    private Environment env;
+
+
+    @Override
+    public UserAnswers saveChoices(List<Choice> choices, Principal principal, String userName){
+        //        User user = userRepository.findFirstByName(userName).orElse(null);
+        // TODO добавить логику для 1-го,  второго... прохождения теста
+        UserAnswers userAnswers = findLastUserAnswersByUserName(userName); // если не находит, то возвращает initUserAnswers
+//        userAnswers.setUser(user);
+
+        userAnswers.setUserAnswers(choices);
+        return save(userAnswers);
     }
 
-    //TODO добавить проверку всех значений и соответствуюшии им Exceptions
     @Override
-    public UserAnswers insert(UserAnswers userAnswers
-//            , Principal principal
-    ){
-        if(userAnswers.getId() != null && userAnswersRepository.findById(userAnswers.getId()).isPresent()){
-
-//        Set<Choice> choices =  userAnswers.getUserAnswers();
-//        Update updateUser = new Update().push("userAnswers").each(choices);
-//        updateUser.push("userAnswers").each(choices);
-//        push.each(choices);
-
-        mongoOperations.updateFirst(Query.query(Criteria.where(Fields.UNDERSCORE_ID).is(userAnswers.getId()))
-                , new Update().set("passDate", LocalDateTime.now()).push("userAnswers").each(userAnswers.getUserAnswers())
-                , UserAnswers.class);
-
-                return userAnswersRepository.findById(userAnswers.getId()).get();
+    @Transactional
+    public UserAnswers save(UserAnswers userAnswers){
+//        Boolean isPresent = userAnswersRepository.findById(userAnswers.getId()).isPresent();
+        if(userAnswers.getId() != null) {
+            Optional<UserAnswers> optional = userAnswersRepository.findById(userAnswers.getId());
+            if(optional.isPresent()){
+                if(optional.get().getUserAnswers().size() >= 45) { // если userAnswers уже полностью пройден (45 вопросов), то записывать в новый userAnswers
+                    userAnswers.setId(null);
+                    userAnswers = insert(userAnswers); // userAnswers = новый тест
+                } else {
+                    userAnswers = update(userAnswers); // userAnswers уже есть в бд
+                }
+            }
         }
         else {
-            userAnswers.setPassDate(LocalDateTime.now());
-            userAnswers.setCreationDate(LocalDateTime.now());
-
-            // если с principal все в порядке, то назначаем userAnswers этого залогиненого пользователя (даже, если в userAnswers передается какой-то другой пользователь)
-//        if(principal != null && principal.getName() != null) {
-            if ( userAnswers.getUser() != null &&
-                    userRepository.findFirstByName(userAnswers.getUser().getName()) != null) {//заменить на то, что на верхней строчке
-//            userAnswers.setUser(userRepository.findFirstByName(principal.getName()));
-
-            } else {
-                //если тестирование проходит еще не залогиненный пользователь, то на фронтенде обязываем его
-                // заполнить поля "name" и 'email' и проверяем, есть ли такой уже в бд (на фротенде это тоже надо как-то делать)
-                if (userAnswers.getUser() != null && userAnswers.getUser().getName() != null) {
-                    if (userRepository.findFirstByName(userAnswers.getUser().getName()) != null) {
-                        throw new BadRequestException(env.getProperty("error.UserAlreadyExists"));
-                    }
-                    //добавляем в бд нового пользователя (для не залогиненных пользователей)
-                    userRepository.insert(userAnswers.getUser());
-                } else throw new BadRequestException(env.getProperty("error.UserCan`tBeNull"));
-            }
-
-            return userAnswersRepository.insert(userAnswers);
+            userAnswers = insert(userAnswers); // userAnswers нет в бд
         }
+        return userAnswers;
+    }
+
+    private UserAnswers insert(UserAnswers userAnswers) {
+        // userAnswers нет в бд => инициируем даты и находим/записываем в бд user
+        userAnswers.setPassDate(LocalDateTime.now());
+        userAnswers.setCreationDate(LocalDateTime.now());
+
+        if(userAnswers.getUser() == null) { // в userAnswers нет user
+            //TODO что делать, если пользователь еще не зарегестрирован
+//            throw new BadRequestException(env.getProperty("error.UserCan`tBeNull") + " You have to register");
+            // сохраняем в бд без пользователя, отсылаем куда-то ссылку по которой можно потом найти эти результаты и зарегестрироваться
+
+        } else { // в userAnswers есть user (зарегестрированный или нет)
+
+            if ( userRepository.findById(userAnswers.getUser().getId()).isPresent() ) { // пользователь зарегестрирован
+                // если с principal все в порядке, то назначаем userAnswers этого залогиненого пользователя (даже, если в userAnswers передается какой-то другой пользователь)
+//                if(principal != null && principal.getName() != null) {
+//                userAnswers.setUser(userRepository.findFirstByName(principal.getName()));
+
+            } else {                                                                    // пользователь не зарегестрирован
+                User user = validateUserByUserName(userAnswers.getUser());
+                //добавляем в бд нового пользователя (для незарегестрированных пользователей)
+                user = userRepository.insert(user);
+                userAnswers.setUser(user);
+            }
+        }
+
+        return userAnswersRepository.insert(userAnswers);
+    }
+
+    private UserAnswers update(UserAnswers userAnswers) {
+        List<Choice> choices =  userAnswers.getUserAnswers();
+        Update updateUser = new Update().set("passDate", LocalDateTime.now()).push("userAnswers").each(choices);
+        Query query = Query.query(Criteria.where(Fields.UNDERSCORE_ID).is(userAnswers.getId()));
+        mongoOperations.updateFirst(query, updateUser, UserAnswers.class);
+
+        return userAnswersRepository.findById(userAnswers.getId()).get();
     }
 
     @Override
-    public UserAnswers findLastByUserName(String userName) {
-    return userAnswersRepository.findFirstByUser_NameOrderByIdDesc(userName);
+    public UserAnswers findById(ObjectId id) {
+        return userAnswersRepository.findById(id)
+                .orElseThrow(() -> new BadRequestException(env.getProperty("error.noUserAnswersFind")));
+    }
+
+    @Override
+    public UserAnswers findLastUserAnswersByUserName(String userName) {
+        if(userName == null) throw new BadRequestException(env.getProperty("error.noUserFind"));
+        User user;
+//       user = userRepository.findFirstByName(userName).orElseThrow(() -> new BadRequestException(env.getProperty("error.noUserFind")));
+        if(userRepository.findFirstByName(userName).isPresent()) {
+            user = userRepository.findFirstByName(userName).get();
+        } else {
+            user = new User();
+            user.setName(userName);
+        }
+
+        UserAnswers userAnswer;
+        Optional<List<UserAnswers>> userAnswers = userAnswersRepository.findAllByUser_IdOrderByIdDesc(user.getId());
+        Boolean userAnswersIsPresent = !userAnswers.get().isEmpty();
+        if(userAnswersIsPresent) {
+            userAnswer = userAnswersRepository.findAllByUser_IdOrderByIdDesc(user.getId()).get().get(0);
+        } else userAnswer = getInitUserAnswers();
+        return userAnswer;
     }
 
     @Override
     public List<UserAnswers> findAllByUserNameOrderByCreationDateDesc(String userName) {
         if(userName == null) throw new BadRequestException(env.getProperty("error.noUserFind"));
 
-        User user = userRepository.findFirstByName(userName).orElseThrow(() -> new BadRequestException("User not Found"));
-        if(user == null) throw new BadRequestException(env.getProperty("error.noUserFind"));
+        User user = userRepository.findFirstByName(userName)
+                .orElseThrow(() -> new BadRequestException(env.getProperty("error.noUserFind")
+                        + " for user name: " + userName));
 
         //TODO может возникнуть проблема, если в _id в UserAnswers ObjectId когда-нибудь повторится.
         // Вроде не должно, так как ObjectId  ("OrderById") отсортирован по дате создания
         // правда с точностью 1 сек. Плюс - не надо индекс на PassDate/CreationDate в UserAnswers создавать
-        return userAnswersRepository.findAllByUser_NameOrderByIdDesc(user.getName());
+        return userAnswersRepository.findAllByUser_IdOrderByIdDesc(user.getId())
+                .orElseThrow(() ->new BadRequestException(env.getProperty("error.noUserAnswersFind")
+                        + " for user with name: " + userName));
+        // TODO вернуть null при exception?
     }
 
     @Override
@@ -118,10 +159,7 @@ public class UserAnswersServiceImpl implements UserAnswersService {
         return userAnswers;
     }
 
-    @Override
-    public List<Choice> choiceList(){
-
-        //TODO переделять на Map<String, List<ChoiceDto>>, где ключ - goal, quality, state
+    private List<Choice> choiceList(){
 
         //GOAL
         List<Choice> choiceGoal = new ArrayList<>();
@@ -205,12 +243,24 @@ public class UserAnswersServiceImpl implements UserAnswersService {
     }
 
     private Choice getChoice(Area area, Scale scaleOne, Scale scaleTwo) {
-//TODO разабраться с id
         Choice choice = new Choice();
         choice.setArea(area);
         choice.setFirstScale(scaleOne);
         choice.setSecondScale(scaleTwo);
-//        choice.setId(new ObjectId());
         return choice;
     }
+
+    private User validateUserByUserName(User user){
+        return userRepository.findFirstByName(user.getName()).orElseThrow(() ->
+               new BadRequestException(env.getProperty("error.UserAlreadyExists") + "with user name: " + user.getName()));
+    }
+
+    @Override
+    public void validateArea(List<Choice> choices, Area area) {
+        if (choices.size() != 15) throw new BadRequestException(env.getProperty("error.ItMustBe15TestsForArea") + " " + area);
+        if ( choices.stream().anyMatch(choice -> choice.getArea() != area) ) {
+            throw new BadRequestException(env.getProperty("error.AreaMustBe") + " " + area);
+        }
+    }
+
 }

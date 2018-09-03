@@ -4,20 +4,14 @@ import com.psycorp.exception.BadRequestException;
 import com.psycorp.model.dto.SimpleUserDto;
 import com.psycorp.model.entity.User;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.PropertySource;
 import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Component;
 
 @Component
-@PropertySource("classpath:errormessages.properties")
 public class UserDtoConverter extends AbstractDtoConverter<User, SimpleUserDto>{
 
-    private final Environment env;
-
     @Autowired
-    public UserDtoConverter(Environment env) {
-        this.env = env;
-    }
+    private Environment env;
 
     @Override
     protected SimpleUserDto createNewDto() {
@@ -41,6 +35,8 @@ public class UserDtoConverter extends AbstractDtoConverter<User, SimpleUserDto>{
     protected void convertFromDto(SimpleUserDto dto, User entity) {
         entity.setName(dto.getName());
         entity.setEmail(dto.getEmail());
-        entity.setId(dto.getId());
+        if(dto.getId() != null) {
+            entity.setId(dto.getId());
+        }
     }
 }

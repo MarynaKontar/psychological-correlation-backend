@@ -3,19 +3,13 @@ package com.psycorp.сonverter;
 import com.psycorp.exception.BadRequestException;
 import com.psycorp.model.dto.AreaDto;
 import com.psycorp.model.enums.Area;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.PropertySource;
 import org.springframework.core.env.Environment;
-import org.springframework.stereotype.Component;
 
-@Component
-@PropertySource("classpath:errormessages.properties")
-public class AreaDtoConverter  {
+class AreaDtoConverter  {
 
     private final Environment env;
 
-    @Autowired
-    protected AreaDtoConverter(Environment env) {
+    AreaDtoConverter(Environment env) {
         this.env = env;
     }
 

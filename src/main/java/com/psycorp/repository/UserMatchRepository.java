@@ -14,15 +14,23 @@ import java.util.List;
 public interface UserMatchRepository extends MongoRepository<UserMatch, ObjectId>{
 
     @Query("{'users.$id': ?0}")
+    List<UserMatch> findByUserId(ObjectId userId);
+
+    @Query("{'users.name': ?0}")
     List<UserMatch> findByUserName(String userName);
+
 
     @Query("{'matches.matchMethod': ?0}")
     List<UserMatch> findByMatchMethod(MatchMethod matchMethod);
 
     @Query("{'users.$id': ?0, 'matches.matchMethod': ?1}")
+    List<UserMatch> findByUserIdAndMatchMethod(ObjectId userId, MatchMethod matchMethod);
+
+    @Query("{'users.name': ?0, 'matches.matchMethod': ?1}")
     List<UserMatch> findByUserNameAndMatchMethod(String userName, MatchMethod matchMethod);
 
     @DeleteQuery("{'users.$id': ?0}")
-    void removeAllByUserId(String userId);
+    void removeAllByUserId(ObjectId userId);
+
 
 }

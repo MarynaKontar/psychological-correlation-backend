@@ -22,25 +22,25 @@ import java.util.List;
 //@PropertySource(value = {"classpath:scales/scalesukrainian.properties"}, encoding = "utf-8", ignoreResourceNotFound = true)
 public class TestDb {
 
-    private final Environment env;
-
-    private final UserAnswersService userAnswersService;
-    private final UserService userService;
-    private final UserMatchService userMatchService;
-
-    private User user1 = new User();
-    private User user2 = new User();
-    private User user3 = new User();
-
-
-    @Autowired
-    public TestDb(Environment env, UserAnswersService userAnswersService, UserService userService,
-                  UserMatchService userMatchService) {
-        this.env = env;
-        this.userAnswersService = userAnswersService;
-        this.userService = userService;
-        this.userMatchService = userMatchService;
-    }
+//    private final Environment env;
+//
+//    private final UserAnswersService userAnswersService;
+//    private final UserService userService;
+//    private final UserMatchService userMatchService;
+//
+//    private User user1 = new User();
+//    private User user2 = new User();
+//    private User user3 = new User();
+//
+//
+//    @Autowired
+//    public TestDb(Environment env, UserAnswersService userAnswersService, UserService userService,
+//                  UserMatchService userMatchService) {
+//        this.env = env;
+//        this.userAnswersService = userAnswersService;
+//        this.userService = userService;
+//        this.userMatchService = userMatchService;
+//    }
 
     //for testing. Delete in production
 //    @PostConstruct

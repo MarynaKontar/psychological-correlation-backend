@@ -7,20 +7,25 @@ import org.springframework.data.rest.core.annotation.RepositoryRestResource;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 @RepositoryRestResource(collectionResourceRel = "userAnswers", path = "userAnswers")
 public interface UserAnswersRepository extends MongoRepository<UserAnswers, ObjectId> {
 
-    //TODO сработает, т.к. User хоть и не встроен в UserAnswers (@DBRef - true linking), но в User primary key теперь name, а не id
+    Optional<UserAnswers> findByUserIdOrderByIdDesc(ObjectId userId);
+
+    //TODO сейчас не сработает, т.к. User хоть и не встроен в UserAnswers (@DBRef - true linking), но в User primary key теперь не name, а id
 //    List<UserAnswers> findAllByUser_NameOrderByPassDateDesc(String name);
 
-    //должен быть такой же как  findAllByUser_NameOrderByPassDateDesc, так как ObjectId  ("OrderById") отсортирован по дате создания
-    //правда с точностью 1 сек. Но наверное findAllByUser_NameOrderByPassDateDesc будет использовать сортировку
+    //должен быть такой же как  findAllByUserIdOrderByPassDateDesc, так как ObjectId  ("OrderById") отсортирован по дате создания
+    //правда с точностью 1 сек. Но наверное findAllByUserIdOrderByPassDateDesc будет использовать сортировку
     // в памяти, а  findAllByUser_NameOrderByIdDesc нет
-    List<UserAnswers> findAllByUser_NameOrderByIdDesc(String name);
+    Optional<List<UserAnswers>> findAllByUser_IdOrderByIdDesc(ObjectId userId);
 
-    UserAnswers findFirstByUser_NameOrderByIdDesc(String name);
+//    Optional<UserAnswers> findFirstByUser_NameOrderByIdDesc(String name);
+//    Optional<List<UserAnswers>> findAllByUser_NameOrderByIdDesc(String name);
 
-    void removeAllByUser_Id (ObjectId userId);
+//    void removeAllByUser_Id (ObjectId userId);
+    void removeAllByUserId (ObjectId userId);
 }

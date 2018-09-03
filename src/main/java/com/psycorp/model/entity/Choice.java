@@ -4,7 +4,7 @@ import com.psycorp.model.enums.Area;
 import com.psycorp.model.enums.Scale;
 import lombok.Data;
 
-import javax.validation.constraints.NotNull;
+import javax.validation.constraints.NotEmpty;
 
 /**
  * Сравнение пары шкал в одном из трех полей. Если chosenScale=null тест еще не пройден
@@ -17,12 +17,11 @@ public class Choice extends AbstractEntity {
     // Совместимость руководитель-подчиненный, Групповая совместимость.)
     //может не подойти
 
-
-    @NotNull
+    @NotEmpty
     private Area area;
-    @NotNull
+    @NotEmpty
     private Scale firstScale;
-    @NotNull
+    @NotEmpty
     private Scale secondScale;
 
     private Scale chosenScale;

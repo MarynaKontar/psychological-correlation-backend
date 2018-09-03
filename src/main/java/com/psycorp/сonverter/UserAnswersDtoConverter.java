@@ -12,25 +12,15 @@ import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 @Component
-//@PropertySource(value = {"classpath:scales/scalesukrainian.properties"}, encoding = "utf-8", ignoreResourceNotFound = true)
-//@PropertySource(value = {"classpath:scales/scalesrussian.properties"}, encoding = "utf-8")
-//@PropertySource(value = {"classpath:scales/scalesenglish.properties"}, encoding = "utf-8", ignoreResourceNotFound = true)
-//@PropertySource("classpath:errormessages.properties")
 public class UserAnswersDtoConverter extends AbstractDtoConverter<UserAnswers, UserAnswersDto>{
 
-    private final UserRepository userRepository;
-    private final Environment env;
-
     @Autowired
-    public UserAnswersDtoConverter(UserRepository userRepository, Environment env) {
-        this.userRepository = userRepository;
-        this.env = env;
-    }
+    private UserRepository userRepository;
+    @Autowired
+    private Environment env;
 
     @Override
     protected UserAnswersDto createNewDto() {
@@ -56,21 +46,19 @@ public class UserAnswersDtoConverter extends AbstractDtoConverter<UserAnswers, U
         List<ChoiceDto> goalDto = choiceDtoConverter.transform(goal);
 
         List<Choice> quality  =  new ArrayList<>(choices);
-//        quality.stream().filter(choice -> choice.getArea() == Area.QUALITY);
         quality.removeIf(choice -> choice.getArea()!= Area.QUALITY);
         List<ChoiceDto> qualityDto = choiceDtoConverter.transform(quality);
 
         List<Choice> state  =  new ArrayList<>(choices);
-//        state.stream().filter(choice -> choice.getArea() == Area.STATE);
         state.removeIf(choice -> choice.getArea()!= Area.STATE);
         List<ChoiceDto> stateDto = choiceDtoConverter.transform(state);
 
         dto.setGoal(goalDto);
         dto.setQuality(qualityDto);
         dto.setState(stateDto);
-        dto.setPassed(true);
         if(entity.getUser() != null){
-        dto.setUserName(entity.getUser().getName());
+            dto.setUserName(entity.getUser().getName());
+            dto.setUserId(entity.getUser().getId());
         }
         dto.setPassDate(entity.getPassDate());
         if(entity.getId() != null) {
@@ -87,7 +75,9 @@ public class UserAnswersDtoConverter extends AbstractDtoConverter<UserAnswers, U
         choices.addAll(choiceDtoConverter.transform(dto.getState()));
 
         entity.setUserAnswers(choices);
-        entity.setUser(userRepository.findFirstByName(dto.getUserName()).get());
+        if(userRepository.findById(dto.getUserId()).isPresent()) {
+            entity.setUser(userRepository.findById(dto.getUserId()).get());
+        }
         entity.setId(dto.getId());
     }
 }

@@ -11,6 +11,7 @@ import java.util.Optional;
 @Repository
 @RepositoryRestResource(collectionResourceRel = "user", path = "user")
 public interface UserRepository extends MongoRepository<User, String> {
+    Optional<User> findById(ObjectId id);
 
     Optional<User> findFirstByEmail(String email);
 

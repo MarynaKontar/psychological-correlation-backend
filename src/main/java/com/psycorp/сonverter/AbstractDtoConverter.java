@@ -4,12 +4,17 @@ import com.psycorp.model.dto.AbstractDto;
 import com.psycorp.model.entity.AbstractEntity;
 
 import org.apache.commons.collections.CollectionUtils;
+import org.springframework.context.annotation.PropertySource;
+
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
+@PropertySource(value = {"classpath:scales/scalesukrainian.properties"}, encoding = "utf-8", ignoreResourceNotFound = true)
+@PropertySource(value = {"classpath:scales/scalesrussian.properties"}, encoding = "utf-8")
+@PropertySource(value = {"classpath:scales/scalesenglish.properties"}, encoding = "utf-8", ignoreResourceNotFound = true)
 public abstract class AbstractDtoConverter<Entity extends AbstractEntity, Dto extends AbstractDto> {
 
     public Dto transform(Entity entity) {
@@ -20,7 +25,6 @@ public abstract class AbstractDtoConverter<Entity extends AbstractEntity, Dto ex
 
     public Entity transform(Dto dto) {
         Entity entity = createEntity(dto);
-//        Entity entity = createNewEntity();
         doDtoToEntityTransform(dto, entity);
         return entity;
     }

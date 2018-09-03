@@ -8,14 +8,8 @@ import org.springframework.data.mongodb.core.index.IndexDirection;
 import org.springframework.data.mongodb.core.index.Indexed;
 
 @Data
-
 public class Match {
-
     private MatchMethod matchMethod;
     private Area area;
-
-//    @Indexed(direction = IndexDirection.DESCENDING)
-//    private Double result;
-
     private Result result;
 }

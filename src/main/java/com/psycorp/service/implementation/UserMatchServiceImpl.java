@@ -16,7 +16,7 @@ import org.springframework.stereotype.Service;
 import java.util.*;
 
 @Service
-@PropertySource("classpath:errormessages.properties")
+//@PropertySource("classpath:errormessages.properties")
 public class UserMatchServiceImpl implements UserMatchService {
 
     private final UserMatchRepository userMatchRepository;
@@ -78,8 +78,8 @@ public class UserMatchServiceImpl implements UserMatchService {
 //        UserAnswers userAnswers1 = userAnswersRepository.findAllByUser_NameOrderByPassDateDesc(user1.getName()).get(0);
 //        UserAnswers userAnswers2 = userAnswersRepository.findAllByUser_NameOrderByPassDateDesc(user2.getName()).get(0);
 //
-        UserAnswers userAnswers1 = userAnswersRepository.findAllByUser_NameOrderByIdDesc(user1.getName()).get(0);
-        UserAnswers userAnswers2 = userAnswersRepository.findAllByUser_NameOrderByIdDesc(user2.getName()).get(0);
+        UserAnswers userAnswers1 = userAnswersRepository.findAllByUser_IdOrderByIdDesc(user1.getId()).get().get(0);
+        UserAnswers userAnswers2 = userAnswersRepository.findAllByUser_IdOrderByIdDesc(user2.getId()).get().get(0);
 
 
         List<Choice> choices1 = userAnswers1.getUserAnswers();
@@ -282,7 +282,7 @@ public class UserMatchServiceImpl implements UserMatchService {
 
     private Boolean validateUserAnswers(User user){
 
-        if(userAnswersRepository.findAllByUser_NameOrderByIdDesc(user.getName()).get(0) == null)
+        if(userAnswersRepository.findAllByUser_IdOrderByIdDesc(user.getId()).isPresent())
             throw new BadRequestException(env.getProperty("error.noTestWasPassed"));
 
         return true;

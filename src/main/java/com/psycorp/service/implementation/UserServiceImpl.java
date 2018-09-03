@@ -9,6 +9,7 @@ import com.psycorp.service.UserService;
 import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -19,18 +20,14 @@ import java.util.List;
 //@Scope("singleton")//default бины создаются синглтонами
 public class UserServiceImpl implements UserService {
 
-    private final UserRepository userRepository;
-    private final UserAnswersRepository userAnswersRepository;
-    private final UserMatchRepository userMatchRepository;
-
-
     @Autowired
-    public UserServiceImpl(UserRepository userRepository, UserAnswersRepository userAnswersRepository
-            , UserMatchRepository userMatchRepository) {
-        this.userRepository = userRepository;
-        this.userAnswersRepository = userAnswersRepository;
-        this.userMatchRepository = userMatchRepository;
-    }
+    private UserRepository userRepository;
+    @Autowired
+    private UserAnswersRepository userAnswersRepository;
+    @Autowired
+    private UserMatchRepository userMatchRepository;
+    @Autowired
+    private Environment env;
 
     //TODO добавить проверку всех значений и соответствуюшии им Exceptions
     @Override
@@ -40,17 +37,20 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public User findFirstUserByEmail(String email) {
-        return userRepository.findFirstByEmail(email).orElseThrow(() -> new BadRequestException("User not found"));
+        return userRepository.findFirstByEmail(email)
+                .orElseThrow(() -> new BadRequestException(env.getProperty("error.noUserFind") + " for email: " + email));
     }
 
     @Override
     public User findFirstUserByName(String name) {
-        return userRepository.findFirstByName(name).orElseThrow(() -> new BadRequestException("User not found"));
+        return userRepository.findFirstByName(name)
+                .orElseThrow(() -> new BadRequestException(env.getProperty("error.noUserFind") + " for user name: " + name));
     }
 
     @Override
     public User findById(ObjectId userId) {
-        return userRepository.findById(userId.toString()).orElseThrow(() -> new BadRequestException("User not found"));
+        return userRepository.findById(userId)
+                .orElseThrow(() -> new BadRequestException(env.getProperty("error.noUserFind") + " for user id: " + userId));
     }
 
     @Override
@@ -61,9 +61,10 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional
     public User deleteUser(ObjectId userId) {
-        User user = userRepository.findById(userId.toString()).orElseThrow(() -> new BadRequestException("User not found"));
-        userAnswersRepository.removeAllByUser_Id(userId);
-        userMatchRepository.removeAllByUserId(userId.toString());
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new BadRequestException(env.getProperty("error.noUserFind") + " for user id: " + userId));
+        userAnswersRepository.removeAllByUserId(userId);
+        userMatchRepository.removeAllByUserId(userId);
         userRepository.delete(user);
         return user;
     }

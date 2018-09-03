@@ -7,9 +7,9 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.mongodb.core.mapping.DBRef;
 
+import javax.validation.constraints.NotEmpty;
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Set;
 
 /**
  * Набор попарных сравнений по трем полям, по шесть шкал в каждом поле для каждого юзера
@@ -21,9 +21,10 @@ public class UserAnswers extends AbstractEntity{
     private ObjectId id;
     @DBRef
     private User user;
+    @NotEmpty
     private List<Choice> userAnswers;
     @CreatedDate
-    private LocalDateTime creationDate;//можно убрать так как дата содержится в ObjectId
+    private LocalDateTime creationDate;
     @LastModifiedDate
     private LocalDateTime passDate;
 }

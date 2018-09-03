@@ -6,6 +6,7 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 
+import javax.validation.constraints.Email;
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
 
@@ -18,6 +19,6 @@ public class User extends AbstractEntity
     private ObjectId id;
     @NotEmpty
     private String name;
-    @NotEmpty
+    @NotEmpty @Email
     private String email;
 }

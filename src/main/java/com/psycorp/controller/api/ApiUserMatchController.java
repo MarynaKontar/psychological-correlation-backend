@@ -6,6 +6,7 @@ import com.psycorp.service.UserMatchService;
 import com.psycorp.service.UserService;
 import com.psycorp.сonverter.UserMatchDtoConverter;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.PropertySource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -16,6 +17,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/match")
+@PropertySource("classpath:errormessages.properties")
 public class ApiUserMatchController {
 
     private final UserService userService;
@@ -29,9 +31,6 @@ public class ApiUserMatchController {
         this.userService = userService;
         this.userMatchService = userMatchService;
         this.userMatchDtoConverter = userMatchDtoConverter;
-
-        httpHeaders = new HttpHeaders();
-        httpHeaders.add("success", "true");
     }
 
     @PostMapping(value = "/Pearson/{userName1}/{userName2}", produces = "application/json")
@@ -96,8 +95,8 @@ public class ApiUserMatchController {
     @ExceptionHandler(RuntimeException.class)
     public ResponseEntity<HttpHeaders> handleException(RuntimeException ex, HttpServletRequest request) {
         HttpHeaders httpHeaders = new HttpHeaders();
-        httpHeaders.add("success", "false");
-        httpHeaders.add("messageError", "Something wrong: " + ex.getMessage());
+        httpHeaders.add("messageError", "Something wrong: " + ex.getMessage()
+                + "; path: " + request.getServletPath());
         return ResponseEntity.badRequest().headers(httpHeaders).build();
     }
 }
