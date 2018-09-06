@@ -1,6 +1,5 @@
 package com.psycorp.сonverter;
 
-import com.psycorp.exception.BadRequestException;
 import com.psycorp.model.dto.AreaDto;
 import com.psycorp.model.dto.ChoiceDto;
 import com.psycorp.model.dto.ScaleDto;
@@ -10,9 +9,6 @@ import org.springframework.stereotype.Component;
 
 @Component
 public class ChoiceDtoConverter extends AbstractDtoConverter<Choice, ChoiceDto>{
-
-    //TODO если не передавать Environment через конструктор (а просто @Autowired), то почему-то
-    // не подтягивает Environment (env=null)
 
     private final Environment env;
 
@@ -32,7 +28,6 @@ public class ChoiceDtoConverter extends AbstractDtoConverter<Choice, ChoiceDto>{
 
     @Override
     protected void convertFromEntity(Choice entity, ChoiceDto dto) {
-        if(entity == null || dto == null) throw new BadRequestException(env.getProperty("error.ChoiceCan`tBeNull"));
 
         AreaDtoConverter areaDtoConverter = new AreaDtoConverter(env);
         AreaDto areaDto = areaDtoConverter.createNewDto();
@@ -54,9 +49,6 @@ public class ChoiceDtoConverter extends AbstractDtoConverter<Choice, ChoiceDto>{
 
     @Override
     protected void convertFromDto(ChoiceDto dto, Choice entity) {
-        if(entity == null || dto == null) throw new BadRequestException(env.getProperty("error.ChoiceCan`tBeNull"));
-        if(dto.getArea() == null || dto.getFirstScale() == null || dto.getSecondScale() == null)
-            throw new BadRequestException(env.getProperty("error.ScaleAndAreaCan`tBeNull"));
 
         entity.setArea(dto.getArea().getArea());
         entity.setFirstScale(dto.getFirstScale().getScale());

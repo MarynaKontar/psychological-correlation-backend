@@ -7,6 +7,7 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.mongodb.core.mapping.DBRef;
 
+import javax.validation.Valid;
 import javax.validation.constraints.NotEmpty;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -21,10 +22,11 @@ public class UserAnswers extends AbstractEntity{
     private ObjectId id;
     @DBRef
     private User user;
-    @NotEmpty
+    @NotEmpty @Valid
     private List<Choice> userAnswers;
     @CreatedDate
     private LocalDateTime creationDate;
     @LastModifiedDate
     private LocalDateTime passDate;
+    private Boolean passed;
 }

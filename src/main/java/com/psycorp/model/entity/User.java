@@ -17,8 +17,9 @@ public class User extends AbstractEntity
 
     @Id
     private ObjectId id;
-    @NotEmpty
+//    @NotEmpty
     private String name;
-    @NotEmpty @Email
+//    @NotEmpty
+    @Email
     private String email;
 }

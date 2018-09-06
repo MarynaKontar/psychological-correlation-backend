@@ -10,8 +10,9 @@ import javax.validation.constraints.NotEmpty;
 public class SimpleUserDto extends AbstractDto{
 
     private ObjectId id;
-    @NotEmpty
+//    @NotEmpty
     private String name;
-    @NotEmpty @Email
+//    @NotEmpty
+    @Email
     private String email;
 }

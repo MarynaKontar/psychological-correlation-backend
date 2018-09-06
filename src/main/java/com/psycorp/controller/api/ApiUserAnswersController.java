@@ -21,6 +21,7 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
+import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
 import java.security.Principal;
 import java.util.List;
@@ -30,87 +31,92 @@ import java.util.List;
 @PropertySource("classpath:errormessages.properties")
 public class ApiUserAnswersController {
 
-    @Autowired
-    private UserAnswersService userAnswersService;
-    @Autowired
-    private UserService userService;
-    @Autowired
-    private ChoiceDtoConverter choiceDtoConverter;
-    @Autowired
-    private UserAnswersDtoConverter userAnswersDtoConverter;
+    private final UserAnswersService userAnswersService;
+    private final UserService userService;
+    private final ChoiceDtoConverter choiceDtoConverter;
+    private final UserAnswersDtoConverter userAnswersDtoConverter;
     private HttpHeaders httpHeaders;
 
-    @GetMapping(value = "/initTest", produces = "application/json")
+    @Autowired
+    public ApiUserAnswersController(UserAnswersService userAnswersService, UserService userService,
+                                    ChoiceDtoConverter choiceDtoConverter,
+                                    UserAnswersDtoConverter userAnswersDtoConverter) {
+        this.userAnswersService = userAnswersService;
+        this.userService = userService;
+        this.choiceDtoConverter = choiceDtoConverter;
+        this.userAnswersDtoConverter = userAnswersDtoConverter;
+        this.httpHeaders = new HttpHeaders();
+    }
+
+    @GetMapping("/initTest")
     public ResponseEntity<UserAnswersDto> getInitUserAnswers(){
         return ResponseEntity.ok().headers(httpHeaders).body(userAnswersDtoConverter.transform(userAnswersService.getInitUserAnswers()));
     }
 
-    @PostMapping()
-    public ResponseEntity<UserAnswersDto> save(@RequestBody @NotNull @Valid UserAnswersDto userAnswersDto){
-
-        UserAnswers userAnswers = userAnswersDtoConverter.transform(userAnswersDto);
-        userAnswers = userAnswersService.save(userAnswers);
-        userAnswersDto = userAnswersDtoConverter.transform(userAnswers);
-        return new ResponseEntity<>(userAnswersDto, HttpStatus.CREATED);
-    }
+//    @PostMapping
+//    public ResponseEntity<UserAnswersDto> save(@RequestBody @NotNull @Valid UserAnswersDto userAnswersDto){
+//
+//        UserAnswers userAnswers = userAnswersDtoConverter.transform(userAnswersDto);
+//        userAnswers = userAnswersService.save(userAnswers);
+//        userAnswersDto = userAnswersDtoConverter.transform(userAnswers);
+//        return new ResponseEntity<>(userAnswersDto, HttpStatus.CREATED);
+//    }
 
     //save only goals
-    @PostMapping(value= "/goal/{userName}")
+    @PostMapping("/goal/{userName}")
     public ResponseEntity<UserAnswersDto> saveGoal(@PathVariable String userName
-            , @RequestBody @NotNull @Valid List<ChoiceDto> choicesDto, Principal principal){
-        UserAnswersDto userAnswersDto = saveChoices(choicesDto, Area.GOAL, principal, userName);
-        return ResponseEntity.ok().headers(httpHeaders).body(userAnswersDto);
+            , @RequestBody @NotNull @Valid UserAnswersDto userAnswersDto, Principal principal){
+        UserAnswers userAnswers = userAnswersDtoConverter.transform(userAnswersDto);
+        List<Choice> choices = choiceDtoConverter.transform(userAnswersDto.getGoal());
+        userAnswers = userAnswersService.saveChoices(userAnswers, choices, principal, Area.GOAL, userName);
+        return ResponseEntity.ok().headers(httpHeaders).body(userAnswersDtoConverter.transform(userAnswers));
     }
 
     //save only qualities
-    @PostMapping(value= "/quality/{userName}")
+    @PostMapping("/quality/{userName}")
     public ResponseEntity<UserAnswersDto> saveQuality(@PathVariable String userName
-            , @RequestBody @NotNull @Valid List<ChoiceDto> choicesDto, Principal principal) {
-        UserAnswersDto userAnswersDto = saveChoices(choicesDto, Area.QUALITY, principal, userName);
-        return ResponseEntity.ok().headers(httpHeaders).body(userAnswersDto);
+            , @RequestBody @NotNull @Valid UserAnswersDto userAnswersDto, Principal principal) {
+        UserAnswers userAnswers = userAnswersDtoConverter.transform(userAnswersDto);
+        List<Choice> choices = choiceDtoConverter.transform(userAnswersDto.getQuality());
+        userAnswers = userAnswersService.saveChoices(userAnswers, choices, principal, Area.QUALITY, userName);
+        return ResponseEntity.ok().headers(httpHeaders).body(userAnswersDtoConverter.transform(userAnswers));
     }
 
     //save only states
-    @PostMapping(value= "/state/{userName}")
+    @PostMapping("/state/{userName}")
     public ResponseEntity<UserAnswersDto> saveState(@PathVariable String userName
-            , @RequestBody @NotNull @Valid List<ChoiceDto> choicesDto, Principal principal) {
-        UserAnswersDto userAnswersDto = saveChoices(choicesDto, Area.STATE, principal, userName);
-        userAnswersDto.setPassed(true);
-        return ResponseEntity.ok().headers(httpHeaders).body(userAnswersDto);
+            , @RequestBody @NotNull @Valid UserAnswersDto userAnswersDto, Principal principal) {
+        UserAnswers userAnswers = userAnswersDtoConverter.transform(userAnswersDto);
+        List<Choice> choices = choiceDtoConverter.transform(userAnswersDto.getState());
+        userAnswers = userAnswersService.saveChoices(userAnswers, choices, principal, Area.STATE, userName);
+        return ResponseEntity.ok().headers(httpHeaders).body(userAnswersDtoConverter.transform(userAnswers));
     }
 
-    private UserAnswersDto saveChoices(List<ChoiceDto> choicesDto, Area area, Principal principal, String userName){
-        List<Choice> choices = choiceDtoConverter.transform(choicesDto);
-        userAnswersService.validateArea(choices, area);
-        UserAnswers userAnswers = userAnswersService.saveChoices(choices, principal, userName);
-        return userAnswersDtoConverter.transform(userAnswers);
+//    // TODO убрать в production
+//    @PostMapping("/random/{userName}")
+//    public ResponseEntity<UserAnswersDto> testRandom(@PathVariable String userName, Principal principal){
+//
+//        User user = userService.findFirstUserByName(userName);
+//        UserAnswers userAnswers = Entity.createRandomUserAnswers(user);
+//        userAnswers = userAnswersService.save(userAnswers);
+//        UserAnswersDto userAnswersDto = userAnswersDtoConverter.transform(userAnswers);
+//        userAnswersDto.setPassed(true);
+//        return new ResponseEntity<>(userAnswersDto, HttpStatus.CREATED);
+//    }
 
-    }
-
-    @PostMapping(value= "/random/{userName}")
-    public ResponseEntity<UserAnswersDto> testRandom(@PathVariable String userName, Principal principal){
-
-        User user = userService.findFirstUserByName(userName);
-        UserAnswers userAnswers = Entity.createRandomUserAnswers(user);
-        userAnswers = userAnswersService.save(userAnswers);
-        UserAnswersDto userAnswersDto = userAnswersDtoConverter.transform(userAnswers);
-        userAnswersDto.setPassed(true);
-        return new ResponseEntity<>(userAnswersDto, HttpStatus.CREATED);
-    }
-
-    @GetMapping(value = "/{id}", produces = "application/json")
+    @GetMapping("/{id}")
     public ResponseEntity<UserAnswersDto> getLastTest(@PathVariable @NotNull ObjectId id){
         return ResponseEntity.ok().headers(httpHeaders).body(userAnswersDtoConverter
                 .transform(userAnswersService.findById(id)));
     }
-    @GetMapping(value = "/userName/{userName}", produces = "application/json")
-    public ResponseEntity<UserAnswersDto> getLastTest(@PathVariable String userName){
+    @GetMapping("/userName")
+    public ResponseEntity<UserAnswersDto> getLastTest(@RequestParam @NotEmpty String userName){
         return ResponseEntity.ok().headers(httpHeaders).body(userAnswersDtoConverter
                 .transform(userAnswersService.findLastUserAnswersByUserName(userName)));
     }
 
-    @GetMapping(value = "/getAll/{userName}", produces = "application/json")
-    public ResponseEntity<List<UserAnswersDto>> getUserAnswers(@PathVariable String userName){
+    @GetMapping
+    public ResponseEntity<List<UserAnswersDto>> getUserAnswers(@RequestParam @NotEmpty String userName){
 
         return ResponseEntity.ok().headers(httpHeaders).body(userAnswersDtoConverter.transform(
                 userAnswersService.findAllByUserNameOrderByCreationDateDesc(userName)));
@@ -124,5 +130,4 @@ public class ApiUserAnswersController {
                 + "; path: " + request.getServletPath());
         return ResponseEntity.badRequest().headers(httpHeaders).build();
     }
-
 }

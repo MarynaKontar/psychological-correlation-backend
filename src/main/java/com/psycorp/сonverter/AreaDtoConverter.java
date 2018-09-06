@@ -18,8 +18,6 @@ class AreaDtoConverter  {
     }
 
     protected void convertFromEntity(Area entity, AreaDto dto) {
-        if(entity == null || dto == null) throw new BadRequestException(env.getProperty("error.AreaCan`tBeNull"));
-
         String areaName = entity.toString().toLowerCase() + ".area.name";//"goal.area.name"
         String areaQuestion = entity.toString()
                 .toLowerCase() + ".question";//"goal.question"

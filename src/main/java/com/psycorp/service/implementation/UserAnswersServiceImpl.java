@@ -9,6 +9,7 @@ import com.psycorp.model.enums.Scale;
 import com.psycorp.repository.UserAnswersRepository;
 import com.psycorp.repository.UserRepository;
 import com.psycorp.service.UserAnswersService;
+import com.sun.org.apache.xpath.internal.operations.Bool;
 import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
@@ -22,6 +23,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.security.Principal;
 import java.time.LocalDateTime;
+import java.time.Period;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -40,72 +42,135 @@ public class UserAnswersServiceImpl implements UserAnswersService {
 
 
     @Override
-    public UserAnswers saveChoices(List<Choice> choices, Principal principal, String userName){
-        //        User user = userRepository.findFirstByName(userName).orElse(null);
-        // TODO добавить логику для 1-го,  второго... прохождения теста
-        UserAnswers userAnswers = findLastUserAnswersByUserName(userName); // если не находит, то возвращает initUserAnswers
-//        userAnswers.setUser(user);
-
-        userAnswers.setUserAnswers(choices);
-        return save(userAnswers);
-    }
-
-    @Override
     @Transactional
-    public UserAnswers save(UserAnswers userAnswers){
-//        Boolean isPresent = userAnswersRepository.findById(userAnswers.getId()).isPresent();
-        if(userAnswers.getId() != null) {
-            Optional<UserAnswers> optional = userAnswersRepository.findById(userAnswers.getId());
-            if(optional.isPresent()){
-                if(optional.get().getUserAnswers().size() >= 45) { // если userAnswers уже полностью пройден (45 вопросов), то записывать в новый userAnswers
-                    userAnswers.setId(null);
-                    userAnswers = insert(userAnswers); // userAnswers = новый тест
-                } else {
-                    userAnswers = update(userAnswers); // userAnswers уже есть в бд
-                }
+    public UserAnswers saveChoices(UserAnswers userAnswers, List<Choice> choices, Principal principal, Area area, String userName){
+
+        validateChoices(choices, area);
+
+        //GET USER
+        // if there isn't principal create anonim user, set it to userAnswers. НО ПОКА ТАК:
+        User user = getUser(userAnswers, userName);
+
+
+        //UPDATE
+        // если есть id у userAnswers, то даже если с фронта пришел какой-то не тот userAnswers, но с такой id,
+        // то вытянем по id и сохраним в него choices (если не isPassed) или сохраним choices в новый UserAnswers (если isPassed)
+        if(userAnswers.getId() != null && userAnswersRepository.findById(userAnswers.getId()).isPresent()) {
+            userAnswers = userAnswersRepository.findById(userAnswers.getId()).get(); // находим по id
+
+            //проверяем, совпадают ли пользователь у userAnswers с user из principal, если нет - exception
+
+
+            //если последний тест уже пройден (заменить после рефакторинга др. методов на userAnswers.getPassed)
+            // и прошел ли срок, после которого можно повторно пройти тест (если нет - exception) isCanPassTest
+            if(isPassed(userAnswers)) {
+                canPassTestAgain(user);
+                userAnswers = insert(choices, user);
             }
+            userAnswers = update(userAnswers, choices);
+
+
+        //INSERT
+        } else { //если нет id у userAnswers
+            canPassTestAgain(user);
+            userAnswers = insert(choices, user);
+            //что если прошел только часть тестов (goal, например), а потом заново начал через день?
         }
-        else {
-            userAnswers = insert(userAnswers); // userAnswers нет в бд
-        }
+
         return userAnswers;
     }
 
-    private UserAnswers insert(UserAnswers userAnswers) {
-        // userAnswers нет в бд => инициируем даты и находим/записываем в бд user
+    //TODO Проверить и переделать
+    private void canPassTestAgain(User user) {
+        if(user.getId() != null) {
+//            Optional<List<UserAnswers>> userAnswersOptional = userAnswersRepository.findAllByUser_IdOrderByIdDesc(user.getId());
+            Optional<UserAnswers> userAnswersOptional1 = userAnswersRepository.findTopByUser_Id(user.getId());
+
+            if(userAnswersOptional1.isPresent()){
+                UserAnswers userAnswers = userAnswersOptional1.get();
+            }
+
+//            if (userAnswersOptional.isPresent() && userAnswersOptional.get().isEmpty()) {
+//                UserAnswers userAnswers = userAnswersOptional.get().get(0);
+//           if(Period.between(userAnswers.getPassDate().toLocalDate(), LocalDateTime.now().toLocalDate()).getDays()
+//                   <= Period.ofMonths(6).getDays()) throw new BadRequestException(env.getProperty("error.YouCan'tPassNewTest"));
+        }
+    }
+
+
+    private User getUser(UserAnswers userAnswers, String userName) {
+        // if there isn't principal create anonim user, set it to userAnswers. НО ПОКА ТАК:
+        if(userAnswers.getUser() != null) {
+            return userRepository.findById(userAnswers.getUser().getId())
+                    .orElse(userRepository.findFirstByName(userName)
+                            .orElseGet(() -> userRepository.save(new User())));}
+        return userRepository.findFirstByName(userName).orElseGet(() -> userRepository.save(new User()));
+    }
+
+    private Boolean isPassed(UserAnswers userAnswers) {
+        List<Choice> choices = userAnswers.getUserAnswers();
+        if (choices.size() != 45) return false;
+        if(choices.stream().filter(choice -> choice.getArea() == Area.GOAL).count() != 15
+                || choices.stream().filter(choice -> choice.getArea() == Area.QUALITY).count() != 15
+                || choices.stream().filter(choice -> choice.getArea() == Area.STATE).count() != 15
+                ) return false;
+
+        if(choices.stream().anyMatch(choice -> choice.getChosenScale() == null)) return false;
+
+        return true;
+    }
+
+//    @Override
+//    @Transactional
+//    public UserAnswers save(UserAnswers userAnswers){
+////        Boolean isPresent = userAnswersRepository.findById(userAnswers.getId()).isPresent();
+//        if(userAnswers.getId() != null) {
+//            Optional<UserAnswers> optional = userAnswersRepository.findById(userAnswers.getId());
+//            if(optional.isPresent()){
+//                if(optional.get().getUserAnswers().size() >= 45) { // если userAnswers уже полностью пройден (45 вопросов), то записывать в новый userAnswers
+//                    userAnswers.setId(null);
+//                    userAnswers = insert(userAnswers); // userAnswers = новый тест
+//                } else {
+//                    userAnswers = update(userAnswers); // userAnswers уже есть в бд
+//                }
+//            }
+//        }
+//        else {
+//            userAnswers = insert(userAnswers); // userAnswers нет в бд
+//        }
+//        return userAnswers;
+//    }
+
+    private UserAnswers insert(List<Choice> choices, User user) {
+        UserAnswers userAnswers = getInitUserAnswers();
+        userAnswers.setUser(user);
+        userAnswers.setUserAnswers(choices);
         userAnswers.setPassDate(LocalDateTime.now());
         userAnswers.setCreationDate(LocalDateTime.now());
-
-        if(userAnswers.getUser() == null) { // в userAnswers нет user
-            //TODO что делать, если пользователь еще не зарегестрирован
-//            throw new BadRequestException(env.getProperty("error.UserCan`tBeNull") + " You have to register");
-            // сохраняем в бд без пользователя, отсылаем куда-то ссылку по которой можно потом найти эти результаты и зарегестрироваться
-
-        } else { // в userAnswers есть user (зарегестрированный или нет)
-
-            if ( userRepository.findById(userAnswers.getUser().getId()).isPresent() ) { // пользователь зарегестрирован
-                // если с principal все в порядке, то назначаем userAnswers этого залогиненого пользователя (даже, если в userAnswers передается какой-то другой пользователь)
-//                if(principal != null && principal.getName() != null) {
-//                userAnswers.setUser(userRepository.findFirstByName(principal.getName()));
-
-            } else {                                                                    // пользователь не зарегестрирован
-                User user = validateUserByUserName(userAnswers.getUser());
-                //добавляем в бд нового пользователя (для незарегестрированных пользователей)
-                user = userRepository.insert(user);
-                userAnswers.setUser(user);
-            }
-        }
-
+        userAnswers.setPassed(isPassed(userAnswers));
         return userAnswersRepository.insert(userAnswers);
     }
 
-    private UserAnswers update(UserAnswers userAnswers) {
-        List<Choice> choices =  userAnswers.getUserAnswers();
-        Update updateUser = new Update().set("passDate", LocalDateTime.now()).push("userAnswers").each(choices);
-        Query query = Query.query(Criteria.where(Fields.UNDERSCORE_ID).is(userAnswers.getId()));
-        mongoOperations.updateFirst(query, updateUser, UserAnswers.class);
+    private UserAnswers update(UserAnswers userAnswers, List<Choice> choices) {
 
-        return userAnswersRepository.findById(userAnswers.getId()).get();
+        // засетить юзера, если был аноним, а стал нормальным principal
+
+        // UPDATE CHOICES
+        Update updateUserAnswers = new Update().set("passDate", LocalDateTime.now()).push("userAnswers").each(choices);
+        Query query = Query.query(Criteria.where(Fields.UNDERSCORE_ID).is(userAnswers.getId()));
+        mongoOperations.updateFirst(query, updateUserAnswers, UserAnswers.class);
+
+        userAnswers = userAnswersRepository.findById(userAnswers.getId())
+                .orElseThrow(() -> new BadRequestException(env.getProperty("error.DataBaseError")));
+
+        // UPDATE PASSED
+        if (isPassed(userAnswers)) { // если тест пройден, то установить поле "passed" в UserAnswers = true
+            mongoOperations.updateFirst(query, new Update().set("passed", true), UserAnswers.class);
+        }
+        userAnswers = userAnswersRepository.findById(userAnswers.getId())
+                .orElseThrow(() -> new BadRequestException(env.getProperty("error.DataBaseError")));
+
+        return userAnswers;
     }
 
     @Override
@@ -255,12 +320,13 @@ public class UserAnswersServiceImpl implements UserAnswersService {
                new BadRequestException(env.getProperty("error.UserAlreadyExists") + "with user name: " + user.getName()));
     }
 
-    @Override
-    public void validateArea(List<Choice> choices, Area area) {
+    private void validateChoices(List<Choice> choices, Area area) {
         if (choices.size() != 15) throw new BadRequestException(env.getProperty("error.ItMustBe15TestsForArea") + " " + area);
         if ( choices.stream().anyMatch(choice -> choice.getArea() != area) ) {
             throw new BadRequestException(env.getProperty("error.AreaMustBe") + " " + area);
         }
+        if(choices.stream().anyMatch(choice -> choice.getChosenScale() == null))
+            throw new BadRequestException(env.getProperty("error.ChosenScaleCan'tBeNull") + " for area: " + area);
     }
 
 }

@@ -16,18 +16,26 @@ import java.security.Principal;
 @RestController
 @RequestMapping
 public class ApiTestController {
-    @Autowired
-    private UserAnswersService userAnswersService;
-    @Autowired
-    private UserService userService;
-    @Autowired
-    private UserMatchService userMatchService;
-    @Autowired
-    private UserAnswersDtoConverter userAnswersDtoConverter;
-    @Autowired
-    private UserMatchDtoConverter userMatchDtoConverter;
+
+    private final UserAnswersService userAnswersService;
+    private final UserService userService;
+    private final UserMatchService userMatchService;
+    private final UserAnswersDtoConverter userAnswersDtoConverter;
+    private final UserMatchDtoConverter userMatchDtoConverter;
     private Principal principal;
     private HttpHeaders httpHeaders;
+
+    @Autowired
+    public ApiTestController(UserAnswersService userAnswersService, UserService userService,
+                             UserMatchService userMatchService, UserAnswersDtoConverter userAnswersDtoConverter,
+                             UserMatchDtoConverter userMatchDtoConverter) {
+        this.userAnswersService = userAnswersService;
+        this.userService = userService;
+        this.userMatchService = userMatchService;
+        this.userAnswersDtoConverter = userAnswersDtoConverter;
+        this.userMatchDtoConverter = userMatchDtoConverter;
+    }
+
 
     @ExceptionHandler(RuntimeException.class)
     public ResponseEntity<HttpHeaders> handleException(RuntimeException ex, HttpServletRequest request) {

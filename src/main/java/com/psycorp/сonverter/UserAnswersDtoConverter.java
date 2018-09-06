@@ -1,6 +1,5 @@
 package com.psycorp.сonverter;
 
-import com.psycorp.exception.BadRequestException;
 import com.psycorp.model.dto.ChoiceDto;
 import com.psycorp.model.dto.UserAnswersDto;
 import com.psycorp.model.entity.Choice;
@@ -34,7 +33,6 @@ public class UserAnswersDtoConverter extends AbstractDtoConverter<UserAnswers, U
 
     @Override
     protected void convertFromEntity(UserAnswers entity, UserAnswersDto dto) {
-        if(entity == null || dto == null) throw new BadRequestException(env.getProperty("error.UserAnswersCan`tBeNull"));
 
         ChoiceDtoConverter choiceDtoConverter = new ChoiceDtoConverter(env);
 
@@ -64,11 +62,12 @@ public class UserAnswersDtoConverter extends AbstractDtoConverter<UserAnswers, U
         if(entity.getId() != null) {
             dto.setId(entity.getId());
         }
+        dto.setPassed(entity.getPassed());
     }
 
     @Override
     protected void convertFromDto(UserAnswersDto dto, UserAnswers entity) {
-        if(entity == null || dto == null) throw new BadRequestException(env.getProperty("error.UserAnswersCan`tBeNull"));
+
         ChoiceDtoConverter choiceDtoConverter = new ChoiceDtoConverter(env);
         List<Choice> choices = new ArrayList<>(choiceDtoConverter.transform(dto.getGoal()));
         choices.addAll(choiceDtoConverter.transform(dto.getQuality()));

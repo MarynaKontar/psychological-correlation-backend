@@ -13,7 +13,7 @@ import java.util.Optional;
 @RepositoryRestResource(collectionResourceRel = "userAnswers", path = "userAnswers")
 public interface UserAnswersRepository extends MongoRepository<UserAnswers, ObjectId> {
 
-    Optional<UserAnswers> findByUserIdOrderByIdDesc(ObjectId userId);
+//    Optional<UserAnswers> findByUserIdOrderByIdDesc(ObjectId userId);
 
     //TODO сейчас не сработает, т.к. User хоть и не встроен в UserAnswers (@DBRef - true linking), но в User primary key теперь не name, а id
 //    List<UserAnswers> findAllByUser_NameOrderByPassDateDesc(String name);
@@ -22,6 +22,7 @@ public interface UserAnswersRepository extends MongoRepository<UserAnswers, Obje
     //правда с точностью 1 сек. Но наверное findAllByUserIdOrderByPassDateDesc будет использовать сортировку
     // в памяти, а  findAllByUser_NameOrderByIdDesc нет
     Optional<List<UserAnswers>> findAllByUser_IdOrderByIdDesc(ObjectId userId);
+    Optional<UserAnswers> findTopByUser_Id(ObjectId userId);
 
 //    Optional<UserAnswers> findFirstByUser_NameOrderByIdDesc(String name);
 //    Optional<List<UserAnswers>> findAllByUser_NameOrderByIdDesc(String name);

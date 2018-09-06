@@ -2,16 +2,17 @@ package com.psycorp.model.dto;
 
 import lombok.Data;
 
-import javax.validation.constraints.NotEmpty;
+import javax.validation.Valid;
+import javax.validation.constraints.NotNull;
 
 @Data
 public class ChoiceDto extends AbstractDto {
-    @NotEmpty
+    @NotNull @Valid
     private AreaDto area;
-    @NotEmpty
+    @NotNull @Valid
     private ScaleDto firstScale;
-    @NotEmpty
+    @NotNull @Valid
     private ScaleDto secondScale;
-    @NotEmpty
+    @NotNull
     private ScaleDto chosenScale;
 }

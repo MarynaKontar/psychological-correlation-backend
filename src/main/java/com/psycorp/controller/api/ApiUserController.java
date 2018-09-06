@@ -15,7 +15,6 @@ import org.springframework.web.bind.annotation.*;
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
-import java.security.Principal;
 import java.util.List;
 
 @RestController
@@ -23,10 +22,14 @@ import java.util.List;
 @PropertySource("classpath:errormessages.properties")
 public class ApiUserController {
 
+    private final UserService userService;
+    private final UserDtoConverter userDtoConverter;
+
     @Autowired
-    private UserService userService;
-    @Autowired
-    private UserDtoConverter userDtoConverter;
+    public ApiUserController(UserService userService, UserDtoConverter userDtoConverter) {
+        this.userService = userService;
+        this.userDtoConverter = userDtoConverter;
+    }
 
 
     @PostMapping()
@@ -36,22 +39,22 @@ public class ApiUserController {
         return new ResponseEntity<>(userDtoConverter.transform(user), HttpStatus.CREATED);
     }
 
-    @GetMapping(value = "/{userId}")
+    @GetMapping("/{userId}")
     public ResponseEntity<SimpleUserDto> get(@PathVariable ObjectId userId){
         return ResponseEntity.ok().body(userDtoConverter.transform(userService.findById(userId)));
     }
 
-    @GetMapping()
+    @GetMapping
     public ResponseEntity<List<SimpleUserDto>> getAll(){
         return ResponseEntity.ok().body(userDtoConverter.transform(userService.findAll()));
     }
 
-    @GetMapping(value = "/email/{email}")
-    public ResponseEntity<SimpleUserDto> getByEmail(@PathVariable String email){
+    @GetMapping("/email")
+    public ResponseEntity<SimpleUserDto> getByEmail(@RequestParam String email){
         return ResponseEntity.ok().body(userDtoConverter.transform(userService.findFirstUserByEmail(email)));
     }
 
-    @PutMapping()
+    @PutMapping
     public ResponseEntity<SimpleUserDto> update(@RequestBody @NotNull SimpleUserDto userDto) {
 
         User user = userService.updateUser(userDtoConverter.transform(userDto));
