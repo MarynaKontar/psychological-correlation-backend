@@ -1,8 +1,12 @@
 package com.psycorp.controller.api;
 
+import com.psycorp.model.dto.CredentialsDto;
 import com.psycorp.model.dto.SimpleUserDto;
 import com.psycorp.model.entity.User;
+import com.psycorp.model.security.CredentialsEntity;
+import com.psycorp.service.CredentialsService;
 import com.psycorp.service.UserService;
+import com.psycorp.сonverter.CredentialsEntityConverter;
 import com.psycorp.сonverter.UserDtoConverter;
 import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,21 +27,32 @@ import java.util.List;
 public class ApiUserController {
 
     private final UserService userService;
+    private final CredentialsService credentialsService;
     private final UserDtoConverter userDtoConverter;
+    private final CredentialsEntityConverter credentialsEntityConverter;
 
     @Autowired
-    public ApiUserController(UserService userService, UserDtoConverter userDtoConverter) {
+    public ApiUserController(UserService userService, CredentialsService credentialsService, UserDtoConverter userDtoConverter, CredentialsEntityConverter credentialsEntityConverter) {
         this.userService = userService;
+        this.credentialsService = credentialsService;
         this.userDtoConverter = userDtoConverter;
+        this.credentialsEntityConverter = credentialsEntityConverter;
     }
 
 
-    @PostMapping()
-    public ResponseEntity<SimpleUserDto> save(@RequestBody @NotNull @Valid SimpleUserDto userDto) {
+//    @PostMapping()
+//    public ResponseEntity<SimpleUserDto> save(@RequestBody @NotNull @Valid SimpleUserDto userDto) {
+//
+//        User user = userService.createUser(userDtoConverter.transform(userDto));
+//        return new ResponseEntity<>(userDtoConverter.transform(user), HttpStatus.CREATED);
+//    }
 
-        User user = userService.createUser(userDtoConverter.transform(userDto));
+    @PostMapping
+    public ResponseEntity<SimpleUserDto> save(@RequestBody @NotNull @Valid CredentialsDto credentialsDto) {
+        User user = credentialsService.save(credentialsEntityConverter.transform(credentialsDto));
         return new ResponseEntity<>(userDtoConverter.transform(user), HttpStatus.CREATED);
     }
+
 
     @GetMapping("/{userId}")
     public ResponseEntity<SimpleUserDto> get(@PathVariable ObjectId userId){
@@ -70,9 +85,6 @@ public class ApiUserController {
     @ExceptionHandler(RuntimeException.class)
     public ResponseEntity<HttpHeaders> handleException(RuntimeException ex, HttpServletRequest request) {
         HttpHeaders httpHeaders = new HttpHeaders();
-//        httpHeaders.add("success", "false");
-        //TODO Body<CustomException>
-//        (CustomExeption)ex
         httpHeaders.add("messageError", "Something wrong: " + ex.getMessage()
                 + "; path: " + request.getServletPath());
         return ResponseEntity.badRequest().headers(httpHeaders).build();

@@ -1,15 +1,21 @@
 package com.psycorp.service.implementation;
 
+import com.psycorp.exception.AuthorizationException;
 import com.psycorp.exception.BadRequestException;
 import com.psycorp.model.entity.Choice;
 import com.psycorp.model.entity.User;
 import com.psycorp.model.entity.UserAnswers;
 import com.psycorp.model.enums.Area;
+import com.psycorp.model.enums.ErrorEnum;
 import com.psycorp.model.enums.Scale;
+import com.psycorp.model.enums.UserRole;
+import com.psycorp.model.security.CredentialsEntity;
 import com.psycorp.repository.UserAnswersRepository;
 import com.psycorp.repository.UserRepository;
+import com.psycorp.repository.security.CredentialsRepository;
+import com.psycorp.security.token.TokenPrincipal;
 import com.psycorp.service.UserAnswersService;
-import com.sun.org.apache.xpath.internal.operations.Bool;
+import com.psycorp.service.security.AuthService;
 import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
@@ -21,63 +27,106 @@ import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.security.Principal;
 import java.time.LocalDateTime;
-import java.time.Period;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 @Service
 public class UserAnswersServiceImpl implements UserAnswersService {
-    @Autowired
-    private UserAnswersRepository userAnswersRepository;
-    @Autowired
-    private UserRepository userRepository;
-    @Autowired
-    private MongoOperations mongoOperations;
-    @Autowired
-    private Environment env;
 
+    private final UserAnswersRepository userAnswersRepository;
+    private final UserRepository userRepository;
+    private final CredentialsRepository credentialsRepository;
+    private final AuthService authService;
+    private final MongoOperations mongoOperations;
+    private final Environment env;
+
+    @Autowired
+    public UserAnswersServiceImpl(UserAnswersRepository userAnswersRepository, UserRepository userRepository,
+                                  CredentialsRepository credentialsRepository, AuthService authService, MongoOperations mongoOperations, Environment env) {
+        this.userAnswersRepository = userAnswersRepository;
+        this.userRepository = userRepository;
+        this.credentialsRepository = credentialsRepository;
+        this.authService = authService;
+        this.mongoOperations = mongoOperations;
+        this.env = env;
+    }
 
     @Override
     @Transactional
-    public UserAnswers saveChoices(UserAnswers userAnswers, List<Choice> choices, Principal principal, Area area, String userName){
+    public UserAnswers saveChoices(UserAnswers userAnswers, List<Choice> choices, Area area){
 
         validateChoices(choices, area);
 
         //GET USER
-        // if there isn't principal create anonim user, set it to userAnswers. НО ПОКА ТАК:
-        User user = getUser(userAnswers, userName);
-
+        User user = getUser();
+//        Optional<UserAnswers> userAnswersOptional = userAnswersRepository.findTopByUser_IdAndPassedOrderByPassDateDesc(user.getId(), false);
+//        Optional<UserAnswers> userAnswersOptional1 =userAnswersRepository.findTopByUser_IdAndPassedOrderByPassDateDesc(user.getId(), false)
+//                .map((ua) -> update(ua, choices));
+        userAnswers = userAnswersRepository.findTopByUser_IdAndPassedOrderByPassDateDesc(user.getId(), false)
+                .map((ua) -> update(ua, choices))
+                .orElseGet(() -> insert(choices, user));
+//        userAnswers = userAnswersRepository.findAllByUser_IdAndPassedAndLastPassDate(user.getId(), false)
+//                .map((ua) -> update(ua, choices))
+//                .orElse(insert(choices, user));
 
         //UPDATE
-        // если есть id у userAnswers, то даже если с фронта пришел какой-то не тот userAnswers, но с такой id,
-        // то вытянем по id и сохраним в него choices (если не isPassed) или сохраним choices в новый UserAnswers (если isPassed)
-        if(userAnswers.getId() != null && userAnswersRepository.findById(userAnswers.getId()).isPresent()) {
-            userAnswers = userAnswersRepository.findById(userAnswers.getId()).get(); // находим по id
+        // если есть userAnswers у user, то вытянем его по userId и сохраним в него choices (если не isPassed)
+        // или сохраним choices в новый UserAnswers (если isPassed)
+//        if(!userAnswersRepository.findAllByUser_IdAndPassedOrderByPassDateDesc(user.getId(), false).isEmpty()) {
+//            List<UserAnswers> userAnswersList = userAnswersRepository.findAllByUser_IdAndPassedOrderByPassDateDesc(user.getId(), false);
+//            userAnswers = userAnswersList.get(0);
+//
+//            //проверяем, совпадают ли пользователь у userAnswers с user из principal, если нет - exception
+//            //для нового юзера не пройдет - убрать
+////            userAuthorization(userAnswers.getUser().getId());
+//
+//            userAnswers = update(userAnswers, choices);
+//
+//
+//        //INSERT
+//        // если последний тест уже пройден и прошел срок, после которого можно повторно пройти тест (если нет - exception)
+//        } else {
+//            userAnswers = insert(choices, user);
+//            //что если прошел только часть тестов (goal, например), а потом заново начал через день?
+//        }
 
-            //проверяем, совпадают ли пользователь у userAnswers с user из principal, если нет - exception
 
 
-            //если последний тест уже пройден (заменить после рефакторинга др. методов на userAnswers.getPassed)
-            // и прошел ли срок, после которого можно повторно пройти тест (если нет - exception) isCanPassTest
-            if(isPassed(userAnswers)) {
-                canPassTestAgain(user);
-                userAnswers = insert(choices, user);
-            }
-            userAnswers = update(userAnswers, choices);
 
 
-        //INSERT
-        } else { //если нет id у userAnswers
-            canPassTestAgain(user);
-            userAnswers = insert(choices, user);
-            //что если прошел только часть тестов (goal, например), а потом заново начал через день?
-        }
+//        //UPDATE
+//        // если есть id у userAnswers, то даже если с фронта пришел какой-то не тот userAnswers, но с такой id,
+//        // то вытянем по id и сохраним в него choices (если не isPassed) или сохраним choices в новый UserAnswers (если isPassed)
+//        if(userAnswers.getId() != null && userAnswersRepository.findById(userAnswers.getId()).isPresent()) {
+//            userAnswers = userAnswersRepository.findById(userAnswers.getId()).get(); // находим по id
+//
+//            if(!userAnswersRepository.findAllByUser_IdAndPassedOrderByPassDateDesc(user.getId(), false).isEmpty()) {
+//                List<UserAnswers> userAnswersList = userAnswersRepository.findAllByUser_IdAndPassedOrderByPassDateDesc(user.getId(), false);
+//                userAnswers = userAnswersList.get(0);
+//            }
+//            //проверяем, совпадают ли пользователь у userAnswers с user из principal, если нет - exception
+//            userAuthorization(userAnswers.getUser().getId());
+//
+//            //если последний тест уже пройден (заменить после рефакторинга др. методов на userAnswers.getPassed)
+//            // и прошел ли срок, после которого можно повторно пройти тест (если нет - exception) isCanPassTest
+//            if(isPassed(userAnswers)) {
+//                canPassTestAgain(user);
+//                userAnswers = insert(choices, user);
+//            }
+//            userAnswers = update(userAnswers, choices);
+//
+//
+//            //INSERT
+//        }
 
         return userAnswers;
+    }
+    private void userAuthorization(ObjectId userId) {
+        TokenPrincipal tokenPrincipal = (TokenPrincipal)(authService.getAuthPrincipal());
+        if( !tokenPrincipal.getId().equals(userId) ) {
+            //TODO какой exception кидать?
+            throw new AuthorizationException("Access Denied", ErrorEnum.NOT_ENOUGH_PERMISSIONS);
+        }
     }
 
     //TODO Проверить и переделать
@@ -97,14 +146,26 @@ public class UserAnswersServiceImpl implements UserAnswersService {
         }
     }
 
+    private User getUser() {
 
-    private User getUser(UserAnswers userAnswers, String userName) {
-        // if there isn't principal create anonim user, set it to userAnswers. НО ПОКА ТАК:
-        if(userAnswers.getUser() != null) {
-            return userRepository.findById(userAnswers.getUser().getId())
-                    .orElse(userRepository.findFirstByName(userName)
-                            .orElseGet(() -> userRepository.save(new User())));}
-        return userRepository.findFirstByName(userName).orElseGet(() -> userRepository.save(new User()));
+        TokenPrincipal tokenPrincipal = (TokenPrincipal) authService.getAuthPrincipal();
+        User user;
+        if(tokenPrincipal != null && tokenPrincipal.getId() != null) { //если есть токен
+            if(userRepository.findById(tokenPrincipal.getId()).isPresent()){ // и для него есть пользователь, то берем этого пользователя
+            user = userRepository.findById(tokenPrincipal.getId()).get();
+            } else { user = saveAnonimUser(); } // если для этого токена нет пользователя, то создаем анонимного (наверное надо кидать ошибку. Это случай, когда в бд не правильно сохраняли)
+        } else { user = saveAnonimUser(); } // если токен == null или у него id == null, то создаем анонимного пользователя
+
+        return user;
+    }
+
+    private User saveAnonimUser() {
+        User user;
+        user = userRepository.save(new User(UUID.randomUUID().toString(), UserRole.ANONIM));
+        CredentialsEntity credentialsEntity = new CredentialsEntity();
+        credentialsEntity.setUser(user);
+        credentialsRepository.save(credentialsEntity);
+        return user;
     }
 
     private Boolean isPassed(UserAnswers userAnswers) {
@@ -142,6 +203,7 @@ public class UserAnswersServiceImpl implements UserAnswersService {
 //    }
 
     private UserAnswers insert(List<Choice> choices, User user) {
+        canPassTestAgain(user);
         UserAnswers userAnswers = getInitUserAnswers();
         userAnswers.setUser(user);
         userAnswers.setUserAnswers(choices);

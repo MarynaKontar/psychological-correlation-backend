@@ -31,6 +31,7 @@ public class ApiUserMatchController {
         this.userService = userService;
         this.userMatchService = userMatchService;
         this.userMatchDtoConverter = userMatchDtoConverter;
+        this.httpHeaders = new HttpHeaders();
     }
 
     @PostMapping(value = "/Pearson/{userName1}/{userName2}", produces = "application/json")

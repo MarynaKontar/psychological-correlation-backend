@@ -5,10 +5,11 @@ import com.psycorp.model.entity.User;
 import com.psycorp.repository.UserAnswersRepository;
 import com.psycorp.repository.UserMatchRepository;
 import com.psycorp.repository.UserRepository;
+import com.psycorp.util.AuthUtil;
 import com.psycorp.service.UserService;
 import org.bson.types.ObjectId;
-import org.springframework.beans.factory.annotation.Autowired;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,14 +21,21 @@ import java.util.List;
 //@Scope("singleton")//default бины создаются синглтонами
 public class UserServiceImpl implements UserService {
 
+    private final UserRepository userRepository;
+    private final UserAnswersRepository userAnswersRepository;
+    private final UserMatchRepository userMatchRepository;
+    private final AuthUtil authUtil;
+    private final Environment env;
+
     @Autowired
-    private UserRepository userRepository;
-    @Autowired
-    private UserAnswersRepository userAnswersRepository;
-    @Autowired
-    private UserMatchRepository userMatchRepository;
-    @Autowired
-    private Environment env;
+    public UserServiceImpl(UserRepository userRepository, UserAnswersRepository userAnswersRepository
+            , UserMatchRepository userMatchRepository, AuthUtil serviceUtil, Environment env) {
+        this.userRepository = userRepository;
+        this.userAnswersRepository = userAnswersRepository;
+        this.userMatchRepository = userMatchRepository;
+        this.authUtil = serviceUtil;
+        this.env = env;
+    }
 
     //TODO добавить проверку всех значений и соответствуюшии им Exceptions
     @Override
@@ -49,6 +57,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public User findById(ObjectId userId) {
+        authUtil.userAuthorization(userId);
         return userRepository.findById(userId)
                 .orElseThrow(() -> new BadRequestException(env.getProperty("error.noUserFind") + " for user id: " + userId));
     }
@@ -61,6 +70,9 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional
     public User deleteUser(ObjectId userId) {
+
+        authUtil.userAuthorization(userId);
+
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new BadRequestException(env.getProperty("error.noUserFind") + " for user id: " + userId));
         userAnswersRepository.removeAllByUserId(userId);

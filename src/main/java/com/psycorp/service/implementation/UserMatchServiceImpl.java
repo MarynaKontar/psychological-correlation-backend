@@ -9,8 +9,8 @@ import com.psycorp.repository.UserMatchRepository;
 import com.psycorp.repository.UserRepository;
 import com.psycorp.service.UserMatchService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.PropertySource;
 import org.springframework.core.env.Environment;
+import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -20,19 +20,19 @@ import java.util.*;
 public class UserMatchServiceImpl implements UserMatchService {
 
     private final UserMatchRepository userMatchRepository;
-
     private final UserRepository userRepository;
-
     private final UserAnswersRepository userAnswersRepository;
+    private final MongoOperations mongoOperations;
 
     private final Environment env;
 
     @Autowired
     public UserMatchServiceImpl(UserMatchRepository userMatchRepository, UserRepository userRepository,
-                                UserAnswersRepository userAnswersRepository, Environment env) {
+                                UserAnswersRepository userAnswersRepository, MongoOperations mongoOperations, Environment env) {
         this.userMatchRepository = userMatchRepository;
         this.userRepository = userRepository;
         this.userAnswersRepository = userAnswersRepository;
+        this.mongoOperations = mongoOperations;
         this.env = env;
     }
 
@@ -45,6 +45,7 @@ public class UserMatchServiceImpl implements UserMatchService {
 
     @Override
     public List<UserMatch> findByUserName(String userName) {
+        //TODO сделать через MongoOperations
         return userMatchRepository.findByUserName(userName);
     }
 
@@ -66,8 +67,8 @@ public class UserMatchServiceImpl implements UserMatchService {
 
     @Override
     public UserMatch match(User user1, User user2, MatchMethod matchMethod){
-        validate(user1);
-        validate(user2);
+//        validate(user1);
+//        validate(user2);
         validateUserAnswers(user1);
         validateUserAnswers(user2);
 
@@ -280,12 +281,11 @@ public class UserMatchServiceImpl implements UserMatchService {
         return true;
     }
 
-    private Boolean validateUserAnswers(User user){
+    private void validateUserAnswers(User user){
+        Optional<List<UserAnswers>> userAnswers = userAnswersRepository.findAllByUser_IdOrderByIdDesc(user.getId());
 
-        if(userAnswersRepository.findAllByUser_IdOrderByIdDesc(user.getId()).isPresent())
+        if(!userAnswersRepository.findAllByUser_IdOrderByIdDesc(user.getId()).isPresent())
             throw new BadRequestException(env.getProperty("error.noTestWasPassed"));
-
-        return true;
     }
 
 }

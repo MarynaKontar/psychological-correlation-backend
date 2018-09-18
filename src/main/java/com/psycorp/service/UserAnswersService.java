@@ -14,7 +14,7 @@ public interface UserAnswersService {
     UserAnswers getInitUserAnswers();
 
 //    UserAnswers save(UserAnswers userAnswers);
-    UserAnswers saveChoices(UserAnswers userAnswers, List<Choice> choices, Principal principal, Area area, String userName);
+    UserAnswers saveChoices(UserAnswers userAnswers, List<Choice> choices, Area area);
 
     UserAnswers findById(ObjectId id);
     UserAnswers findLastUserAnswersByUserName(String userName);

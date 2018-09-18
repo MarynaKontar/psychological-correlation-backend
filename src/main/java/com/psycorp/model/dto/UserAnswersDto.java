@@ -15,7 +15,7 @@ public class UserAnswersDto extends AbstractDto {
     private ObjectId id;
     private String userName;
     private ObjectId userId;
-    @NotEmpty
+//    @NotEmpty
     @Valid @Size(min = 15, max = 15)
     private List<ChoiceDto> goal;
     @Valid @Size(min = 0, max = 15)

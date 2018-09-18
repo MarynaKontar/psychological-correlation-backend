@@ -17,6 +17,7 @@ public interface UserMatchRepository extends MongoRepository<UserMatch, ObjectId
     List<UserMatch> findByUserId(ObjectId userId);
 
     @Query("{'users.name': ?0}")
+//    @Query("{'users': {'$ref':'user', '$name':{'$oname':?0}}}")
     List<UserMatch> findByUserName(String userName);
 
 

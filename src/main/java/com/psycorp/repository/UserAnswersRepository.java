@@ -3,6 +3,7 @@ package com.psycorp.repository;
 import com.psycorp.model.entity.UserAnswers;
 import org.bson.types.ObjectId;
 import org.springframework.data.mongodb.repository.MongoRepository;
+import org.springframework.data.mongodb.repository.Query;
 import org.springframework.data.rest.core.annotation.RepositoryRestResource;
 import org.springframework.stereotype.Repository;
 
@@ -23,6 +24,13 @@ public interface UserAnswersRepository extends MongoRepository<UserAnswers, Obje
     // в памяти, а  findAllByUser_NameOrderByIdDesc нет
     Optional<List<UserAnswers>> findAllByUser_IdOrderByIdDesc(ObjectId userId);
     Optional<UserAnswers> findTopByUser_Id(ObjectId userId);
+
+    List<UserAnswers> findAllByUser_IdAndPassedOrderByPassDateDesc(ObjectId userId, Boolean passed);
+
+    @Query("{$find: {'user.$id': ?0, 'passed': ?1}, $sort: {'passDate': -1}, $limit: 1}")
+   UserAnswers findAllByUser_IdAndPassedAndLastPassDate(ObjectId userId, Boolean passed);
+
+    Optional<UserAnswers> findTopByUser_IdAndPassedOrderByPassDateDesc(ObjectId userId, Boolean passed);
 
 //    Optional<UserAnswers> findFirstByUser_NameOrderByIdDesc(String name);
 //    Optional<List<UserAnswers>> findAllByUser_NameOrderByIdDesc(String name);

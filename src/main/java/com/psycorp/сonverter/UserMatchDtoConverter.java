@@ -38,6 +38,7 @@ public class UserMatchDtoConverter extends AbstractDtoConverter<UserMatch, UserM
     }
 
     @Override
+    //TODO убрать exceptions!!!!!!!!!!! Заменить на valid
     protected void convertFromEntity(UserMatch entity, UserMatchDto dto) {
         if(entity == null || dto == null) throw new BadRequestException(env.getProperty("error.UserMatchCan`tBeNull"));
 
@@ -49,6 +50,7 @@ public class UserMatchDtoConverter extends AbstractDtoConverter<UserMatch, UserM
         dto.setUsers(userDtoConverter.transform(entity.getUsers()));
 //        dto.setUserNames(entity.getUserNames());
         dto.setAdvice(Advice.getAdvice(entity));
+        dto.setId(entity.getId());
     }
 
     //TODO не используется так как для сравнения в контроллере просто используются имена пользователей, а @RequestBody не передается
