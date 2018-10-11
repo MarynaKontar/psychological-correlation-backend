@@ -2,9 +2,12 @@ package com.psycorp.service.implementation;
 
 import com.psycorp.exception.BadRequestException;
 import com.psycorp.model.entity.User;
+import com.psycorp.model.enums.UserRole;
+import com.psycorp.model.security.CredentialsEntity;
 import com.psycorp.repository.UserAnswersRepository;
 import com.psycorp.repository.UserMatchRepository;
 import com.psycorp.repository.UserRepository;
+import com.psycorp.repository.security.CredentialsRepository;
 import com.psycorp.util.AuthUtil;
 import com.psycorp.service.UserService;
 import org.bson.types.ObjectId;
@@ -15,6 +18,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.UUID;
 
 @Service
 //@Primary
@@ -22,15 +26,17 @@ import java.util.List;
 public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
+    private final CredentialsRepository credentialsRepository;
     private final UserAnswersRepository userAnswersRepository;
     private final UserMatchRepository userMatchRepository;
     private final AuthUtil authUtil;
     private final Environment env;
 
     @Autowired
-    public UserServiceImpl(UserRepository userRepository, UserAnswersRepository userAnswersRepository
+    public UserServiceImpl(UserRepository userRepository, CredentialsRepository credentialsRepository, UserAnswersRepository userAnswersRepository
             , UserMatchRepository userMatchRepository, AuthUtil serviceUtil, Environment env) {
         this.userRepository = userRepository;
+        this.credentialsRepository = credentialsRepository;
         this.userAnswersRepository = userAnswersRepository;
         this.userMatchRepository = userMatchRepository;
         this.authUtil = serviceUtil;
@@ -44,9 +50,21 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public User findFirstUserByEmail(String email) {
-        return userRepository.findFirstByEmail(email)
-                .orElseThrow(() -> new BadRequestException(env.getProperty("error.noUserFind") + " for email: " + email));
+    @Transactional
+    public User createAnonimUser() {
+        User user;
+        user = userRepository.save(new User(UUID.randomUUID().toString(), UserRole.ANONIM));
+        CredentialsEntity credentialsEntity = new CredentialsEntity();
+        credentialsEntity.setUser(user);
+        credentialsRepository.save(credentialsEntity);
+        return user;
+    }
+
+    @Override
+    public User findUserByNameOrEmail(String nameOrEmail) {
+        return userRepository.findUserByNameOrEmail(nameOrEmail, nameOrEmail)
+                .orElseThrow(() -> new BadRequestException(env.getProperty("error.noUserFind") + " for name or email: "
+                        + nameOrEmail));
     }
 
     @Override
@@ -57,7 +75,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public User findById(ObjectId userId) {
-        authUtil.userAuthorization(userId);
+//        authUtil.userAuthorization(userId);
         return userRepository.findById(userId)
                 .orElseThrow(() -> new BadRequestException(env.getProperty("error.noUserFind") + " for user id: " + userId));
     }

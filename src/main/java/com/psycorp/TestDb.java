@@ -97,8 +97,8 @@ public class TestDb {
 //    @PostConstruct()
 //    public void userMatch2() {
 //
-//        User user1 = userService.findFirstUserByEmail("email7");
-//        User user2 = userService.findFirstUserByEmail("email8");
+//        User user1 = userService.findUserByNameOrEmail("email7");
+//        User user2 = userService.findUserByNameOrEmail("email8");
 //
 //        UserMatch userMatch = userMatchService.match(user1,user2, MatchMethod.PEARSONCORRELATION);
 //        userMatchService.createUser(userMatch);
@@ -106,8 +106,8 @@ public class TestDb {
 //
 //    @PostConstruct
 //    public void createSecondUserAnswers() {
-//        User user1 = userService.findFirstUserByEmail("email7");
-//        User user2 = userService.findFirstUserByEmail("email8");
+//        User user1 = userService.findUserByNameOrEmail("email7");
+//        User user2 = userService.findUserByNameOrEmail("email8");
 //
 //        UserAnswers userAnswers1 = Entity.createRandomUserAnswers(user1);
 //        userAnswersService.createUser(userAnswers1);

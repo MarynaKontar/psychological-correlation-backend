@@ -13,6 +13,9 @@ import java.util.Optional;
 public interface UserRepository extends MongoRepository<User, String> {
     Optional<User> findById(ObjectId id);
 
+    //with one parameter isn't work, it's need all parameters
+    Optional<User> findUserByNameOrEmail(String name, String email);
+
     Optional<User> findFirstByEmail(String email);
 
     Optional<User> findFirstByName(String name);

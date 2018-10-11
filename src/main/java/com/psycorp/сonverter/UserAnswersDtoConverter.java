@@ -2,9 +2,11 @@ package com.psycorp.сonverter;
 
 import com.psycorp.model.dto.ChoiceDto;
 import com.psycorp.model.dto.UserAnswersDto;
+import com.psycorp.model.dto.ValueProfileDto;
 import com.psycorp.model.entity.Choice;
 import com.psycorp.model.entity.UserAnswers;
 import com.psycorp.model.enums.Area;
+import com.psycorp.model.enums.Scale;
 import com.psycorp.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
@@ -12,6 +14,7 @@ import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 @Component
 public class UserAnswersDtoConverter extends AbstractDtoConverter<UserAnswers, UserAnswersDto>{
@@ -55,7 +58,7 @@ public class UserAnswersDtoConverter extends AbstractDtoConverter<UserAnswers, U
         dto.setQuality(qualityDto);
         dto.setState(stateDto);
         if(entity.getUser() != null){
-            dto.setUserName(entity.getUser().getName());
+//            dto.setUserName(entity.getUser().getName());
             dto.setUserId(entity.getUser().getId());
         }
         dto.setPassDate(entity.getPassDate());
@@ -78,5 +81,16 @@ public class UserAnswersDtoConverter extends AbstractDtoConverter<UserAnswers, U
             entity.setUser(userRepository.findById(dto.getUserId()).get());
         }
         entity.setId(dto.getId());
+    }
+
+    public List<ValueProfileDto> convertToValueProfile(Map<Scale, Double> valueProfiles) {
+        List<ValueProfileDto> valueProfileDtos = new ArrayList<>();
+
+        valueProfiles.forEach((scale, value) ->
+                valueProfileDtos.add(
+                        new ValueProfileDto(scale, env.getProperty(scale.name()), value * 100 )
+                )
+        );
+        return valueProfileDtos;
     }
 }

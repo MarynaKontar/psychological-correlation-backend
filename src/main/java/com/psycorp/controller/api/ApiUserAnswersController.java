@@ -1,12 +1,12 @@
 package com.psycorp.controller.api;
 
 import com.psycorp.model.dto.UserAnswersDto;
+import com.psycorp.model.dto.ValueProfileDto;
 import com.psycorp.model.entity.Choice;
 import com.psycorp.model.entity.UserAnswers;
 import com.psycorp.model.enums.Area;
-import com.psycorp.model.enums.TokenType;
+import com.psycorp.model.enums.Scale;
 import com.psycorp.model.enums.UserRole;
-import com.psycorp.model.security.TokenEntity;
 import com.psycorp.service.UserAnswersService;
 import com.psycorp.service.UserService;
 import com.psycorp.service.security.AuthService;
@@ -26,6 +26,7 @@ import javax.validation.Valid;
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
 import java.util.List;
+import java.util.Map;
 
 import static com.psycorp.security.SecurityConstant.ACCESS_TOKEN_PREFIX;
 
@@ -39,17 +40,20 @@ public class ApiUserAnswersController {
     private final ChoiceDtoConverter choiceDtoConverter;
     private final UserAnswersDtoConverter userAnswersDtoConverter;
     private final AuthService authService;
+    private final TokenService tokenService;
     private HttpHeaders httpHeaders;
+
 
     @Autowired
     public ApiUserAnswersController(UserAnswersService userAnswersService, UserService userService,
                                     ChoiceDtoConverter choiceDtoConverter,
-                                    UserAnswersDtoConverter userAnswersDtoConverter, AuthService authService) {
+                                    UserAnswersDtoConverter userAnswersDtoConverter, AuthService authService, TokenService tokenService) {
         this.userAnswersService = userAnswersService;
         this.userService = userService;
         this.choiceDtoConverter = choiceDtoConverter;
         this.userAnswersDtoConverter = userAnswersDtoConverter;
         this.authService = authService;
+        this.tokenService = tokenService;
         this.httpHeaders = new HttpHeaders();
     }
 
@@ -69,19 +73,20 @@ public class ApiUserAnswersController {
 
     //save only goals
     //TODO сделать, чтобы возврашал Void (чтобі лишняя инфа и нагрузка не ходила по http), потом как отдельній запрос
-    // идет UserAnswersDto ("дайте мне результаты моего теста") и токен генерить в сервисе
+    // идет UserAnswersDto ("дайте мне результаты моего теста"). токен генерить в сервисе или как здесь?
     @PostMapping("/goal")
-    public ResponseEntity<UserAnswersDto> saveGoal(@RequestBody @NotNull @Valid UserAnswersDto userAnswersDto){
+    public ResponseEntity<UserAnswersDto> saveGoal(@RequestBody @NotNull @Valid UserAnswersDto userAnswersDto
+            , @RequestHeader(value = "Authorization", required = false) String token){
         UserAnswers userAnswers = userAnswersDtoConverter.transform(userAnswersDto);
         List<Choice> choices = choiceDtoConverter.transform(userAnswersDto.getGoal());
-        userAnswers = userAnswersService.saveChoices(userAnswers, choices, Area.GOAL);
-        if(userAnswers.getUser().getRole().equals(UserRole.ANONIM)){
-            String token = authService.generateAccessTokenForAnonim(userAnswers.getUser());
-            return ResponseEntity.status(HttpStatus.CREATED)
-                    .header(HttpHeaders.AUTHORIZATION, ACCESS_TOKEN_PREFIX + " " + token)
-                    .headers(httpHeaders).body(userAnswersDtoConverter.transform(userAnswers));
+        userAnswers = userAnswersService.saveChoices(token, userAnswers, choices, Area.GOAL);
+        if((token == null) && userAnswers.getUser().getRole().equals(UserRole.ANONIM)){
+            token = ACCESS_TOKEN_PREFIX + " " + authService.generateAccessTokenForAnonim(userAnswers.getUser());
         }
-        return ResponseEntity.ok().headers(httpHeaders).body(userAnswersDtoConverter.transform(userAnswers));
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .header(HttpHeaders.AUTHORIZATION, token) // или сгенеренный токен или пришедший в хедере (уже с 'Bearer ')
+                .headers(httpHeaders).body(userAnswersDtoConverter.transform(userAnswers));
+//        return ResponseEntity.ok().headers(httpHeaders).body(userAnswersDtoConverter.transform(userAnswers));
     }
 
     //save only qualities
@@ -89,7 +94,7 @@ public class ApiUserAnswersController {
     public ResponseEntity<UserAnswersDto> saveQuality(@RequestBody @NotNull @Valid UserAnswersDto userAnswersDto) {
         UserAnswers userAnswers = userAnswersDtoConverter.transform(userAnswersDto);
         List<Choice> choices = choiceDtoConverter.transform(userAnswersDto.getQuality());
-        userAnswers = userAnswersService.saveChoices(userAnswers, choices, Area.QUALITY);
+        userAnswers = userAnswersService.saveChoices(null, userAnswers, choices, Area.QUALITY);
         return ResponseEntity.ok().headers(httpHeaders).body(userAnswersDtoConverter.transform(userAnswers));
     }
 
@@ -98,9 +103,21 @@ public class ApiUserAnswersController {
     public ResponseEntity<UserAnswersDto> saveState(@RequestBody @NotNull @Valid UserAnswersDto userAnswersDto) {
         UserAnswers userAnswers = userAnswersDtoConverter.transform(userAnswersDto);
         List<Choice> choices = choiceDtoConverter.transform(userAnswersDto.getState());
-        userAnswers = userAnswersService.saveChoices(userAnswers, choices, Area.STATE);
+        userAnswers = userAnswersService.saveChoices(null, userAnswers, choices, Area.STATE);
         return ResponseEntity.ok().headers(httpHeaders).body(userAnswersDtoConverter.transform(userAnswers));
     }
+
+    @GetMapping("/getPassedTest")
+    public ResponseEntity<UserAnswersDto> getPassedTestResult(){
+         return ResponseEntity.ok().headers(httpHeaders)
+                 .body(userAnswersDtoConverter.transform(userAnswersService.getLastPassedTest()));
+    }
+
+    @GetMapping("/generateTokenList")
+    public ResponseEntity<List<String>> generateTokenList(){
+        return ResponseEntity.ok().headers(httpHeaders).body(tokenService.generateTokenList(3));
+    }
+
 
 //    // TODO убрать в production
 //    @PostMapping("/random/{userName}")
@@ -122,7 +139,7 @@ public class ApiUserAnswersController {
     @GetMapping("/userName")
     public ResponseEntity<UserAnswersDto> getLastTest(@RequestParam @NotEmpty String userName){
         return ResponseEntity.ok().headers(httpHeaders).body(userAnswersDtoConverter
-                .transform(userAnswersService.findLastUserAnswersByUserName(userName)));
+                .transform(userAnswersService.findLastUserAnswersByUserNameOrEmail(userName)));
     }
 
     @GetMapping
@@ -131,6 +148,13 @@ public class ApiUserAnswersController {
         return ResponseEntity.ok().headers(httpHeaders).body(userAnswersDtoConverter.transform(
                 userAnswersService.findAllByUserNameOrderByCreationDateDesc(userName)));
 
+    }
+
+    @GetMapping("/value-profile")
+    public ResponseEntity<List<ValueProfileDto>> getValueProfile(){
+        Map<Scale, Double> valueProfile = userAnswersService.getValueProfile();
+        List<ValueProfileDto> valueProfileDtos = userAnswersDtoConverter.convertToValueProfile(valueProfile);
+        return ResponseEntity.ok().headers(httpHeaders).body(valueProfileDtos);
     }
 
     @ExceptionHandler(RuntimeException.class)

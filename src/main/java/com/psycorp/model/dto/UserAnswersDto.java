@@ -13,7 +13,7 @@ import java.util.List;
 public class UserAnswersDto extends AbstractDto {
 
     private ObjectId id;
-    private String userName;
+//    private String userName;
     private ObjectId userId;
 //    @NotEmpty
     @Valid @Size(min = 15, max = 15)

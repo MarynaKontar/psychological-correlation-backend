@@ -9,7 +9,9 @@ import java.util.List;
 public interface UserService {
     User createUser(User user);
 
-    User findFirstUserByEmail(String email);
+    User createAnonimUser();
+
+    User findUserByNameOrEmail(String email);
     User findFirstUserByName(String name);
     User findById (ObjectId userId);
     //TODO deleteUser in production

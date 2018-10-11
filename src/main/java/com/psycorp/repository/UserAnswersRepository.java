@@ -23,7 +23,7 @@ public interface UserAnswersRepository extends MongoRepository<UserAnswers, Obje
     //правда с точностью 1 сек. Но наверное findAllByUserIdOrderByPassDateDesc будет использовать сортировку
     // в памяти, а  findAllByUser_NameOrderByIdDesc нет
     Optional<List<UserAnswers>> findAllByUser_IdOrderByIdDesc(ObjectId userId);
-    Optional<UserAnswers> findTopByUser_Id(ObjectId userId);
+    Optional<UserAnswers> findTopByUser_IdOrderByPassDateDesc(ObjectId userId);
 
     List<UserAnswers> findAllByUser_IdAndPassedOrderByPassDateDesc(ObjectId userId, Boolean passed);
 

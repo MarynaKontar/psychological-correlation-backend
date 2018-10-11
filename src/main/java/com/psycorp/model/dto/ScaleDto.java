@@ -9,8 +9,8 @@ import javax.validation.constraints.NotNull;
 @Data
 public class ScaleDto extends AbstractDto
 {
-    @NotNull
+//    @NotNull
     private Scale scale;
-    @NotEmpty
+//    @NotEmpty
     private String scaleName;
 }

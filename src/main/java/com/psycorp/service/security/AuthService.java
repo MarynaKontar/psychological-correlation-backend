@@ -26,5 +26,7 @@ public interface AuthService {
     String generateAccessToken(UsernamePasswordDto usernamePassword);
 
     String generateAccessTokenForAnonim(User user);
+
+    User getUserByToken(String token);
 //    String generateDeviceToken();
 }

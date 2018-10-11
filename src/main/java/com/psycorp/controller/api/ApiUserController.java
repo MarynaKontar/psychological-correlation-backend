@@ -3,7 +3,6 @@ package com.psycorp.controller.api;
 import com.psycorp.model.dto.CredentialsDto;
 import com.psycorp.model.dto.SimpleUserDto;
 import com.psycorp.model.entity.User;
-import com.psycorp.model.security.CredentialsEntity;
 import com.psycorp.service.CredentialsService;
 import com.psycorp.service.UserService;
 import com.psycorp.сonverter.CredentialsEntityConverter;
@@ -53,6 +52,12 @@ public class ApiUserController {
         return new ResponseEntity<>(userDtoConverter.transform(user), HttpStatus.CREATED);
     }
 
+    //TODO и зачем я это сделала? Єтот permitAll, а верхний - нет. Но надо убрать (на фронте через интерсепторі решу эту проблему)
+    @PostMapping("/save")
+    public ResponseEntity<SimpleUserDto> saveNewUser(@RequestBody @NotNull @Valid CredentialsDto credentialsDto) {
+        User user = credentialsService.save(credentialsEntityConverter.transform(credentialsDto));
+        return new ResponseEntity<>(userDtoConverter.transform(user), HttpStatus.CREATED);
+    }
 
     @GetMapping("/{userId}")
     public ResponseEntity<SimpleUserDto> get(@PathVariable ObjectId userId){
@@ -64,9 +69,10 @@ public class ApiUserController {
         return ResponseEntity.ok().body(userDtoConverter.transform(userService.findAll()));
     }
 
-    @GetMapping("/email")
-    public ResponseEntity<SimpleUserDto> getByEmail(@RequestParam String email){
-        return ResponseEntity.ok().body(userDtoConverter.transform(userService.findFirstUserByEmail(email)));
+    // выдаст любому залогиненному пользователю инфор. о любом другом пользователе по его name or email
+    @GetMapping("/NameOrEmail")
+    public ResponseEntity<SimpleUserDto> getByNameOrEmail(@RequestParam String email){
+        return ResponseEntity.ok().body(userDtoConverter.transform(userService.findUserByNameOrEmail(email)));
     }
 
     @PutMapping

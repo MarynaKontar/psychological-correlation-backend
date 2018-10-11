@@ -14,7 +14,7 @@ public interface CredentialsRepository extends MongoRepository<CredentialsEntity
 
     @Query("{'user.name': ?0}")
     CredentialsEntity findByUserName(String userName);
-//    Optional<CredentialsEntity> findFirstByUser_Email(String username);
+//    Optional<CredentialsEntity> findFirstByUser_Email(String name);
 
     Optional<CredentialsEntity> findByUser_Id(ObjectId objectId);
 }
