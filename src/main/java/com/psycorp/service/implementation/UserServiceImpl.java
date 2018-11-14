@@ -8,6 +8,8 @@ import com.psycorp.repository.UserAnswersRepository;
 import com.psycorp.repository.UserMatchRepository;
 import com.psycorp.repository.UserRepository;
 import com.psycorp.repository.security.CredentialsRepository;
+import com.psycorp.security.token.TokenPrincipal;
+import com.psycorp.service.security.AuthService;
 import com.psycorp.util.AuthUtil;
 import com.psycorp.service.UserService;
 import org.bson.types.ObjectId;
@@ -29,16 +31,18 @@ public class UserServiceImpl implements UserService {
     private final CredentialsRepository credentialsRepository;
     private final UserAnswersRepository userAnswersRepository;
     private final UserMatchRepository userMatchRepository;
+    private final AuthService authService;
     private final AuthUtil authUtil;
     private final Environment env;
 
     @Autowired
     public UserServiceImpl(UserRepository userRepository, CredentialsRepository credentialsRepository, UserAnswersRepository userAnswersRepository
-            , UserMatchRepository userMatchRepository, AuthUtil serviceUtil, Environment env) {
+            , UserMatchRepository userMatchRepository, AuthService authService, AuthUtil serviceUtil, Environment env) {
         this.userRepository = userRepository;
         this.credentialsRepository = credentialsRepository;
         this.userAnswersRepository = userAnswersRepository;
         this.userMatchRepository = userMatchRepository;
+        this.authService = authService;
         this.authUtil = serviceUtil;
         this.env = env;
     }
@@ -63,21 +67,21 @@ public class UserServiceImpl implements UserService {
     @Override
     public User findUserByNameOrEmail(String nameOrEmail) {
         return userRepository.findUserByNameOrEmail(nameOrEmail, nameOrEmail)
-                .orElseThrow(() -> new BadRequestException(env.getProperty("error.noUserFind") + " for name or email: "
+                .orElseThrow(() -> new BadRequestException(env.getProperty("error.noUserFound") + " for name or email: "
                         + nameOrEmail));
     }
 
     @Override
     public User findFirstUserByName(String name) {
         return userRepository.findFirstByName(name)
-                .orElseThrow(() -> new BadRequestException(env.getProperty("error.noUserFind") + " for user name: " + name));
+                .orElseThrow(() -> new BadRequestException(env.getProperty("error.noUserFound") + " for user name: " + name));
     }
 
     @Override
     public User findById(ObjectId userId) {
 //        authUtil.userAuthorization(userId);
         return userRepository.findById(userId)
-                .orElseThrow(() -> new BadRequestException(env.getProperty("error.noUserFind") + " for user id: " + userId));
+                .orElseThrow(() -> new BadRequestException(env.getProperty("error.noUserFound") + " for user id: " + userId));
     }
 
     @Override
@@ -92,7 +96,7 @@ public class UserServiceImpl implements UserService {
         authUtil.userAuthorization(userId);
 
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new BadRequestException(env.getProperty("error.noUserFind") + " for user id: " + userId));
+                .orElseThrow(() -> new BadRequestException(env.getProperty("error.noUserFound") + " for user id: " + userId));
         userAnswersRepository.removeAllByUserId(userId);
         userMatchRepository.removeAllByUserId(userId);
         userRepository.delete(user);
@@ -102,6 +106,21 @@ public class UserServiceImpl implements UserService {
     @Override
     public User updateUser(User user) {
         return userRepository.save(user);
+    }
+
+    @Override
+    public User getPrincipalUser() {
+
+        User user;
+        TokenPrincipal tokenPrincipal = (TokenPrincipal) authService.getAuthPrincipal();
+
+        if(tokenPrincipal != null && tokenPrincipal.getId() != null) { //если есть токен
+            if(userRepository.findById(tokenPrincipal.getId()).isPresent()){ // и для него есть пользователь, то берем этого пользователя
+                user = userRepository.findById(tokenPrincipal.getId()).get();
+            } else { throw new BadRequestException(env.getProperty("error.TokenIsNotValid")); } // если для этого токена нет пользователя, то надо кидать ошибку. Это случай, когда в бд не правильно сохраняли)
+        } else { throw new BadRequestException(env.getProperty("error.TokenIsNotValid")); } // если токен == null или у него id == null
+
+        return user;
     }
 
 }

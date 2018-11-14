@@ -74,9 +74,15 @@ public class TokenServiceImpl implements TokenService {
         //TODO добавить usersForMatchingи в создаваемых пользователей
 
         List<String> tokens= new ArrayList<>(n);
-        usersForMatching.forEach(user -> tokens.add(createUserToken(user,TokenType.ACCESS_TOKEN).getToken()));
+        usersForMatching.forEach(user -> {
+            tokens.add(createUserToken(user, TokenType.ACCESS_TOKEN).getToken());
+            mongoOperations.updateFirst(  // UPDATE USERSFORMATCHING for all n users (add them principal)
+                    Query.query(Criteria.where(Fields.UNDERSCORE_ID).is(user.getId())),
+                    new Update().push("usersForMatching").each(Arrays.asList(principal)),
+                    User.class);
+        });
 
-        // UPDATE USERSFORMATCHING
+        // UPDATE USERSFORMATCHING for principal user
         Update updateUser = new Update().push("usersForMatching").each(usersForMatching);
         Query query = Query.query(Criteria.where(Fields.UNDERSCORE_ID).is(principal.getId()));
         mongoOperations.updateFirst(query, updateUser, User.class);

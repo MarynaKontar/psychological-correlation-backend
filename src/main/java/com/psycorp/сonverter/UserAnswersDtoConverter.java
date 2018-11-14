@@ -3,10 +3,11 @@ package com.psycorp.сonverter;
 import com.psycorp.model.dto.ChoiceDto;
 import com.psycorp.model.dto.UserAnswersDto;
 import com.psycorp.model.dto.ValueProfileDto;
+import com.psycorp.model.dto.ValueProfileElementDto;
 import com.psycorp.model.entity.Choice;
 import com.psycorp.model.entity.UserAnswers;
+import com.psycorp.model.entity.ValueProfile;
 import com.psycorp.model.enums.Area;
-import com.psycorp.model.enums.Scale;
 import com.psycorp.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
@@ -14,15 +15,19 @@ import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 @Component
 public class UserAnswersDtoConverter extends AbstractDtoConverter<UserAnswers, UserAnswersDto>{
 
+    private final UserRepository userRepository;
+    private final Environment env;
+
     @Autowired
-    private UserRepository userRepository;
-    @Autowired
-    private Environment env;
+    public UserAnswersDtoConverter(UserRepository userRepository, Environment env) {
+        this.userRepository = userRepository;
+        this.env = env;
+    }
+
 
     @Override
     protected UserAnswersDto createNewDto() {
@@ -77,20 +82,31 @@ public class UserAnswersDtoConverter extends AbstractDtoConverter<UserAnswers, U
         choices.addAll(choiceDtoConverter.transform(dto.getState()));
 
         entity.setUserAnswers(choices);
-        if(userRepository.findById(dto.getUserId()).isPresent()) {
+
+//        Boolean present1 = userRepository.existsById(dto.getUserId());
+//        Boolean present2 = userRepository.findById(dto.getUserId()).isPresent();
+//        Optional<User> user = userRepository.findById(dto.getUserId());
+        if(dto.getId() != null && userRepository.existsById(dto.getUserId())) {
             entity.setUser(userRepository.findById(dto.getUserId()).get());
         }
         entity.setId(dto.getId());
     }
 
-    public List<ValueProfileDto> convertToValueProfile(Map<Scale, Double> valueProfiles) {
-        List<ValueProfileDto> valueProfileDtos = new ArrayList<>();
+    public ValueProfileDto convertToValueProfileDtoList(ValueProfile valueProfile) {
+        List<ValueProfileElementDto> valueProfileElementDtos = new ArrayList<>();
 
-        valueProfiles.forEach((scale, value) ->
-                valueProfileDtos.add(
-                        new ValueProfileDto(scale, env.getProperty(scale.name()), value * 100 )
-                )
+        valueProfile.getScaleResult().forEach((scale, comment) ->
+                {
+//                    comment.setResult(comment.getResult() * 100);
+                    valueProfileElementDtos.add(
+                            new ValueProfileElementDto(env.getProperty(scale.name()), comment.getResult(), comment)
+                    );
+                }
         );
-        return valueProfileDtos;
+
+        ValueProfileDto valueProfileDto = new ValueProfileDto();
+        valueProfileDto.setValueProfileElements(valueProfileElementDtos);
+        valueProfileDto.setIsPrincipalUser(valueProfile.getIsPrincipalUser());
+        return valueProfileDto;
     }
 }

@@ -2,9 +2,7 @@ package com.psycorp.service.implementation;
 
 import com.psycorp.exception.AuthorizationException;
 import com.psycorp.exception.BadRequestException;
-import com.psycorp.model.entity.Choice;
-import com.psycorp.model.entity.User;
-import com.psycorp.model.entity.UserAnswers;
+import com.psycorp.model.entity.*;
 import com.psycorp.model.enums.Area;
 import com.psycorp.model.enums.ErrorEnum;
 import com.psycorp.model.enums.Scale;
@@ -15,6 +13,7 @@ import com.psycorp.security.token.TokenPrincipal;
 import com.psycorp.service.UserAnswersService;
 import com.psycorp.service.UserService;
 import com.psycorp.service.security.AuthService;
+import com.psycorp.util.ValueProfileCommentUtil;
 import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.PropertySource;
@@ -40,6 +39,7 @@ import static java.util.stream.Collectors.groupingBy;
 @PropertySource(value = {"classpath:scales/scalesukrainian.properties"}, encoding = "utf-8", ignoreResourceNotFound = true)
 @PropertySource(value = {"classpath:scales/scalesrussian.properties"}, encoding = "utf-8")
 @PropertySource(value = {"classpath:scales/scalesenglish.properties"}, encoding = "utf-8", ignoreResourceNotFound = true)
+@PropertySource(value = {"classpath:scales/scalescomment.properties"}, encoding = "utf-8", ignoreResourceNotFound = true)
 public class UserAnswersServiceImpl implements UserAnswersService {
 
     private final UserAnswersRepository userAnswersRepository;
@@ -69,7 +69,7 @@ public class UserAnswersServiceImpl implements UserAnswersService {
         validateChoices(choices, area);
 
         //GET USER
-        User user = getUser(token);
+        User user = getUserByToken(token);
 //        Optional<UserAnswers> userAnswersOptional = userAnswersRepository.findTopByUser_IdAndPassedOrderByPassDateDesc(user.getId(), false);
 //        Optional<UserAnswers> userAnswersOptional1 =userAnswersRepository.findTopByUser_IdAndPassedOrderByPassDateDesc(user.getId(), false)
 //                .map((ua) -> update(ua, choices));
@@ -157,23 +157,30 @@ public class UserAnswersServiceImpl implements UserAnswersService {
         }
     }
 
-    private User getUser(String token) {
+    private User getUserByToken(String token) {
 
         // если пользователь заходит на сайт по ссылке с токеном, то ищем пользователя по этому токену
         if(token != null && !token.isEmpty()) {
            return authService.getUserByToken(token.substring(ACCESS_TOKEN_PREFIX.length() + 1));
         }
 
-        User user;
+        User user = getPrincipal();
+
+        return user;
+    }
+
+    private User getPrincipal() {
+
+        User principal;
         TokenPrincipal tokenPrincipal = (TokenPrincipal) authService.getAuthPrincipal();
 
         if(tokenPrincipal != null && tokenPrincipal.getId() != null) { //если есть токен
             if(userRepository.findById(tokenPrincipal.getId()).isPresent()){ // и для него есть пользователь, то берем этого пользователя
-            user = userRepository.findById(tokenPrincipal.getId()).get();
-            } else { user = userService.createAnonimUser(); } // если для этого токена нет пользователя, то создаем анонимного (наверное надо кидать ошибку. Это случай, когда в бд не правильно сохраняли)
-        } else { user = userService.createAnonimUser(); } // если токен == null или у него id == null, то создаем анонимного пользователя
+                principal = userRepository.findById(tokenPrincipal.getId()).get();
+            } else { principal = userService.createAnonimUser(); } // если для этого токена нет пользователя, то создаем анонимного (наверное надо кидать ошибку. Это случай, когда в бд не правильно сохраняли)
+        } else { principal = userService.createAnonimUser(); } // если токен == null или у него id == null, то создаем анонимного пользователя
 
-        return user;
+        return principal;
     }
 
     private Boolean isPassed(UserAnswers userAnswers) {
@@ -251,7 +258,7 @@ public class UserAnswersServiceImpl implements UserAnswersService {
 
     @Override
     public UserAnswers findLastUserAnswersByUserNameOrEmail(String userName) {
-        if(userName == null) throw new BadRequestException(env.getProperty("error.noUserFind"));
+        if(userName == null) throw new BadRequestException(env.getProperty("error.noUserFound"));
         User user;
 //       user = userRepository.findFirstByName(userName).orElseThrow(() -> new BadRequestException(env.getProperty("error.noUserFind")));
         if(userRepository.findUserByNameOrEmail(userName, userName).isPresent()) {
@@ -272,10 +279,10 @@ public class UserAnswersServiceImpl implements UserAnswersService {
 
     @Override
     public List<UserAnswers> findAllByUserNameOrderByCreationDateDesc(String userName) {
-        if(userName == null) throw new BadRequestException(env.getProperty("error.noUserFind"));
+        if(userName == null) throw new BadRequestException(env.getProperty("error.noUserFound"));
 
         User user = userRepository.findFirstByName(userName)
-                .orElseThrow(() -> new BadRequestException(env.getProperty("error.noUserFind")
+                .orElseThrow(() -> new BadRequestException(env.getProperty("error.noUserFound")
                         + " for user name: " + userName));
 
         //TODO может возникнуть проблема, если в _id в UserAnswers ObjectId когда-нибудь повторится.
@@ -289,7 +296,7 @@ public class UserAnswersServiceImpl implements UserAnswersService {
 
     @Override
     public UserAnswers getLastPassedTest() {
-        User user = getUser(null);
+        User user = getPrincipal();
         return userAnswersRepository.findTopByUser_IdAndPassedOrderByPassDateDesc(user.getId(),true)
                 .orElseThrow(() -> new BadRequestException(env.getProperty("error.noPassedUserAnswersFind")));
     }
@@ -302,31 +309,74 @@ public class UserAnswersServiceImpl implements UserAnswersService {
     }
 
     @Override
-    public Map<Scale, Double> getValueProfile() {
-        User user = getUser(null);
+    public ValueProfile getValueProfile(User noPrincipalUser) {
+
+        // if there is noPrincipalUser - get it; if not - get principal
+        User user;
+        Boolean isPrincipalUser;
+        if (noPrincipalUser != null) {
+            if (noPrincipalUser.getId() != null && userRepository.existsById(noPrincipalUser.getId())) {
+                user = userRepository.findById(noPrincipalUser.getId()).get();
+                //TODO check if this user is not principal
+                isPrincipalUser = false;
+            } else throw new BadRequestException(env.getProperty("error.noUserFound"));
+        } else {
+            user = getPrincipal();
+            isPrincipalUser = true;
+        }
+
+
         UserAnswers userAnswer = userAnswersRepository.findTopByUser_IdAndPassedOrderByPassDateDesc(user.getId(),true)
                 .orElseThrow(() -> new BadRequestException(env.getProperty("error.noPassedUserAnswersFind")));
-        Map<Scale, Double> valueProfile = new HashMap<>();
+        Map<Scale, ValueProfileComment> valueProfile = new HashMap<>();
         final Integer totalNumberOfQuestions = Integer.valueOf(env.getProperty("total.number.of.questions"));
 
         userAnswer.getUserAnswers()
                 .stream()
                 .collect(groupingBy(choice -> choice.getChosenScale(), counting()))
                 .forEach((scale, value) ->
-                        valueProfile.put(scale, value.doubleValue()/totalNumberOfQuestions));
+                        valueProfile.put(scale,
+                                ValueProfileCommentUtil.getComment(env, scale, value.doubleValue()/totalNumberOfQuestions * 100)));
 
-        // if user didn't choose some scale at all, than we have to put this scale (scales) to answer
+        // if user didn't choose some scale at all, than we have to put this scale (scales) to answer with 0 value
         List<Scale> scales = getScales();
-        scales.forEach(scale -> valueProfile.putIfAbsent(scale, 0d));
+        scales.forEach(scale -> valueProfile.putIfAbsent(scale, ValueProfileCommentUtil.getComment(env, scale, 0d)));
 
         //sort by scale in descending order
-        Map<Scale, Double> sortedValueProfile = valueProfile.entrySet().stream()
+        Map<Scale, ValueProfileComment> sortedValueProfile = valueProfile.entrySet().stream()
                 .sorted(comparingByKey(Comparator.reverseOrder()))
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue,
                         (oldValue, newValue) -> oldValue, LinkedHashMap::new));
 
-        return sortedValueProfile;
+        return new ValueProfile(sortedValueProfile, isPrincipalUser);
     }
+
+//    @Override
+//    public ValueProfile getValueProfile() {
+//        User user = getUser(null);
+//        UserAnswers userAnswer = userAnswersRepository.findTopByUser_IdAndPassedOrderByPassDateDesc(user.getId(),true)
+//                .orElseThrow(() -> new BadRequestException(env.getProperty("error.noPassedUserAnswersFind")));
+//        Map<Scale, Double> scaleResult = new HashMap<>();
+//        final Integer totalNumberOfQuestions = Integer.valueOf(env.getProperty("total.number.of.questions"));
+//
+//        userAnswer.getUserAnswers()
+//                .stream()
+//                .collect(groupingBy(choice -> choice.getChosenScale(), counting()))
+//                .forEach((scale, value) ->
+//                        scaleResult.put(scale, value.doubleValue()/totalNumberOfQuestions));
+//
+//        // if user didn't choose some scale at all, than we have to put this scale (scales) to answer
+//        List<Scale> scales = getScales();
+//        scales.forEach(scale -> scaleResult.putIfAbsent(scale, 0d));
+//
+//        //sort by scale in descending order
+//        Map<Scale, Double> sortedValueProfile = scaleResult.entrySet().stream()
+//                .sorted(comparingByKey(Comparator.reverseOrder()))
+//                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue,
+//                        (oldValue, newValue) -> oldValue, LinkedHashMap::new));
+//
+//        return sortedValueProfile;
+//    }
 
     private List<Scale> getScales() {
         List<Scale> scales = new ArrayList<>();
@@ -426,13 +476,21 @@ public class UserAnswersServiceImpl implements UserAnswersService {
         Choice choice = new Choice();
         choice.setArea(area);
 
-        //set random first and second test scale
-        Boolean random = new Random().nextBoolean();
-        Scale one = random ? scaleOne : scaleTwo;
-        Scale two = random ? scaleTwo : scaleOne;
+        List<Scale> scales = Arrays.asList(scaleOne, scaleTwo);
+//        SecureRandom random = new SecureRandom();
+//        Collections.shuffle(scales, random);
+        Collections.shuffle(scales);
 
-        choice.setFirstScale(one);
-        choice.setSecondScale(two);
+        //set random first and second test scale
+//        Boolean random = new Random(454567).nextBoolean();
+//        Scale one = random ? scaleOne : scaleTwo;
+//        Scale two = random ? scaleTwo : scaleOne;
+//
+//        choice.setFirstScale(one);
+//        choice.setSecondScale(two);
+
+        choice.setFirstScale(scales.get(0));
+        choice.setSecondScale(scales.get(1));
 
         return choice;
     }

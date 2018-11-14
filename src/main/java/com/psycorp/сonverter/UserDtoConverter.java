@@ -10,8 +10,13 @@ import org.springframework.stereotype.Component;
 @Component
 public class UserDtoConverter extends AbstractDtoConverter<User, SimpleUserDto>{
 
+
+    private final Environment env;
+
     @Autowired
-    private Environment env;
+    public UserDtoConverter(Environment env) {
+        this.env = env;
+    }
 
     @Override
     protected SimpleUserDto createNewDto() {
@@ -25,10 +30,11 @@ public class UserDtoConverter extends AbstractDtoConverter<User, SimpleUserDto>{
 
     @Override
     protected void convertFromEntity(User entity, SimpleUserDto dto) {
-        if(entity == null || dto == null) throw new BadRequestException(env.getProperty("error.UserCan`tBeNull"));
+//        if(entity == null || dto == null) throw new BadRequestException(env.getProperty("error.UserCan`tBeNull"));
         dto.setName(entity.getName());
         dto.setEmail(entity.getEmail());
         dto.setId(entity.getId());
+
     }
 
     @Override

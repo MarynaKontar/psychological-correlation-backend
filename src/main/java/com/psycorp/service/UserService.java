@@ -14,6 +14,7 @@ public interface UserService {
     User findUserByNameOrEmail(String email);
     User findFirstUserByName(String name);
     User findById (ObjectId userId);
+    User getPrincipalUser();
     //TODO deleteUser in production
     List<User> findAll();
 

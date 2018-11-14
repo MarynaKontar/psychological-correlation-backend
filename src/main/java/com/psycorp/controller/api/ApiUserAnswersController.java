@@ -1,11 +1,13 @@
 package com.psycorp.controller.api;
 
+import com.psycorp.model.dto.SimpleUserDto;
 import com.psycorp.model.dto.UserAnswersDto;
 import com.psycorp.model.dto.ValueProfileDto;
 import com.psycorp.model.entity.Choice;
+import com.psycorp.model.entity.User;
 import com.psycorp.model.entity.UserAnswers;
+import com.psycorp.model.entity.ValueProfile;
 import com.psycorp.model.enums.Area;
-import com.psycorp.model.enums.Scale;
 import com.psycorp.model.enums.UserRole;
 import com.psycorp.service.UserAnswersService;
 import com.psycorp.service.UserService;
@@ -13,6 +15,7 @@ import com.psycorp.service.security.AuthService;
 import com.psycorp.service.security.TokenService;
 import com.psycorp.сonverter.ChoiceDtoConverter;
 import com.psycorp.сonverter.UserAnswersDtoConverter;
+import com.psycorp.сonverter.UserDtoConverter;
 import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.PropertySource;
@@ -26,7 +29,6 @@ import javax.validation.Valid;
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
 import java.util.List;
-import java.util.Map;
 
 import static com.psycorp.security.SecurityConstant.ACCESS_TOKEN_PREFIX;
 
@@ -38,6 +40,7 @@ public class ApiUserAnswersController {
     private final UserAnswersService userAnswersService;
     private final UserService userService;
     private final ChoiceDtoConverter choiceDtoConverter;
+    private final UserDtoConverter userDtoConverter;
     private final UserAnswersDtoConverter userAnswersDtoConverter;
     private final AuthService authService;
     private final TokenService tokenService;
@@ -46,11 +49,13 @@ public class ApiUserAnswersController {
 
     @Autowired
     public ApiUserAnswersController(UserAnswersService userAnswersService, UserService userService,
-                                    ChoiceDtoConverter choiceDtoConverter,
-                                    UserAnswersDtoConverter userAnswersDtoConverter, AuthService authService, TokenService tokenService) {
+                                    ChoiceDtoConverter choiceDtoConverter, UserDtoConverter userDtoConverter,
+                                    UserAnswersDtoConverter userAnswersDtoConverter,
+                                    AuthService authService, TokenService tokenService) {
         this.userAnswersService = userAnswersService;
         this.userService = userService;
         this.choiceDtoConverter = choiceDtoConverter;
+        this.userDtoConverter = userDtoConverter;
         this.userAnswersDtoConverter = userAnswersDtoConverter;
         this.authService = authService;
         this.tokenService = tokenService;
@@ -150,10 +155,13 @@ public class ApiUserAnswersController {
 
     }
 
-    @GetMapping("/value-profile")
-    public ResponseEntity<List<ValueProfileDto>> getValueProfile(){
-        Map<Scale, Double> valueProfile = userAnswersService.getValueProfile();
-        List<ValueProfileDto> valueProfileDtos = userAnswersDtoConverter.convertToValueProfile(valueProfile);
+    @PostMapping("/value-profile")
+    public ResponseEntity<ValueProfileDto> getValueProfile(@RequestBody(required = false)
+                                                           @NotNull @Valid SimpleUserDto userDto){
+
+        User user = (userDto != null) ? userDtoConverter.transform(userDto) : null;
+        ValueProfile valueProfile = userAnswersService.getValueProfile(user);
+        ValueProfileDto valueProfileDtos = userAnswersDtoConverter.convertToValueProfileDtoList(valueProfile);
         return ResponseEntity.ok().headers(httpHeaders).body(valueProfileDtos);
     }
 

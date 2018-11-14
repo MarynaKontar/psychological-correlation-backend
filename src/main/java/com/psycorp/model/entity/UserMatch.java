@@ -12,7 +12,7 @@ import java.util.List;
 import java.util.Set;
 
 /**
- * Расчитанные результаты совместимости двух юзеров
+ * Расчитанные результаты совместимости двух (или больше) пользователей
  */
 @Data
 //@ToString(exclude = {"id"})
@@ -26,7 +26,8 @@ public class UserMatch extends AbstractEntity
     @Id
     private ObjectId id;
     @DBRef
-    //TODO Если здесь поставить @Indexed, то создастся индекс на user, а не на user.id (user.name). Поэтому приходится использовать @CompoundIndex
+    //TODO Если здесь поставить @Indexed, то создастся индекс на user, а не на user.id. Поэтому приходится использовать @CompoundIndex
     private Set<User> users;
     private List<Match> matches;
+//    private List<ValueProfile> valueProfiles;
 }

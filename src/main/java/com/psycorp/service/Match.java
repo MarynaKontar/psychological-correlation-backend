@@ -14,4 +14,5 @@ public interface Match {
      * @return UserMatch
      */
     UserMatch match(User user1, User user2, MatchMethod matchMethod);
+    UserMatch match(User user, MatchMethod matchMethod);
 }

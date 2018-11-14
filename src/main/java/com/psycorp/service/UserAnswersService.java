@@ -1,15 +1,13 @@
 package com.psycorp.service;
 
 import com.psycorp.model.entity.Choice;
+import com.psycorp.model.entity.User;
 import com.psycorp.model.entity.UserAnswers;
+import com.psycorp.model.entity.ValueProfile;
 import com.psycorp.model.enums.Area;
-import com.psycorp.model.enums.Scale;
 import org.bson.types.ObjectId;
-import org.springframework.transaction.annotation.Transactional;
 
-import java.security.Principal;
 import java.util.List;
-import java.util.Map;
 
 public interface UserAnswersService {
 
@@ -24,5 +22,5 @@ public interface UserAnswersService {
 
     UserAnswers getLastPassedTest();
 
-    Map<Scale, Double> getValueProfile();
+    ValueProfile getValueProfile(User noPrincipalUser);
 }
