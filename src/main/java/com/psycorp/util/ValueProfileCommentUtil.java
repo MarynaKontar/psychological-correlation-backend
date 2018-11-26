@@ -1,10 +1,11 @@
 package com.psycorp.util;
 
-import com.psycorp.model.entity.ValueProfileComment;
+import com.psycorp.model.objects.ValueProfileComment;
 import com.psycorp.model.enums.Scale;
 import org.springframework.core.env.Environment;
 import org.springframework.util.Assert;
 
+import javax.validation.constraints.NotNull;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -20,7 +21,7 @@ public class ValueProfileCommentUtil {
      * @param value percent of chosen scale in value profile
      * @return
      */
-    public static ValueProfileComment getComment(Environment env, Scale scale, Double value){
+    public static ValueProfileComment getComment(Environment env, @NotNull Scale scale, Double value){
         Assert.isTrue(value <= 100, "Value is a percent of chosen scale and can't be > 100.");
         String significance = getSignificance(env, value);
 
@@ -35,9 +36,11 @@ public class ValueProfileCommentUtil {
             list.add(env.getProperty(prefix + ".li." + i));
             i = i + 1;
         }
-
-        comment.setList(list);
+        comment.setScale(env.getProperty(scale.name()));
         comment.setResult(value);
+        comment.setList(list);
+//        comment.setResult(value);
+//        comment.setFooter(env.getProperty(prefix + ".footer"));
         return comment;
     }
 

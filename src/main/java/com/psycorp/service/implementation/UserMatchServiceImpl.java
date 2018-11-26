@@ -4,16 +4,16 @@ import com.psycorp.exception.BadRequestException;
 import com.psycorp.model.entity.*;
 import com.psycorp.model.enums.Area;
 import com.psycorp.model.enums.MatchMethod;
+import com.psycorp.model.objects.Matching;
+import com.psycorp.model.objects.UserMatch;
 import com.psycorp.repository.UserAnswersRepository;
 import com.psycorp.repository.UserMatchRepository;
-import com.psycorp.repository.UserRepository;
-import com.psycorp.security.token.TokenPrincipal;
 import com.psycorp.service.UserMatchService;
-import com.psycorp.service.security.AuthService;
+import com.psycorp.service.UserService;
+import com.psycorp.util.UserMatchCommentUtil;
 import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
-import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.stereotype.Service;
 
 import java.sql.Timestamp;
@@ -27,45 +27,38 @@ import static java.util.Comparator.comparing;
 public class UserMatchServiceImpl implements UserMatchService {
 
     private final UserMatchRepository userMatchRepository;
-    private final UserRepository userRepository;
-    private final AuthService authService;
+    private final UserService userService;
     private final UserAnswersRepository userAnswersRepository;
-    private final MongoOperations mongoOperations;
 
     private final Environment env;
 
     @Autowired
-    public UserMatchServiceImpl(UserMatchRepository userMatchRepository, UserRepository userRepository,
-                                AuthService authService, UserAnswersRepository userAnswersRepository,
-                                MongoOperations mongoOperations, Environment env) {
+    public UserMatchServiceImpl(UserMatchRepository userMatchRepository, UserService userService,
+                                UserAnswersRepository userAnswersRepository, Environment env) {
         this.userMatchRepository = userMatchRepository;
-        this.userRepository = userRepository;
-        this.authService = authService;
+        this.userService = userService;
         this.userAnswersRepository = userAnswersRepository;
-        this.mongoOperations = mongoOperations;
         this.env = env;
     }
 
-    //TODO добавить проверку всех значений и соответствуюшии им Exceptions
-
     @Override
-    public UserMatch insert(UserMatch userMatch) {
-        return userMatchRepository.insert(userMatch);
+    public UserMatchEntity insert(UserMatchEntity userMatchEntity) {
+        return userMatchRepository.insert(userMatchEntity);
     }
 
     @Override
-    public List<UserMatch> findByUserName(String userName) {
+    public List<UserMatchEntity> findByUserName(String userName) {
         //TODO сделать через MongoOperations
         return userMatchRepository.findByUserName(userName);
     }
 
     @Override
-    public List<UserMatch> findByMatchMethod(MatchMethod matchMethod) {
+    public List<UserMatchEntity> findByMatchMethod(MatchMethod matchMethod) {
         return userMatchRepository.findByMatchMethod(matchMethod);
     }
 
     @Override
-    public List<UserMatch> findByUserNameAndMatchMethod(String userName, MatchMethod matchMethod) {
+    public List<UserMatchEntity> findByUserNameAndMatchMethod(String userName, MatchMethod matchMethod) {
         //TODO не получается через постмен сделать empty или null
         // (просто пропуск имени или метода(.../getAll//pearsoncorrelation) выдает 404)
         if(userName == null || userName.isEmpty() || matchMethod.name().isEmpty()) throw new BadRequestException("&&&&&&&&&&&&");
@@ -73,49 +66,48 @@ public class UserMatchServiceImpl implements UserMatchService {
     }
 
     @Override
-    public List<UserMatch> getAll(){return userMatchRepository.findAll();}
+    public List<UserMatchEntity> getAll(){return userMatchRepository.findAll();}
 
     @Override
     public UserMatch match(User user1, User user2, MatchMethod matchMethod){
-//        validate(user1);
-//        validate(user2);
-        User fullUser1 = getUser(user1);
-        User fullUser2 = getUser(user2);
+
+        User fullUser1 = userService.find(user1);
+        User fullUser2 = userService.find(user2);
         validIfUsersCanBeMatching(fullUser1, fullUser2);
         validateUserAnswers(fullUser1);
         validateUserAnswers(fullUser2);
 
-        UserAnswers userAnswers1 = userAnswersRepository.findAllByUser_IdOrderByIdDesc(fullUser1.getId()).get().get(0);
-        UserAnswers userAnswers2 = userAnswersRepository.findAllByUser_IdOrderByIdDesc(fullUser2.getId()).get().get(0);
+        UserAnswersEntity userAnswersEntity1 = userAnswersRepository.findAllByUser_IdOrderByIdDesc(fullUser1.getId()).get().get(0);
+        UserAnswersEntity userAnswersEntity2 = userAnswersRepository.findAllByUser_IdOrderByIdDesc(fullUser2.getId()).get().get(0);
 
-        List<UserMatch> userMatchesUser1 = userMatchRepository.findByUserId(fullUser1.getId());
-        List<UserMatch> userMatchesUser2 = userMatchRepository.findByUserId(fullUser2.getId());
+        List<UserMatchEntity> userMatchEntitiesUser1 = userMatchRepository.findByUserId(fullUser1.getId());
+        List<UserMatchEntity> userMatchEntitiesUser2 = userMatchRepository.findByUserId(fullUser2.getId());
 
-        // check if there is record in userMatch collection that is after of both userAnswers; if not - insert it
-        UserMatch userMatch = userMatchesUser1.stream()
+        // check if there is record in userMatchEntity collection that is made after of both userAnswers and get it; if not - insert it
+        UserMatchEntity userMatchEntity = userMatchEntitiesUser1.stream()
                 .filter(userMatchPrincipal ->
-                        userMatchesUser2.contains(userMatchPrincipal)
-                                && userMatchPrincipal.getId().getDate().after(Timestamp.valueOf(userAnswers1.getPassDate()))
-                                && userMatchPrincipal.getId().getDate().after(Timestamp.valueOf(userAnswers2.getPassDate())))
-                .sorted(Comparator.comparing(UserMatch::getId).reversed()).limit(1).findFirst()
+                        userMatchEntitiesUser2.contains(userMatchPrincipal)
+                                && userMatchPrincipal.getId().getDate().after(Timestamp.valueOf(userAnswersEntity1.getPassDate()))
+                                && userMatchPrincipal.getId().getDate().after(Timestamp.valueOf(userAnswersEntity2.getPassDate())))
+                .sorted(Comparator.comparing(UserMatchEntity::getId).reversed()).limit(1).findFirst()
                 .orElseGet(() ->
-                        insert(userAnswers1, userAnswers2, fullUser1, fullUser2, matchMethod)
+                        insert(userAnswersEntity1, userAnswersEntity2, fullUser1, fullUser2, matchMethod)
                 );
-        return userMatch;
+
+        return getUserMatch(userMatchEntity);
     }
 
     // TODO какой-то глюк: principal.getUsersForMatching().get(0) дает user только с одним элементом в usersForMatching, поэтому приходится брать через репозиторий
     @Override
     public UserMatch match(User user, MatchMethod matchMethod){
-        User principal = getPrincipalUser();
+        User principal = userService.getPrincipalUser();
 
         User user2;
         if (user != null) { // if get user from controller, than get it;
-            user2 = getUser(user);
+            user2 = userService.find(user);
         } else { //if not (user firstly tests and matching with user, that sent him token) - get first user from userForMatching list
             if(!principal.getUsersForMatching().isEmpty()) {
-                    user2 = userRepository.findById(principal.getUsersForMatching().get(0).getId())
-                            .orElseThrow(() -> new BadRequestException(env.getProperty("error.noUserFound")));
+                    user2 = userService.findById(principal.getUsersForMatching().get(0).getId());
             } else throw new BadRequestException(env.getProperty("error.noUserFound"));
         }
 
@@ -123,31 +115,117 @@ public class UserMatchServiceImpl implements UserMatchService {
         validateUserAnswers(principal);
         validateUserAnswers(user2);
 
-        //последний сохраненный UserAnswers
-//        UserAnswers userAnswers1 = userAnswersRepository.findAllByUser_IdOrderByPassDateDesc(principal.getId()).get(0);
-//        UserAnswers userAnswers2 = userAnswersRepository.findAllByUser_IdOrderByPassDateDesc(user2.getId()).get(0);
+        //последний сохраненный UserAnswersEntity
+//        UserAnswersEntity userAnswersEntity1 = userAnswersRepository.findAllByUser_IdOrderByPassDateDesc(principal.getId()).get(0);
+//        UserAnswersEntity userAnswersEntity2 = userAnswersRepository.findAllByUser_IdOrderByPassDateDesc(user2.getId()).get(0);
 
-//        UserAnswers userAnswers1 = userAnswersRepository.findAllByUser_NameOrderByPassDateDesc(principal.getName()).get(0);
-//        UserAnswers userAnswers2 = userAnswersRepository.findAllByUser_NameOrderByPassDateDesc(user2.getName()).get(0);
+//        UserAnswersEntity userAnswersEntity1 = userAnswersRepository.findAllByUser_NameOrderByPassDateDesc(principal.getName()).get(0);
+//        UserAnswersEntity userAnswersEntity2 = userAnswersRepository.findAllByUser_NameOrderByPassDateDesc(user2.getName()).get(0);
 //
-        UserAnswers userAnswers1 = userAnswersRepository.findAllByUser_IdOrderByIdDesc(principal.getId()).get().get(0);
-        UserAnswers userAnswers2 = userAnswersRepository.findAllByUser_IdOrderByIdDesc(user2.getId()).get().get(0);
+        UserAnswersEntity userAnswersEntity1 = userAnswersRepository.findAllByUser_IdOrderByIdDesc(principal.getId()).get().get(0);
+        UserAnswersEntity userAnswersEntity2 = userAnswersRepository.findAllByUser_IdOrderByIdDesc(user2.getId()).get().get(0);
 
-        List<UserMatch> userMatchesPrincipal = userMatchRepository.findByUserId(principal.getId());
-        List<UserMatch> userMatchesUser2 = userMatchRepository.findByUserId(user2.getId());
+        List<UserMatchEntity> userMatcheEntitiesPrincipal = userMatchRepository.findByUserId(principal.getId());
+        List<UserMatchEntity> userMatchEntitiesUser2 = userMatchRepository.findByUserId(user2.getId());
 
-        // check if there is record in userMatch collection that is after of both userAnswers; if not - insert it
-        UserMatch userMatch = userMatchesPrincipal.stream()
+        // check if there is record in userMatchEntity collection that is after of both userAnswers; if not - insert it
+        UserMatchEntity userMatchEntity = userMatcheEntitiesPrincipal.stream()
                 .filter(userMatchPrincipal ->
-                    userMatchesUser2.contains(userMatchPrincipal)
-                    && userMatchPrincipal.getId().getDate().after(Timestamp.valueOf(userAnswers1.getPassDate()))
-                    && userMatchPrincipal.getId().getDate().after(Timestamp.valueOf(userAnswers2.getPassDate())))
-                .sorted(Comparator.comparing(UserMatch::getId).reversed()).limit(1).findFirst()
+                    userMatchEntitiesUser2.contains(userMatchPrincipal)
+                    && userMatchPrincipal.getId().getDate().after(Timestamp.valueOf(userAnswersEntity1.getPassDate()))
+                    && userMatchPrincipal.getId().getDate().after(Timestamp.valueOf(userAnswersEntity2.getPassDate())))
+                .sorted(Comparator.comparing(UserMatchEntity::getId).reversed()).limit(1).findFirst()
                 .orElseGet(() ->
-                        insert(userAnswers1, userAnswers2, principal, user2, matchMethod)
+                        insert(userAnswersEntity1, userAnswersEntity2, principal, user2, matchMethod)
                 );
+        return getUserMatch(userMatchEntity);
+    }
+
+    private UserMatch getUserMatch(UserMatchEntity userMatchEntity) {
+        List<Matching> matches = new ArrayList<>();
+        userMatchEntity.getMatches().forEach(matchEntity -> matches.add(new Matching(matchEntity.getMatchMethod(),
+                matchEntity.getArea(), matchEntity.getResult(), UserMatchCommentUtil.getAspectComment(matchEntity, env))));
+
+        UserMatch userMatch = new UserMatch();
+        userMatch.setId(userMatchEntity.getId());
+        userMatch.setMatches(matches);
+        userMatch.setUsers(userMatchEntity.getUsers());
         return userMatch;
     }
+
+//    @Override
+//    public UserMatchEntity match(User user1, User user2, MatchMethod matchMethod){
+//
+//        User fullUser1 = getUser(user1);
+//        User fullUser2 = getUser(user2);
+//        validIfUsersCanBeMatching(fullUser1, fullUser2);
+//        validateUserAnswers(fullUser1);
+//        validateUserAnswers(fullUser2);
+//
+//        UserAnswersEntity userAnswers1 = userAnswersRepository.findAllByUser_IdOrderByIdDesc(fullUser1.getId()).get().get(0);
+//        UserAnswersEntity userAnswers2 = userAnswersRepository.findAllByUser_IdOrderByIdDesc(fullUser2.getId()).get().get(0);
+//
+//        List<UserMatchEntity> userMatchesUser1 = userMatchRepository.findByUserId(fullUser1.getId());
+//        List<UserMatchEntity> userMatchesUser2 = userMatchRepository.findByUserId(fullUser2.getId());
+//
+//        // check if there is record in userMatch collection that is made after of both userAnswers and get it; if not - insert it
+//        UserMatchEntity userMatch = userMatchesUser1.stream()
+//                .filter(userMatchPrincipal ->
+//                        userMatchesUser2.contains(userMatchPrincipal)
+//                                && userMatchPrincipal.getId().getDate().after(Timestamp.valueOf(userAnswers1.getPassDate()))
+//                                && userMatchPrincipal.getId().getDate().after(Timestamp.valueOf(userAnswers2.getPassDate())))
+//                .sorted(Comparator.comparing(UserMatchEntity::getId).reversed()).limit(1).findFirst()
+//                .orElseGet(() ->
+//                        insert(userAnswers1, userAnswers2, fullUser1, fullUser2, matchMethod)
+//                );
+//        return userMatch;
+//    }
+//
+//    // TODO какой-то глюк: principal.getUsersForMatching().get(0) дает user только с одним элементом в usersForMatching, поэтому приходится брать через репозиторий
+//    @Override
+//    public UserMatchEntity match(User user, MatchMethod matchMethod){
+//        User principal = userService.getPrincipalUser();
+//
+//        User user2;
+//        if (user != null) { // if get user from controller, than get it;
+//            user2 = getUser(user);
+//        } else { //if not (user firstly tests and matching with user, that sent him token) - get first user from userForMatching list
+//            if(!principal.getUsersForMatching().isEmpty()) {
+//                user2 = userService.findById(principal.getUsersForMatching().get(0).getId());
+//            } else throw new BadRequestException(env.getProperty("error.noUserFound"));
+//        }
+//
+//        validIfUsersCanBeMatching(principal, user2);
+//        validateUserAnswers(principal);
+//        validateUserAnswers(user2);
+//
+//        //последний сохраненный UserAnswersEntity
+////        UserAnswersEntity userAnswers1 = userAnswersRepository.findAllByUser_IdOrderByPassDateDesc(principal.getId()).get(0);
+////        UserAnswersEntity userAnswers2 = userAnswersRepository.findAllByUser_IdOrderByPassDateDesc(user2.getId()).get(0);
+//
+////        UserAnswersEntity userAnswers1 = userAnswersRepository.findAllByUser_NameOrderByPassDateDesc(principal.getName()).get(0);
+////        UserAnswersEntity userAnswers2 = userAnswersRepository.findAllByUser_NameOrderByPassDateDesc(user2.getName()).get(0);
+////
+//        UserAnswersEntity userAnswers1 = userAnswersRepository.findAllByUser_IdOrderByIdDesc(principal.getId()).get().get(0);
+//        UserAnswersEntity userAnswers2 = userAnswersRepository.findAllByUser_IdOrderByIdDesc(user2.getId()).get().get(0);
+//
+//        List<UserMatchEntity> userMatchesPrincipal = userMatchRepository.findByUserId(principal.getId());
+//        List<UserMatchEntity> userMatchesUser2 = userMatchRepository.findByUserId(user2.getId());
+//
+//        // check if there is record in userMatch collection that is after of both userAnswers; if not - insert it
+//        UserMatchEntity userMatch = userMatchesPrincipal.stream()
+//                .filter(userMatchPrincipal ->
+//                        userMatchesUser2.contains(userMatchPrincipal)
+//                                && userMatchPrincipal.getId().getDate().after(Timestamp.valueOf(userAnswers1.getPassDate()))
+//                                && userMatchPrincipal.getId().getDate().after(Timestamp.valueOf(userAnswers2.getPassDate())))
+//                .sorted(Comparator.comparing(UserMatchEntity::getId).reversed()).limit(1).findFirst()
+//                .orElseGet(() ->
+//                        insert(userAnswers1, userAnswers2, principal, user2, matchMethod)
+//                );
+//        return userMatch;
+//    }
+//
+
 
     private void validIfUsersCanBeMatching(User user1, User user2) {
         if (user1.getUsersForMatching() == null || user2.getUsersForMatching() == null) {
@@ -170,12 +248,12 @@ public class UserMatchServiceImpl implements UserMatchService {
 //        }
     }
 
-    private UserMatch insert(UserAnswers userAnswers1, UserAnswers userAnswers2, User principal, User user,
-                             MatchMethod matchMethod) {
-        List<Choice> choices1 = userAnswers1.getUserAnswers();
-        List<Choice> choices2 = userAnswers2.getUserAnswers();
+    private UserMatchEntity insert(UserAnswersEntity userAnswersEntity1, UserAnswersEntity userAnswersEntity2, User principal, User user,
+                                   MatchMethod matchMethod) {
+        List<Choice> choices1 = userAnswersEntity1.getUserAnswers();
+        List<Choice> choices2 = userAnswersEntity2.getUserAnswers();
 
-        List<Match> matches = matchMap(choices1, choices2, matchMethod);
+        List<MatchEntity> matches = matchMap(choices1, choices2, matchMethod);
 
         Set<User> users = new HashSet<>();
         users.add(principal);
@@ -186,44 +264,35 @@ public class UserMatchServiceImpl implements UserMatchService {
 //        userNames.add(principal.getName());
 //        userNames.add(user2.getName());
 
-        UserMatch userMatch = new UserMatch();
-//        userMatch.setUserNames(userNames);
-        userMatch.setUsers(users);
+        UserMatchEntity userMatchEntity = new UserMatchEntity();
+//        userMatchEntity.setUserNames(userNames);
+        userMatchEntity.setUsers(users);
 
-        userMatch.setMatches(matches);
-//        userMatch.setMatchMethod(matchMethod);
+        userMatchEntity.setMatches(matches);
+//        userMatchEntity.setMatchMethod(matchMethod);
 
-        userMatch = userMatchRepository.insert(userMatch);
-        return userMatch;
+        userMatchEntity = userMatchRepository.insert(userMatchEntity);
+        return userMatchEntity;
     }
-
-    private User getPrincipalUser() {
-
-        User user;
-        TokenPrincipal tokenPrincipal = (TokenPrincipal) authService.getAuthPrincipal();
-
-        if(tokenPrincipal != null && tokenPrincipal.getId() != null) { //если есть токен
-            if(userRepository.findById(tokenPrincipal.getId()).isPresent()){ // и для него есть пользователь, то берем этого пользователя
-                user = userRepository.findById(tokenPrincipal.getId()).get();
-            } else { throw new BadRequestException(env.getProperty("error.TokenIsNotValid")); } // если для этого токена нет пользователя, то надо кидать ошибку. Это случай, когда в бд не правильно сохраняли)
-        } else { throw new BadRequestException(env.getProperty("error.TokenIsNotValid")); } // если токен == null или у него id == null
-
-        return user;
-    }
-
-    private User getUser(User user) {
-
-        // ищем пользователя, с которым будем сравнивать результаты тестов
-        if(user != null && user.getId() != null && userRepository.existsById(user.getId())) {
-            User user1 = userRepository.findById(user.getId()).get();
-            return user1;
-        } else { throw new BadRequestException(env.getProperty("error.noUserFound")); }
-    }
+//
+//    private User getPrincipalUser() {
+//
+//        User user;
+//        TokenPrincipal tokenPrincipal = (TokenPrincipal) authService.getAuthPrincipal();
+//
+//        if(tokenPrincipal != null && tokenPrincipal.getId() != null) { //если есть токен
+//            if(userRepository.findById(tokenPrincipal.getId()).isPresent()){ // и для него есть пользователь, то берем этого пользователя
+//                user = userRepository.findById(tokenPrincipal.getId()).get();
+//            } else { throw new BadRequestException(env.getProperty("error.TokenIsNotValid")); } // если для этого токена нет пользователя, то надо кидать ошибку. Это случай, когда в бд не правильно сохраняли)
+//        } else { throw new BadRequestException(env.getProperty("error.TokenIsNotValid")); } // если токен == null или у него id == null
+//
+//        return user;
+//    }
 
 
-    private List<Match> matchMap(List<Choice> choices1, List<Choice> choices2, MatchMethod matchMethod) {
+    private List<MatchEntity> matchMap(List<Choice> choices1, List<Choice> choices2, MatchMethod matchMethod) {
 
-       List<Match> matches = new ArrayList<>();
+       List<MatchEntity> matches = new ArrayList<>();
 
         for (Area area : Area.values()) {
             matches.add(getMatchForMatchMethod(choices1, choices2, matchMethod, area));
@@ -236,9 +305,9 @@ public class UserMatchServiceImpl implements UserMatchService {
          return matches;
     }
 
-    private Match getMatchForMatchMethod(List<Choice> choices1, List<Choice> choices2, MatchMethod matchMethod, Area area) {
-        Match match = new Match();
-        match.setArea(area);
+    private MatchEntity getMatchForMatchMethod(List<Choice> choices1, List<Choice> choices2, MatchMethod matchMethod, Area area) {
+        MatchEntity matchEntity = new MatchEntity();
+        matchEntity.setArea(area);
 
         Result result = new Result();
         if(matchMethod == MatchMethod.PERCENT){
@@ -248,9 +317,9 @@ public class UserMatchServiceImpl implements UserMatchService {
             result.setNumber(areaMatchPearson(choices1, choices2, area));
         } else throw new BadRequestException(env.getProperty("error.ThereIsn'tThatMatchMethod"));
 
-        match.setResult(result);
-        match.setMatchMethod(matchMethod);
-        return match;
+        matchEntity.setResult(result);
+        matchEntity.setMatchMethod(matchMethod);
+        return matchEntity;
     }
 
     private Double areaMatchPearson(List<Choice> choices1, List<Choice> choices2, Area area){
@@ -384,13 +453,8 @@ public class UserMatchServiceImpl implements UserMatchService {
                 .count();
     }
 
-    private void validate(User user){
-        if (user == null || user.getId() == null || !userRepository.existsById(user.getId()))
-            throw new BadRequestException(env.getProperty("error.noUserFound"));
-    }
-
     private void validateUserAnswers(User user){
-        Optional<List<UserAnswers>> userAnswers = userAnswersRepository.findAllByUser_IdOrderByIdDesc(user.getId());
+        Optional<List<UserAnswersEntity>> userAnswers = userAnswersRepository.findAllByUser_IdOrderByIdDesc(user.getId());
         if(!userAnswersRepository.findAllByUser_IdOrderByIdDesc(user.getId()).isPresent())
             throw new BadRequestException(env.getProperty("error.noTestWasPassed"));
     }

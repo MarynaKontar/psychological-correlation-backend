@@ -1,7 +1,9 @@
 package com.psycorp.service.implementation;
 
+import com.psycorp.exception.AuthorizationException;
 import com.psycorp.exception.BadRequestException;
 import com.psycorp.model.entity.User;
+import com.psycorp.model.enums.ErrorEnum;
 import com.psycorp.model.enums.UserRole;
 import com.psycorp.model.security.CredentialsEntity;
 import com.psycorp.repository.UserAnswersRepository;
@@ -31,18 +33,18 @@ public class UserServiceImpl implements UserService {
     private final CredentialsRepository credentialsRepository;
     private final UserAnswersRepository userAnswersRepository;
     private final UserMatchRepository userMatchRepository;
-    private final AuthService authService;
+    @Autowired
+    private AuthService authService;
     private final AuthUtil authUtil;
     private final Environment env;
 
     @Autowired
     public UserServiceImpl(UserRepository userRepository, CredentialsRepository credentialsRepository, UserAnswersRepository userAnswersRepository
-            , UserMatchRepository userMatchRepository, AuthService authService, AuthUtil serviceUtil, Environment env) {
+            , UserMatchRepository userMatchRepository, AuthUtil serviceUtil, Environment env) {
         this.userRepository = userRepository;
         this.credentialsRepository = credentialsRepository;
         this.userAnswersRepository = userAnswersRepository;
         this.userMatchRepository = userMatchRepository;
-        this.authService = authService;
         this.authUtil = serviceUtil;
         this.env = env;
     }
@@ -65,6 +67,24 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    public User find(User user) {
+        if (user != null && user.getId() != null) {
+            user = findById(user.getId());
+        } else {
+            throw new BadRequestException(env.getProperty("error.UserOrUserIdCan`tBeNull"));
+        }
+        return user;
+    }
+
+    @Override
+    public User findById(ObjectId userId) {
+//        authUtil.userAuthorization(userId);
+//        userRepository.existsById(userId);
+        return userRepository.findById(userId)
+                .orElseThrow(() -> new BadRequestException(env.getProperty("error.noUserFound") + " for user id: " + userId));
+    }
+
+    @Override
     public User findUserByNameOrEmail(String nameOrEmail) {
         return userRepository.findUserByNameOrEmail(nameOrEmail, nameOrEmail)
                 .orElseThrow(() -> new BadRequestException(env.getProperty("error.noUserFound") + " for name or email: "
@@ -78,10 +98,22 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public User findById(ObjectId userId) {
-//        authUtil.userAuthorization(userId);
-        return userRepository.findById(userId)
-                .orElseThrow(() -> new BadRequestException(env.getProperty("error.noUserFound") + " for user id: " + userId));
+    public User getPrincipalUser() {
+
+        TokenPrincipal tokenPrincipal = (TokenPrincipal) authService.getAuthPrincipal();
+        if(tokenPrincipal != null && tokenPrincipal.getId() != null) { //если есть токен
+            return findById(tokenPrincipal.getId()); // и для него есть пользователь, то берем этого пользователя
+        } else { throw new AuthorizationException("User not authorised", ErrorEnum.NOT_AUTHORIZED); } // если токен == null или у него id == null
+
+//        User user;
+//        TokenPrincipal tokenPrincipal = (TokenPrincipal) authService.getAuthPrincipal();
+//
+//        if(tokenPrincipal != null && tokenPrincipal.getId() != null) { //если есть токен
+//            if(userRepository.findById(tokenPrincipal.getId()).isPresent()){ // и для него есть пользователь, то берем этого пользователя
+//                user = userRepository.findById(tokenPrincipal.getId()).get();
+//            } else { throw new BadRequestException(env.getProperty("error.TokenIsNotValid")); } // если для этого токена нет пользователя, то надо кидать ошибку. Это случай, когда в бд не правильно сохраняли)
+//        } else { throw new BadRequestException(env.getProperty("error.TokenIsNotValid")); } // если токен == null или у него id == null
+//        return user;
     }
 
     @Override
@@ -90,36 +122,20 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    @Transactional
-    public User deleteUser(ObjectId userId) {
-
-        authUtil.userAuthorization(userId);
-
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new BadRequestException(env.getProperty("error.noUserFound") + " for user id: " + userId));
-        userAnswersRepository.removeAllByUserId(userId);
-        userMatchRepository.removeAllByUserId(userId);
-        userRepository.delete(user);
-        return user;
-    }
-
-    @Override
     public User updateUser(User user) {
         return userRepository.save(user);
     }
 
     @Override
-    public User getPrincipalUser() {
+    @Transactional
+    public User deleteUser(ObjectId userId) {
 
-        User user;
-        TokenPrincipal tokenPrincipal = (TokenPrincipal) authService.getAuthPrincipal();
+//        authUtil.userAuthorization(userId);
 
-        if(tokenPrincipal != null && tokenPrincipal.getId() != null) { //если есть токен
-            if(userRepository.findById(tokenPrincipal.getId()).isPresent()){ // и для него есть пользователь, то берем этого пользователя
-                user = userRepository.findById(tokenPrincipal.getId()).get();
-            } else { throw new BadRequestException(env.getProperty("error.TokenIsNotValid")); } // если для этого токена нет пользователя, то надо кидать ошибку. Это случай, когда в бд не правильно сохраняли)
-        } else { throw new BadRequestException(env.getProperty("error.TokenIsNotValid")); } // если токен == null или у него id == null
-
+        User user = findById(userId);
+        userAnswersRepository.removeAllByUserId(userId);
+        userMatchRepository.removeAllByUserId(userId);
+        userRepository.delete(user);
         return user;
     }
 

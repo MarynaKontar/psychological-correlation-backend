@@ -3,16 +3,15 @@ package com.psycorp.controller.api;
 import com.psycorp.exception.BadRequestException;
 import com.psycorp.model.dto.SimpleUserDto;
 import com.psycorp.model.dto.UserMatchDto;
-import com.psycorp.model.dto.ValueProfileDto;
+import com.psycorp.model.dto.ValueProfileMatchingDto;
 import com.psycorp.model.entity.User;
-import com.psycorp.model.entity.ValueProfile;
 import com.psycorp.model.enums.MatchMethod;
-import com.psycorp.service.UserAnswersService;
 import com.psycorp.service.UserMatchService;
 import com.psycorp.service.UserService;
-import com.psycorp.сonverter.UserAnswersDtoConverter;
+import com.psycorp.service.ValueProfileService;
 import com.psycorp.сonverter.UserDtoConverter;
 import com.psycorp.сonverter.UserMatchDtoConverter;
+import com.psycorp.сonverter.ValueProfileMatchingDtoConverter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.PropertySource;
 import org.springframework.http.HttpHeaders;
@@ -23,35 +22,35 @@ import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import java.security.Principal;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 
 @RestController
 @RequestMapping("/match")
 @PropertySource("classpath:errormessages.properties")
+@PropertySource(value = {"classpath:match/areacommentrussian.properties"}, encoding = "utf-8")
+@PropertySource(value = {"classpath:match/scalescommentrussian.properties"}, encoding = "utf-8")
 public class ApiUserMatchController {
 
     private final UserService userService;
     private final UserMatchService userMatchService;
+    private final ValueProfileService valueProfileService;
     private final UserDtoConverter userDtoConverter;
-    private final UserAnswersService userAnswersService;
-    private final UserAnswersDtoConverter userAnswersDtoConverter;
     private final UserMatchDtoConverter userMatchDtoConverter;
+    private final ValueProfileMatchingDtoConverter valueProfileMatchingDtoConverter;
+
     private HttpHeaders httpHeaders;
 
     @Autowired
     public ApiUserMatchController(UserService userService, UserMatchService userMatchService,
-                                  UserDtoConverter userDtoConverter, UserAnswersService userAnswersService,
-                                  UserAnswersDtoConverter userAnswersDtoConverter,
-                                  UserMatchDtoConverter userMatchDtoConverter) {
+                                  ValueProfileService valueProfileService, UserDtoConverter userDtoConverter,
+                                  UserMatchDtoConverter userMatchDtoConverter,
+                                  ValueProfileMatchingDtoConverter valueProfileMatchingDtoConverter) {
         this.userService = userService;
         this.userMatchService = userMatchService;
         this.userDtoConverter = userDtoConverter;
-        this.userAnswersService = userAnswersService;
-        this.userAnswersDtoConverter = userAnswersDtoConverter;
+        this.valueProfileService = valueProfileService;
         this.userMatchDtoConverter = userMatchDtoConverter;
+        this.valueProfileMatchingDtoConverter = valueProfileMatchingDtoConverter;
         this.httpHeaders = new HttpHeaders();
     }
 
@@ -61,22 +60,31 @@ public class ApiUserMatchController {
                 .body(userService.getPrincipalUser().getUsersForMatching());
     }
 
-    // TODO если будет сравнивать больше двух пользователей, то List<SimpleUserDto> userDtos с фронта
-    @PostMapping("/value-profile-for-matching")
-    public ResponseEntity<List<ValueProfileDto>> getValueProfilesForMatching(@RequestBody
-                                         @NotNull @Valid SimpleUserDto userDto) throws BadRequestException {
-       User user;
-       if(userDto != null) {
-           user = userDtoConverter.transform(userDto);
-       } else {throw new BadRequestException("User can't be null.");}
 
-       ValueProfile valueProfilePrincipal = userAnswersService.getValueProfile(null);
-       ValueProfile valueProfile = userAnswersService.getValueProfile(user);
-       ValueProfileDto valueProfilePrincipalDto = userAnswersDtoConverter.convertToValueProfileDtoList(valueProfilePrincipal);
-       ValueProfileDto valueProfileDto = userAnswersDtoConverter.convertToValueProfileDtoList(valueProfile);
-       List<ValueProfileDto> valueProfileDtos =Arrays.asList(valueProfileDto, valueProfilePrincipalDto);
-       return ResponseEntity.ok().headers(httpHeaders).body(valueProfileDtos);
+    @PostMapping("/value-profile-for-matching")
+    public ResponseEntity<ValueProfileMatchingDto> getValueProfilesForMatching(@RequestBody
+                            @NotNull @Valid SimpleUserDto userDto) throws BadRequestException {
+        User user = userDtoConverter.transform(userDto); // если null, то вернет new User()
+        return ResponseEntity.ok().headers(httpHeaders).body(valueProfileMatchingDtoConverter.transform(
+                valueProfileService.getValueProfileForMatching(user)));
     }
+
+    // TODO если будет сравнивать больше двух пользователей, то List<SimpleUserDto> userDtos с фронта
+//    @PostMapping("/value-profile-for-matching")
+//    public ResponseEntity<List<ValueProfileDto>> getValueProfilesForMatching(@RequestBody
+//                                         @NotNull @Valid SimpleUserDto userDto) throws BadRequestException {
+//       User user;
+//       if(userDto != null) {
+//           user = userDtoConverter.transform(userDto);
+//       } else {throw new BadRequestException("User can't be null.");}
+//
+//       ValueProfile valueProfilePrincipal = userAnswersService.getValueProfileIndividual(null);
+//       ValueProfile valueProfile = userAnswersService.getValueProfileIndividual(user);
+//       ValueProfileDto valueProfilePrincipalDto = userAnswersDtoConverter.convertToValueProfileDto(valueProfilePrincipal);
+//       ValueProfileDto valueProfile = userAnswersDtoConverter.convertToValueProfileDto(valueProfile);
+//       List<ValueProfileDto> valueProfileDtos =Arrays.asList(valueProfile, valueProfilePrincipalDto);
+//       return ResponseEntity.ok().headers(httpHeaders).body(valueProfileDtos);
+//    }
 
 
     //TODO надо передавать лист с users для тех, с кем идет сравнение
@@ -120,39 +128,39 @@ public class ApiUserMatchController {
                         .match(user, MatchMethod.PERCENT)));
     }
 
-    @GetMapping(value = "/{userName}", produces = "application/json")
-    public ResponseEntity<List<UserMatchDto>> getAllMatches(Principal principal, @PathVariable String userName){
-//TODO после подключения security, убрать @PathVariable String userName и использовать principal.getName()
-//        User user = userService.findFirstUserByName(userName);
-//        if (user == null) return ResponseEntity.badRequest().build();
-        return ResponseEntity.ok().headers(httpHeaders).body(userMatchDtoConverter.transform(userMatchService
-                .findByUserName(userName)));
+//    @GetMapping(value = "/{userName}", produces = "application/json")
+//    public ResponseEntity<List<UserMatchDto>> getAllMatches(Principal principal, @PathVariable String userName){
+////TODO после подключения security, убрать @PathVariable String userName и использовать principal.getName()
+////        User user = userService.findFirstUserByName(userName);
+////        if (user == null) return ResponseEntity.badRequest().build();
+//        return ResponseEntity.ok().headers(httpHeaders).body(userMatchDtoConverter.transform(userMatchService
+//                .findByUserName(userName)));
+//
+////        return ResponseEntity.ok().headers(httpHeaders).body(userMatchDtoConverter.transform(userMatchService.getAll()));
+//    }
+//
+//    //TODO убрать в production
+//    @GetMapping(value = "/getAllByMatchMethod/{matchMethodString}", produces = "application/json")
+//    public ResponseEntity<List<UserMatchDto>> getAllByMatchMethod(@PathVariable String matchMethodString){
+//        MatchMethod matchMethod = MatchMethod.valueOf(matchMethodString.toUpperCase());
+//
+//        return ResponseEntity.ok().headers(httpHeaders).body(userMatchDtoConverter.transform(userMatchService
+//                .findByMatchMethod(matchMethod)));
+//    }
 
-//        return ResponseEntity.ok().headers(httpHeaders).body(userMatchDtoConverter.transform(userMatchService.getAll()));
-    }
-
-    //TODO убрать в production
-    @GetMapping(value = "/getAllByMatchMethod/{matchMethodString}", produces = "application/json")
-    public ResponseEntity<List<UserMatchDto>> getAllByMatchMethod(@PathVariable String matchMethodString){
-        MatchMethod matchMethod = MatchMethod.valueOf(matchMethodString.toUpperCase());
-
-        return ResponseEntity.ok().headers(httpHeaders).body(userMatchDtoConverter.transform(userMatchService
-                .findByMatchMethod(matchMethod)));
-    }
-
-    @GetMapping(value = "/{userName}/{matchMethodString}", produces = "application/json")
-    public ResponseEntity<List<UserMatchDto>> getAllByUserNameAndMatchMethod(@PathVariable String userName
-            , @PathVariable String matchMethodString){
-        //TODO после подключения security, убрать @PathVariable String userName и использовать principal.getName()
-//        if(principal.getName() == null ||
-//                (!principal.getName().equals(userName) && !principal.getName().equals(userName2)) )
-//            return ResponseEntity.badRequest().build();
-
-        MatchMethod matchMethod = MatchMethod.valueOf(matchMethodString.toUpperCase());
-
-        return ResponseEntity.ok().headers(httpHeaders).body(userMatchDtoConverter.transform(userMatchService
-                .findByUserNameAndMatchMethod(userName, matchMethod)));
-    }
+//    @GetMapping(value = "/{userName}/{matchMethodString}", produces = "application/json")
+//    public ResponseEntity<List<UserMatchDto>> getAllByUserNameAndMatchMethod(@PathVariable String userName
+//            , @PathVariable String matchMethodString){
+//        //TODO после подключения security, убрать @PathVariable String userName и использовать principal.getName()
+////        if(principal.getName() == null ||
+////                (!principal.getName().equals(userName) && !principal.getName().equals(userName2)) )
+////            return ResponseEntity.badRequest().build();
+//
+//        MatchMethod matchMethod = MatchMethod.valueOf(matchMethodString.toUpperCase());
+//
+//        return ResponseEntity.ok().headers(httpHeaders).body(userMatchDtoConverter.transform(userMatchService
+//                .findByUserNameAndMatchMethod(userName, matchMethod)));
+//    }
 
     @ExceptionHandler(RuntimeException.class)
     public ResponseEntity<HttpHeaders> handleException(RuntimeException ex, HttpServletRequest request) {

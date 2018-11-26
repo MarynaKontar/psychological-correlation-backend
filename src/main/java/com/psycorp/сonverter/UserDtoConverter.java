@@ -1,6 +1,5 @@
 package com.psycorp.сonverter;
 
-import com.psycorp.exception.BadRequestException;
 import com.psycorp.model.dto.SimpleUserDto;
 import com.psycorp.model.entity.User;
 import org.springframework.beans.factory.annotation.Autowired;

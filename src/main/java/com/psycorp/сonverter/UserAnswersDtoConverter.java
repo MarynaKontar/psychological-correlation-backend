@@ -2,11 +2,8 @@ package com.psycorp.сonverter;
 
 import com.psycorp.model.dto.ChoiceDto;
 import com.psycorp.model.dto.UserAnswersDto;
-import com.psycorp.model.dto.ValueProfileDto;
-import com.psycorp.model.dto.ValueProfileElementDto;
 import com.psycorp.model.entity.Choice;
-import com.psycorp.model.entity.UserAnswers;
-import com.psycorp.model.entity.ValueProfile;
+import com.psycorp.model.entity.UserAnswersEntity;
 import com.psycorp.model.enums.Area;
 import com.psycorp.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,7 +14,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Component
-public class UserAnswersDtoConverter extends AbstractDtoConverter<UserAnswers, UserAnswersDto>{
+public class UserAnswersDtoConverter extends AbstractDtoConverter<UserAnswersEntity, UserAnswersDto>{
 
     private final UserRepository userRepository;
     private final Environment env;
@@ -35,12 +32,12 @@ public class UserAnswersDtoConverter extends AbstractDtoConverter<UserAnswers, U
     }
 
     @Override
-    protected UserAnswers createNewEntity() {
-        return new UserAnswers();
+    protected UserAnswersEntity createNewEntity() {
+        return new UserAnswersEntity();
     }
 
     @Override
-    protected void convertFromEntity(UserAnswers entity, UserAnswersDto dto) {
+    protected void convertFromEntity(UserAnswersEntity entity, UserAnswersDto dto) {
 
         ChoiceDtoConverter choiceDtoConverter = new ChoiceDtoConverter(env);
 
@@ -74,7 +71,7 @@ public class UserAnswersDtoConverter extends AbstractDtoConverter<UserAnswers, U
     }
 
     @Override
-    protected void convertFromDto(UserAnswersDto dto, UserAnswers entity) {
+    protected void convertFromDto(UserAnswersDto dto, UserAnswersEntity entity) {
 
         ChoiceDtoConverter choiceDtoConverter = new ChoiceDtoConverter(env);
         List<Choice> choices = new ArrayList<>(choiceDtoConverter.transform(dto.getGoal()));
@@ -92,21 +89,4 @@ public class UserAnswersDtoConverter extends AbstractDtoConverter<UserAnswers, U
         entity.setId(dto.getId());
     }
 
-    public ValueProfileDto convertToValueProfileDtoList(ValueProfile valueProfile) {
-        List<ValueProfileElementDto> valueProfileElementDtos = new ArrayList<>();
-
-        valueProfile.getScaleResult().forEach((scale, comment) ->
-                {
-//                    comment.setResult(comment.getResult() * 100);
-                    valueProfileElementDtos.add(
-                            new ValueProfileElementDto(env.getProperty(scale.name()), comment.getResult(), comment)
-                    );
-                }
-        );
-
-        ValueProfileDto valueProfileDto = new ValueProfileDto();
-        valueProfileDto.setValueProfileElements(valueProfileElementDtos);
-        valueProfileDto.setIsPrincipalUser(valueProfile.getIsPrincipalUser());
-        return valueProfileDto;
-    }
 }

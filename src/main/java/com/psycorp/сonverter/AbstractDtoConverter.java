@@ -12,9 +12,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
-@PropertySource(value = {"classpath:scales/scalesukrainian.properties"}, encoding = "utf-8", ignoreResourceNotFound = true)
-@PropertySource(value = {"classpath:scales/scalesrussian.properties"}, encoding = "utf-8")
-@PropertySource(value = {"classpath:scales/scalesenglish.properties"}, encoding = "utf-8", ignoreResourceNotFound = true)
+//@PropertySource(value = {"classpath:match/areacommentrussian.properties"}, encoding = "utf-8")
 public abstract class AbstractDtoConverter<Entity extends AbstractEntity, Dto extends AbstractDto> {
 
     public Dto transform(Entity entity) {

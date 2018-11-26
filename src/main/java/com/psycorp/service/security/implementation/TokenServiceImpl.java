@@ -1,19 +1,14 @@
 package com.psycorp.service.security.implementation;
 
 import com.psycorp.exception.AuthorizationException;
-import com.psycorp.exception.BadRequestException;
 import com.psycorp.model.entity.User;
-import com.psycorp.model.entity.UserAnswers;
 import com.psycorp.model.enums.ErrorEnum;
 import com.psycorp.model.enums.TokenType;
 import com.psycorp.model.security.TokenEntity;
 import com.psycorp.repository.security.TokenRepository;
-import com.psycorp.security.token.TokenPrincipal;
 import com.psycorp.service.UserService;
-import com.psycorp.service.security.AuthService;
 import com.psycorp.service.security.TokenService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.env.Environment;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.aggregation.Fields;
 import org.springframework.data.mongodb.core.query.Criteria;
@@ -32,18 +27,14 @@ import java.util.UUID;
 public class TokenServiceImpl implements TokenService {
 
     private final TokenRepository tokenRepository;
-    private final UserService userService;
-    private final AuthService authService;
+    @Autowired
+    private UserService userService;
     private final MongoOperations mongoOperations;
-    private final Environment env;
 
     @Autowired
-    public TokenServiceImpl(TokenRepository tokenRepository, UserService userService, AuthService authService, MongoOperations mongoOperations, Environment env) {
+    public TokenServiceImpl(TokenRepository tokenRepository, MongoOperations mongoOperations) {
         this.tokenRepository = tokenRepository;
-        this.userService = userService;
-        this.authService = authService;
         this.mongoOperations = mongoOperations;
-        this.env = env;
     }
 
 //    private JwtService jwtService;
@@ -66,7 +57,8 @@ public class TokenServiceImpl implements TokenService {
     @Override
     @Transactional
     public List<String> generateTokenList(Integer n){ //n tokens
-        User principal = getUser();
+//        User principal = getUser();
+        User principal = userService.getPrincipalUser();
         List<User> usersForMatching = new ArrayList<>(n);
         for (int i = 0; i < n; i++) {
             usersForMatching.add(userService.createAnonimUser());
@@ -90,13 +82,13 @@ public class TokenServiceImpl implements TokenService {
        return tokens;
     }
 
-    private User getUser() {
-
-        TokenPrincipal tokenPrincipal = (TokenPrincipal) authService.getAuthPrincipal();
-        if(tokenPrincipal != null && tokenPrincipal.getId() != null) { //если есть токен
-           return userService.findById(tokenPrincipal.getId()); // и для него есть пользователь, то берем этого пользователя
-        } else { throw new AuthorizationException("User not authorised", ErrorEnum.NOT_AUTHORIZED); } // если токен == null или у него id == null
-    }
+//    private User getUser() {
+//
+//        TokenPrincipal tokenPrincipal = (TokenPrincipal) authService.getAuthPrincipal();
+//        if(tokenPrincipal != null && tokenPrincipal.getId() != null) { //если есть токен
+//           return userService.findById(tokenPrincipal.getId()); // и для него есть пользователь, то берем этого пользователя
+//        } else { throw new AuthorizationException("User not authorised", ErrorEnum.NOT_AUTHORIZED); } // если токен == null или у него id == null
+//    }
 
     @Override
     public User getUserByToken(String token){

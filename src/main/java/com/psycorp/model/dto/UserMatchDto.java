@@ -10,10 +10,11 @@ import java.util.List;
 @Data
 public class UserMatchDto extends AbstractDto{
     private ObjectId id;
-    @NotNull @Valid
+    @NotNull
+    @Valid
     private List<SimpleUserDto> users;
     @NotNull @Valid
-    private List<MatchDto> matches;
-//    @NotEmpty @Valid
-//    private String advice; //совет по поводу результата совместимости респондентов
+    private List<MatchingDto> matches;
+    //    @NotEmpty @Valid
+    //    private String advice; //совет по поводу результата совместимости респондентов
 }

@@ -2,7 +2,7 @@ package com.psycorp.util;
 
 import com.psycorp.model.entity.Choice;
 import com.psycorp.model.entity.User;
-import com.psycorp.model.entity.UserAnswers;
+import com.psycorp.model.entity.UserAnswersEntity;
 import com.psycorp.model.enums.Area;
 import com.psycorp.model.enums.Scale;
 
@@ -19,22 +19,22 @@ public class Entity {
     /**
      *
      * @param user
-     * @return UserAnswers for user
+     * @return UserAnswersEntity for user
      */
-    public static UserAnswers createRandomUserAnswers(User user){
-        UserAnswers userAnswers = new UserAnswers();
-        userAnswers.setUser(user);
+    public static UserAnswersEntity createRandomUserAnswers(User user){
+        UserAnswersEntity userAnswersEntity = new UserAnswersEntity();
+        userAnswersEntity.setUser(user);
 
         List<Choice> choices = new ArrayList<>();
         choices.addAll(getChoices(Area.GOAL));
         choices.addAll(getChoices(Area.QUALITY));
         choices.addAll(getChoices(Area.STATE));
 
-        userAnswers.setUserAnswers(choices);
-        userAnswers.setCreationDate(LocalDateTime.now());
-        userAnswers.setPassDate(LocalDateTime.now());
+        userAnswersEntity.setUserAnswers(choices);
+        userAnswersEntity.setCreationDate(LocalDateTime.now());
+        userAnswersEntity.setPassDate(LocalDateTime.now());
 
-        return userAnswers;
+        return userAnswersEntity;
     }
 
     private static Set<Choice> getChoices(Area area) {

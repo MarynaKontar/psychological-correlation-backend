@@ -8,15 +8,12 @@ import com.psycorp.model.enums.ErrorEnum;
 import com.psycorp.model.enums.Scale;
 import com.psycorp.repository.UserAnswersRepository;
 import com.psycorp.repository.UserRepository;
-import com.psycorp.repository.security.CredentialsRepository;
 import com.psycorp.security.token.TokenPrincipal;
 import com.psycorp.service.UserAnswersService;
 import com.psycorp.service.UserService;
 import com.psycorp.service.security.AuthService;
-import com.psycorp.util.ValueProfileCommentUtil;
 import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.PropertySource;
 import org.springframework.core.env.Environment;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.aggregation.Fields;
@@ -28,23 +25,14 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.*;
-import java.util.stream.Collectors;
 
 import static com.psycorp.security.SecurityConstant.ACCESS_TOKEN_PREFIX;
-import static java.util.Map.Entry.comparingByKey;
-import static java.util.stream.Collectors.counting;
-import static java.util.stream.Collectors.groupingBy;
 
 @Service
-@PropertySource(value = {"classpath:scales/scalesukrainian.properties"}, encoding = "utf-8", ignoreResourceNotFound = true)
-@PropertySource(value = {"classpath:scales/scalesrussian.properties"}, encoding = "utf-8")
-@PropertySource(value = {"classpath:scales/scalesenglish.properties"}, encoding = "utf-8", ignoreResourceNotFound = true)
-@PropertySource(value = {"classpath:scales/scalescomment.properties"}, encoding = "utf-8", ignoreResourceNotFound = true)
 public class UserAnswersServiceImpl implements UserAnswersService {
 
     private final UserAnswersRepository userAnswersRepository;
     private final UserRepository userRepository;
-    private final CredentialsRepository credentialsRepository;
     private final AuthService authService;
     private final UserService userService;
     private final MongoOperations mongoOperations;
@@ -52,10 +40,10 @@ public class UserAnswersServiceImpl implements UserAnswersService {
 
     @Autowired
     public UserAnswersServiceImpl(UserAnswersRepository userAnswersRepository, UserRepository userRepository,
-                                  CredentialsRepository credentialsRepository, AuthService authService, UserService userService, MongoOperations mongoOperations, Environment env) {
+                                  AuthService authService, UserService userService, MongoOperations mongoOperations,
+                                  Environment env) {
         this.userAnswersRepository = userAnswersRepository;
         this.userRepository = userRepository;
-        this.credentialsRepository = credentialsRepository;
         this.authService = authService;
         this.userService = userService;
         this.mongoOperations = mongoOperations;
@@ -64,40 +52,40 @@ public class UserAnswersServiceImpl implements UserAnswersService {
 
     @Override
     @Transactional
-    public UserAnswers saveChoices(String token, UserAnswers userAnswers, List<Choice> choices, Area area){
+    public UserAnswersEntity saveChoices(String token, UserAnswersEntity userAnswersEntity, List<Choice> choices, Area area){
 
         validateChoices(choices, area);
 
         //GET USER
         User user = getUserByToken(token);
-//        Optional<UserAnswers> userAnswersOptional = userAnswersRepository.findTopByUser_IdAndPassedOrderByPassDateDesc(user.getId(), false);
-//        Optional<UserAnswers> userAnswersOptional1 =userAnswersRepository.findTopByUser_IdAndPassedOrderByPassDateDesc(user.getId(), false)
+//        Optional<UserAnswersEntity> userAnswersOptional = userAnswersRepository.findTopByUser_IdAndPassedOrderByPassDateDesc(user.getId(), false);
+//        Optional<UserAnswersEntity> userAnswersOptional1 =userAnswersRepository.findTopByUser_IdAndPassedOrderByPassDateDesc(user.getId(), false)
 //                .map((ua) -> update(ua, choices));
-        userAnswers = userAnswersRepository.findTopByUser_IdAndPassedOrderByPassDateDesc(user.getId(), false)
+        userAnswersEntity = userAnswersRepository.findTopByUser_IdAndPassedOrderByPassDateDesc(user.getId(), false)
                 .map((ua) -> update(ua, choices))
                 .orElseGet(() -> insert(choices, user));
-//        userAnswers = userAnswersRepository.findAllByUser_IdAndPassedAndLastPassDate(user.getId(), false)
+//        userAnswersEntity = userAnswersRepository.findAllByUser_IdAndPassedAndLastPassDate(user.getId(), false)
 //                .map((ua) -> update(ua, choices))
 //                .orElse(insert(choices, user));
 
         //UPDATE
-        // если есть userAnswers у user, то вытянем его по userId и сохраним в него choices (если не isPassed)
-        // или сохраним choices в новый UserAnswers (если isPassed)
+        // если есть userAnswersEntity у user, то вытянем его по userId и сохраним в него choices (если не isPassed)
+        // или сохраним choices в новый UserAnswersEntity (если isPassed)
 //        if(!userAnswersRepository.findAllByUser_IdAndPassedOrderByPassDateDesc(user.getId(), false).isEmpty()) {
-//            List<UserAnswers> userAnswersList = userAnswersRepository.findAllByUser_IdAndPassedOrderByPassDateDesc(user.getId(), false);
-//            userAnswers = userAnswersList.get(0);
+//            List<UserAnswersEntity> userAnswersList = userAnswersRepository.findAllByUser_IdAndPassedOrderByPassDateDesc(user.getId(), false);
+//            userAnswersEntity = userAnswersList.get(0);
 //
-//            //проверяем, совпадают ли пользователь у userAnswers с user из principal, если нет - exception
+//            //проверяем, совпадают ли пользователь у userAnswersEntity с user из principal, если нет - exception
 //            //для нового юзера не пройдет - убрать
-////            userAuthorization(userAnswers.getUser().getId());
+////            userAuthorization(userAnswersEntity.getUser().getId());
 //
-//            userAnswers = update(userAnswers, choices);
+//            userAnswersEntity = update(userAnswersEntity, choices);
 //
 //
 //        //INSERT
 //        // если последний тест уже пройден и прошел срок, после которого можно повторно пройти тест (если нет - exception)
 //        } else {
-//            userAnswers = insert(choices, user);
+//            userAnswersEntity = insert(choices, user);
 //            //что если прошел только часть тестов (goal, например), а потом заново начал через день?
 //        }
 
@@ -106,31 +94,31 @@ public class UserAnswersServiceImpl implements UserAnswersService {
 
 
 //        //UPDATE
-//        // если есть id у userAnswers, то даже если с фронта пришел какой-то не тот userAnswers, но с такой id,
-//        // то вытянем по id и сохраним в него choices (если не isPassed) или сохраним choices в новый UserAnswers (если isPassed)
-//        if(userAnswers.getId() != null && userAnswersRepository.findById(userAnswers.getId()).isPresent()) {
-//            userAnswers = userAnswersRepository.findById(userAnswers.getId()).get(); // находим по id
+//        // если есть id у userAnswersEntity, то даже если с фронта пришел какой-то не тот userAnswersEntity, но с такой id,
+//        // то вытянем по id и сохраним в него choices (если не isPassed) или сохраним choices в новый UserAnswersEntity (если isPassed)
+//        if(userAnswersEntity.getId() != null && userAnswersRepository.findById(userAnswersEntity.getId()).isPresent()) {
+//            userAnswersEntity = userAnswersRepository.findById(userAnswersEntity.getId()).get(); // находим по id
 //
 //            if(!userAnswersRepository.findAllByUser_IdAndPassedOrderByPassDateDesc(user.getId(), false).isEmpty()) {
-//                List<UserAnswers> userAnswersList = userAnswersRepository.findAllByUser_IdAndPassedOrderByPassDateDesc(user.getId(), false);
-//                userAnswers = userAnswersList.get(0);
+//                List<UserAnswersEntity> userAnswersList = userAnswersRepository.findAllByUser_IdAndPassedOrderByPassDateDesc(user.getId(), false);
+//                userAnswersEntity = userAnswersList.get(0);
 //            }
-//            //проверяем, совпадают ли пользователь у userAnswers с user из principal, если нет - exception
-//            userAuthorization(userAnswers.getUser().getId());
+//            //проверяем, совпадают ли пользователь у userAnswersEntity с user из principal, если нет - exception
+//            userAuthorization(userAnswersEntity.getUser().getId());
 //
-//            //если последний тест уже пройден (заменить после рефакторинга др. методов на userAnswers.getPassed)
+//            //если последний тест уже пройден (заменить после рефакторинга др. методов на userAnswersEntity.getPassed)
 //            // и прошел ли срок, после которого можно повторно пройти тест (если нет - exception) isCanPassTest
-//            if(isPassed(userAnswers)) {
+//            if(isPassed(userAnswersEntity)) {
 //                canPassTestAgain(user);
-//                userAnswers = insert(choices, user);
+//                userAnswersEntity = insert(choices, user);
 //            }
-//            userAnswers = update(userAnswers, choices);
+//            userAnswersEntity = update(userAnswersEntity, choices);
 //
 //
 //            //INSERT
 //        }
 
-        return userAnswers;
+        return userAnswersEntity;
     }
     private void userAuthorization(ObjectId userId) {
         TokenPrincipal tokenPrincipal = (TokenPrincipal)(authService.getAuthPrincipal());
@@ -143,15 +131,15 @@ public class UserAnswersServiceImpl implements UserAnswersService {
     //TODO Проверить и переделать
     private void canPassTestAgain(User user) {
         if(user.getId() != null) {
-//            Optional<List<UserAnswers>> userAnswersOptional = userAnswersRepository.findAllByUser_IdOrderByIdDesc(user.getId());
-            Optional<UserAnswers> userAnswersOptional1 = userAnswersRepository.findTopByUser_IdOrderByPassDateDesc(user.getId());
+//            Optional<List<UserAnswersEntity>> userAnswersOptional = userAnswersRepository.findAllByUser_IdOrderByIdDesc(user.getId());
+            Optional<UserAnswersEntity> userAnswersOptional1 = userAnswersRepository.findTopByUser_IdOrderByPassDateDesc(user.getId());
 
             if(userAnswersOptional1.isPresent()){
-                UserAnswers userAnswers = userAnswersOptional1.get();
+                UserAnswersEntity userAnswersEntity = userAnswersOptional1.get();
             }
 
 //            if (userAnswersOptional.isPresent() && userAnswersOptional.get().isEmpty()) {
-//                UserAnswers userAnswers = userAnswersOptional.get().get(0);
+//                UserAnswersEntity userAnswers = userAnswersOptional.get().get(0);
 //           if(Period.between(userAnswers.getPassDate().toLocalDate(), LocalDateTime.now().toLocalDate()).getDays()
 //                   <= Period.ofMonths(6).getDays()) throw new BadRequestException(env.getProperty("error.YouCan'tPassNewTest"));
         }
@@ -175,20 +163,22 @@ public class UserAnswersServiceImpl implements UserAnswersService {
         TokenPrincipal tokenPrincipal = (TokenPrincipal) authService.getAuthPrincipal();
 
         if(tokenPrincipal != null && tokenPrincipal.getId() != null) { //если есть токен
-            if(userRepository.findById(tokenPrincipal.getId()).isPresent()){ // и для него есть пользователь, то берем этого пользователя
-                principal = userRepository.findById(tokenPrincipal.getId()).get();
-            } else { principal = userService.createAnonimUser(); } // если для этого токена нет пользователя, то создаем анонимного (наверное надо кидать ошибку. Это случай, когда в бд не правильно сохраняли)
+//            if(userRepository.findById(tokenPrincipal.getId()).isPresent()){ // и для него есть пользователь, то берем этого пользователя
+//                principal = userRepository.findById(tokenPrincipal.getId()).get();
+//            } else { principal = userService.createAnonimUser(); } // если для этого токена нет пользователя, то создаем анонимного (наверное надо кидать ошибку. Это случай, когда в бд не правильно сохраняли)
+            principal = userService.findById(tokenPrincipal.getId());
         } else { principal = userService.createAnonimUser(); } // если токен == null или у него id == null, то создаем анонимного пользователя
 
         return principal;
     }
 
-    private Boolean isPassed(UserAnswers userAnswers) {
-        List<Choice> choices = userAnswers.getUserAnswers();
+    private Boolean isPassed(UserAnswersEntity userAnswersEntity) {
+        Integer numberOfQuestions = Integer.valueOf(env.getProperty("total.number.of.questions"));
+        List<Choice> choices = userAnswersEntity.getUserAnswers();
         if (choices.size() != 45) return false;
-        if(choices.stream().filter(choice -> choice.getArea() == Area.GOAL).count() != 15
-                || choices.stream().filter(choice -> choice.getArea() == Area.QUALITY).count() != 15
-                || choices.stream().filter(choice -> choice.getArea() == Area.STATE).count() != 15
+        if(choices.stream().filter(choice -> choice.getArea() == Area.GOAL).count() != numberOfQuestions
+                || choices.stream().filter(choice -> choice.getArea() == Area.QUALITY).count() != numberOfQuestions
+                || choices.stream().filter(choice -> choice.getArea() == Area.STATE).count() != numberOfQuestions
                 ) return false;
 
         if(choices.stream().anyMatch(choice -> choice.getChosenScale() == null)) return false;
@@ -198,10 +188,10 @@ public class UserAnswersServiceImpl implements UserAnswersService {
 
 //    @Override
 //    @Transactional
-//    public UserAnswers save(UserAnswers userAnswers){
+//    public UserAnswersEntity save(UserAnswersEntity userAnswers){
 ////        Boolean isPresent = userAnswersRepository.findById(userAnswers.getId()).isPresent();
 //        if(userAnswers.getId() != null) {
-//            Optional<UserAnswers> optional = userAnswersRepository.findById(userAnswers.getId());
+//            Optional<UserAnswersEntity> optional = userAnswersRepository.findById(userAnswers.getId());
 //            if(optional.isPresent()){
 //                if(optional.get().getUserAnswers().size() >= 45) { // если userAnswers уже полностью пройден (45 вопросов), то записывать в новый userAnswers
 //                    userAnswers.setId(null);
@@ -217,47 +207,47 @@ public class UserAnswersServiceImpl implements UserAnswersService {
 //        return userAnswers;
 //    }
 
-    private UserAnswers insert(List<Choice> choices, User user) {
+    private UserAnswersEntity insert(List<Choice> choices, User user) {
         canPassTestAgain(user);
-        UserAnswers userAnswers = getInitUserAnswers();
-        userAnswers.setUser(user);
-        userAnswers.setUserAnswers(choices);
-        userAnswers.setPassDate(LocalDateTime.now());
-        userAnswers.setCreationDate(LocalDateTime.now());
-        userAnswers.setPassed(isPassed(userAnswers));
-        return userAnswersRepository.insert(userAnswers);
+        UserAnswersEntity userAnswersEntity = getInitUserAnswers();
+        userAnswersEntity.setUser(user);
+        userAnswersEntity.setUserAnswers(choices);
+        userAnswersEntity.setPassDate(LocalDateTime.now());
+        userAnswersEntity.setCreationDate(LocalDateTime.now());
+        userAnswersEntity.setPassed(isPassed(userAnswersEntity));
+        return userAnswersRepository.insert(userAnswersEntity);
     }
 
-    private UserAnswers update(UserAnswers userAnswers, List<Choice> choices) {
+    private UserAnswersEntity update(UserAnswersEntity userAnswersEntity, List<Choice> choices) {
 
         // засетить юзера, если был аноним, а стал нормальным principal
 
         // UPDATE CHOICES
         Update updateUserAnswers = new Update().set("passDate", LocalDateTime.now()).push("userAnswers").each(choices);
-        Query query = Query.query(Criteria.where(Fields.UNDERSCORE_ID).is(userAnswers.getId()));
-        mongoOperations.updateFirst(query, updateUserAnswers, UserAnswers.class);
+        Query query = Query.query(Criteria.where(Fields.UNDERSCORE_ID).is(userAnswersEntity.getId()));
+        mongoOperations.updateFirst(query, updateUserAnswers, UserAnswersEntity.class);
 
-        userAnswers = userAnswersRepository.findById(userAnswers.getId())
+        userAnswersEntity = userAnswersRepository.findById(userAnswersEntity.getId())
                 .orElseThrow(() -> new BadRequestException(env.getProperty("error.DataBaseError")));
 
         // UPDATE PASSED
-        if (isPassed(userAnswers)) { // если тест пройден, то установить поле "passed" в UserAnswers = true
-            mongoOperations.updateFirst(query, new Update().set("passed", true), UserAnswers.class);
+        if (isPassed(userAnswersEntity)) { // если тест пройден, то установить поле "passed" в UserAnswersEntity = true
+            mongoOperations.updateFirst(query, new Update().set("passed", true), UserAnswersEntity.class);
         }
-        userAnswers = userAnswersRepository.findById(userAnswers.getId())
+        userAnswersEntity = userAnswersRepository.findById(userAnswersEntity.getId())
                 .orElseThrow(() -> new BadRequestException(env.getProperty("error.DataBaseError")));
 
-        return userAnswers;
+        return userAnswersEntity;
     }
 
     @Override
-    public UserAnswers findById(ObjectId id) {
+    public UserAnswersEntity findById(ObjectId id) {
         return userAnswersRepository.findById(id)
                 .orElseThrow(() -> new BadRequestException(env.getProperty("error.noUserAnswersFind")));
     }
 
     @Override
-    public UserAnswers findLastUserAnswersByUserNameOrEmail(String userName) {
+    public UserAnswersEntity findLastUserAnswersByUserNameOrEmail(String userName) {
         if(userName == null) throw new BadRequestException(env.getProperty("error.noUserFound"));
         User user;
 //       user = userRepository.findFirstByName(userName).orElseThrow(() -> new BadRequestException(env.getProperty("error.noUserFind")));
@@ -268,8 +258,8 @@ public class UserAnswersServiceImpl implements UserAnswersService {
             user.setName(userName);
         }
 
-        UserAnswers userAnswer;
-        Optional<List<UserAnswers>> userAnswers = userAnswersRepository.findAllByUser_IdOrderByIdDesc(user.getId());
+        UserAnswersEntity userAnswer;
+        Optional<List<UserAnswersEntity>> userAnswers = userAnswersRepository.findAllByUser_IdOrderByIdDesc(user.getId());
         Boolean userAnswersIsPresent = !userAnswers.get().isEmpty();
         if(userAnswersIsPresent) {
             userAnswer = userAnswersRepository.findAllByUser_IdOrderByIdDesc(user.getId()).get().get(0);
@@ -278,16 +268,16 @@ public class UserAnswersServiceImpl implements UserAnswersService {
     }
 
     @Override
-    public List<UserAnswers> findAllByUserNameOrderByCreationDateDesc(String userName) {
+    public List<UserAnswersEntity> findAllByUserNameOrderByCreationDateDesc(String userName) {
         if(userName == null) throw new BadRequestException(env.getProperty("error.noUserFound"));
 
         User user = userRepository.findFirstByName(userName)
                 .orElseThrow(() -> new BadRequestException(env.getProperty("error.noUserFound")
                         + " for user name: " + userName));
 
-        //TODO может возникнуть проблема, если в _id в UserAnswers ObjectId когда-нибудь повторится.
+        //TODO может возникнуть проблема, если в _id в UserAnswersEntity ObjectId когда-нибудь повторится.
         // Вроде не должно, так как ObjectId  ("OrderById") отсортирован по дате создания
-        // правда с точностью 1 сек. Плюс - не надо индекс на PassDate/CreationDate в UserAnswers создавать
+        // правда с точностью 1 сек. Плюс - не надо индекс на PassDate/CreationDate в UserAnswersEntity создавать
         return userAnswersRepository.findAllByUser_IdOrderByIdDesc(user.getId())
                 .orElseThrow(() ->new BadRequestException(env.getProperty("error.noUserAnswersFind")
                         + " for user with name: " + userName));
@@ -295,99 +285,28 @@ public class UserAnswersServiceImpl implements UserAnswersService {
     }
 
     @Override
-    public UserAnswers getLastPassedTest() {
+    public UserAnswersEntity getLastPassedTest() {
         User user = getPrincipal();
         return userAnswersRepository.findTopByUser_IdAndPassedOrderByPassDateDesc(user.getId(),true)
                 .orElseThrow(() -> new BadRequestException(env.getProperty("error.noPassedUserAnswersFind")));
     }
 
     @Override
-    public UserAnswers getInitUserAnswers(){
-        UserAnswers userAnswers = new UserAnswers();
-        userAnswers.setUserAnswers(choiceList());
-        return userAnswers;
+    public UserAnswersEntity getLastPassedTest(User user) {
+        if(user != null && user.getId() != null) {
+            return userAnswersRepository.findTopByUser_IdAndPassedOrderByPassDateDesc(user.getId(), true)
+                    .orElseThrow(() -> new BadRequestException(env.getProperty("error.noPassedUserAnswersFind")));
+        } else throw new BadRequestException(env.getProperty("error.UserOrUserIdCan`tBeNull"));
     }
 
     @Override
-    public ValueProfile getValueProfile(User noPrincipalUser) {
-
-        // if there is noPrincipalUser - get it; if not - get principal
-        User user;
-        Boolean isPrincipalUser;
-        if (noPrincipalUser != null) {
-            if (noPrincipalUser.getId() != null && userRepository.existsById(noPrincipalUser.getId())) {
-                user = userRepository.findById(noPrincipalUser.getId()).get();
-                //TODO check if this user is not principal
-                isPrincipalUser = false;
-            } else throw new BadRequestException(env.getProperty("error.noUserFound"));
-        } else {
-            user = getPrincipal();
-            isPrincipalUser = true;
-        }
-
-
-        UserAnswers userAnswer = userAnswersRepository.findTopByUser_IdAndPassedOrderByPassDateDesc(user.getId(),true)
-                .orElseThrow(() -> new BadRequestException(env.getProperty("error.noPassedUserAnswersFind")));
-        Map<Scale, ValueProfileComment> valueProfile = new HashMap<>();
-        final Integer totalNumberOfQuestions = Integer.valueOf(env.getProperty("total.number.of.questions"));
-
-        userAnswer.getUserAnswers()
-                .stream()
-                .collect(groupingBy(choice -> choice.getChosenScale(), counting()))
-                .forEach((scale, value) ->
-                        valueProfile.put(scale,
-                                ValueProfileCommentUtil.getComment(env, scale, value.doubleValue()/totalNumberOfQuestions * 100)));
-
-        // if user didn't choose some scale at all, than we have to put this scale (scales) to answer with 0 value
-        List<Scale> scales = getScales();
-        scales.forEach(scale -> valueProfile.putIfAbsent(scale, ValueProfileCommentUtil.getComment(env, scale, 0d)));
-
-        //sort by scale in descending order
-        Map<Scale, ValueProfileComment> sortedValueProfile = valueProfile.entrySet().stream()
-                .sorted(comparingByKey(Comparator.reverseOrder()))
-                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue,
-                        (oldValue, newValue) -> oldValue, LinkedHashMap::new));
-
-        return new ValueProfile(sortedValueProfile, isPrincipalUser);
+    public UserAnswersEntity getInitUserAnswers(){
+        UserAnswersEntity userAnswersEntity = new UserAnswersEntity();
+        userAnswersEntity.setUserAnswers(choiceList());
+        return userAnswersEntity;
     }
 
-//    @Override
-//    public ValueProfile getValueProfile() {
-//        User user = getUser(null);
-//        UserAnswers userAnswer = userAnswersRepository.findTopByUser_IdAndPassedOrderByPassDateDesc(user.getId(),true)
-//                .orElseThrow(() -> new BadRequestException(env.getProperty("error.noPassedUserAnswersFind")));
-//        Map<Scale, Double> scaleResult = new HashMap<>();
-//        final Integer totalNumberOfQuestions = Integer.valueOf(env.getProperty("total.number.of.questions"));
-//
-//        userAnswer.getUserAnswers()
-//                .stream()
-//                .collect(groupingBy(choice -> choice.getChosenScale(), counting()))
-//                .forEach((scale, value) ->
-//                        scaleResult.put(scale, value.doubleValue()/totalNumberOfQuestions));
-//
-//        // if user didn't choose some scale at all, than we have to put this scale (scales) to answer
-//        List<Scale> scales = getScales();
-//        scales.forEach(scale -> scaleResult.putIfAbsent(scale, 0d));
-//
-//        //sort by scale in descending order
-//        Map<Scale, Double> sortedValueProfile = scaleResult.entrySet().stream()
-//                .sorted(comparingByKey(Comparator.reverseOrder()))
-//                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue,
-//                        (oldValue, newValue) -> oldValue, LinkedHashMap::new));
-//
-//        return sortedValueProfile;
-//    }
 
-    private List<Scale> getScales() {
-        List<Scale> scales = new ArrayList<>();
-        scales.add(Scale.ONE);
-        scales.add(Scale.TWO);
-        scales.add(Scale.THREE);
-        scales.add(Scale.FOUR);
-        scales.add(Scale.FIVE);
-        scales.add(Scale.SIX);
-        return scales;
-    }
 
     private List<Choice> choiceList(){
 
@@ -478,7 +397,7 @@ public class UserAnswersServiceImpl implements UserAnswersService {
 
         List<Scale> scales = Arrays.asList(scaleOne, scaleTwo);
 //        SecureRandom random = new SecureRandom();
-//        Collections.shuffle(scales, random);
+//        Collections.shuffle(testing, random);
         Collections.shuffle(scales);
 
         //set random first and second test scale
@@ -501,7 +420,8 @@ public class UserAnswersServiceImpl implements UserAnswersService {
     }
 
     private void validateChoices(List<Choice> choices, Area area) {
-        if (choices.size() != 15) throw new BadRequestException(env.getProperty("error.ItMustBe15TestsForArea") + " " + area);
+        Integer numberOfQuestions = Integer.valueOf(env.getProperty("total.number.of.questions"));
+        if (choices.size() != numberOfQuestions) throw new BadRequestException(env.getProperty("error.ItMustBe15TestsForArea") + " " + area);
         if ( choices.stream().anyMatch(choice -> choice.getArea() != area) ) {
             throw new BadRequestException(env.getProperty("error.AreaMustBe") + " " + area);
         }

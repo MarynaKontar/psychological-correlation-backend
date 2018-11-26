@@ -1,9 +1,6 @@
 package com.psycorp.service;
 
-import com.psycorp.model.entity.Choice;
-import com.psycorp.model.entity.User;
-import com.psycorp.model.entity.UserAnswers;
-import com.psycorp.model.entity.ValueProfile;
+import com.psycorp.model.entity.*;
 import com.psycorp.model.enums.Area;
 import org.bson.types.ObjectId;
 
@@ -11,16 +8,16 @@ import java.util.List;
 
 public interface UserAnswersService {
 
-    UserAnswers getInitUserAnswers();
+    UserAnswersEntity getLastPassedTest(User user);
 
-//    UserAnswers save(UserAnswers userAnswers);
-    UserAnswers saveChoices(String token, UserAnswers userAnswers, List<Choice> choices, Area area);
+    UserAnswersEntity getInitUserAnswers();
 
-    UserAnswers findById(ObjectId id);
-    UserAnswers findLastUserAnswersByUserNameOrEmail(String userName);
-    List<UserAnswers> findAllByUserNameOrderByCreationDateDesc(String userName);
+//    UserAnswersEntity save(UserAnswersEntity userAnswersEntity);
+    UserAnswersEntity saveChoices(String token, UserAnswersEntity userAnswersEntity, List<Choice> choices, Area area);
 
-    UserAnswers getLastPassedTest();
+    UserAnswersEntity findById(ObjectId id);
+    UserAnswersEntity findLastUserAnswersByUserNameOrEmail(String userName);
+    List<UserAnswersEntity> findAllByUserNameOrderByCreationDateDesc(String userName);
 
-    ValueProfile getValueProfile(User noPrincipalUser);
+    UserAnswersEntity getLastPassedTest();
 }

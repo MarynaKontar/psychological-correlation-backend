@@ -11,7 +11,7 @@ import java.util.List;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class ValueProfileDto {
+public class ValueProfileDto extends AbstractDto {
 
     @NotNull @Valid
     private List<ValueProfileElementDto> valueProfileElements;

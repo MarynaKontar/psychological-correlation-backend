@@ -11,6 +11,7 @@ public interface UserService {
 
     User createAnonimUser();
 
+    User find(User user);
     User findUserByNameOrEmail(String email);
     User findFirstUserByName(String name);
     User findById (ObjectId userId);

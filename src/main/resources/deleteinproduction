@@ -488,11 +488,11 @@ ChoiceDto choiceDto1 = new ChoiceDto();
         validateUsers(user1, user2);
 
         //последний сохраненный UserAnswers
-        UserAnswers userAnswers1 = userAnswersRepository.findAllByUser_IdOrderByPassDateDesc(user1.getId()).get(0);
-        UserAnswers userAnswers2 = userAnswersRepository.findAllByUser_IdOrderByPassDateDesc(user2.getId()).get(0);
+        UserAnswers userAnswersEntity1 = userAnswersRepository.findAllByUser_IdOrderByPassDateDesc(user1.getId()).get(0);
+        UserAnswers userAnswersEntity2 = userAnswersRepository.findAllByUser_IdOrderByPassDateDesc(user2.getId()).get(0);
 
-        Set<Choice> choices1 =  userAnswers1.getUserAnswers();
-        Set<Choice> choices2 =  userAnswers2.getUserAnswers();
+        Set<Choice> choices1 =  userAnswersEntity1.getUserAnswers();
+        Set<Choice> choices2 =  userAnswersEntity2.getUserAnswers();
 
         choices1.removeIf(choice -> !choice.getArea().equals(Area.GOAL));
         choices2.removeIf(choice -> !choice.getArea().equals(Area.GOAL));
@@ -508,11 +508,11 @@ ChoiceDto choiceDto1 = new ChoiceDto();
         validateUsers(user1, user2);
 
         //последний сохраненный UserAnswers
-        UserAnswers userAnswers1 = userAnswersRepository.findAllByUser_IdOrderByPassDateDesc(user1.getId()).get(0);
-        UserAnswers userAnswers2 = userAnswersRepository.findAllByUser_IdOrderByPassDateDesc(user2.getId()).get(0);
+        UserAnswers userAnswersEntity1 = userAnswersRepository.findAllByUser_IdOrderByPassDateDesc(user1.getId()).get(0);
+        UserAnswers userAnswersEntity2 = userAnswersRepository.findAllByUser_IdOrderByPassDateDesc(user2.getId()).get(0);
 
-        Set<Choice> choices1 =  userAnswers1.getUserAnswers();
-        Set<Choice> choices2 =  userAnswers2.getUserAnswers();
+        Set<Choice> choices1 =  userAnswersEntity1.getUserAnswers();
+        Set<Choice> choices2 =  userAnswersEntity2.getUserAnswers();
 
         choices1.removeIf(choice -> !choice.getArea().equals(Area.QUALITY));
         choices2.removeIf(choice -> !choice.getArea().equals(Area.QUALITY));
@@ -529,11 +529,11 @@ ChoiceDto choiceDto1 = new ChoiceDto();
         validateUsers(user1, user2);
 
         //последний сохраненный UserAnswers
-        UserAnswers userAnswers1 = userAnswersRepository.findAllByUser_IdOrderByPassDateDesc(user1.getId()).get(0);
-        UserAnswers userAnswers2 = userAnswersRepository.findAllByUser_IdOrderByPassDateDesc(user2.getId()).get(0);
+        UserAnswers userAnswersEntity1 = userAnswersRepository.findAllByUser_IdOrderByPassDateDesc(user1.getId()).get(0);
+        UserAnswers userAnswersEntity2 = userAnswersRepository.findAllByUser_IdOrderByPassDateDesc(user2.getId()).get(0);
 
-        Set<Choice> choices1 =  userAnswers1.getUserAnswers();
-        Set<Choice> choices2 =  userAnswers2.getUserAnswers();
+        Set<Choice> choices1 =  userAnswersEntity1.getUserAnswers();
+        Set<Choice> choices2 =  userAnswersEntity2.getUserAnswers();
 
         choices1.removeIf(choice -> !choice.getArea().equals(Area.STATE));
         choices2.removeIf(choice -> !choice.getArea().equals(Area.STATE));
@@ -549,11 +549,11 @@ ChoiceDto choiceDto1 = new ChoiceDto();
         validateUsers(user1, user2);
 
         //последний сохраненный UserAnswers
-        UserAnswers userAnswers1 = userAnswersRepository.findAllByUser_IdOrderByPassDateDesc(user1.getId()).get(0);
-        UserAnswers userAnswers2 = userAnswersRepository.findAllByUser_IdOrderByPassDateDesc(user2.getId()).get(0);
+        UserAnswers userAnswersEntity1 = userAnswersRepository.findAllByUser_IdOrderByPassDateDesc(user1.getId()).get(0);
+        UserAnswers userAnswersEntity2 = userAnswersRepository.findAllByUser_IdOrderByPassDateDesc(user2.getId()).get(0);
 
-        Set<Choice> choices1 =  userAnswers1.getUserAnswers();
-        Set<Choice> choices2 =  userAnswers2.getUserAnswers();
+        Set<Choice> choices1 =  userAnswersEntity1.getUserAnswers();
+        Set<Choice> choices2 =  userAnswersEntity2.getUserAnswers();
 
         choices1.removeAll(choices2);
         double totalMatchPercentInt = 100 * choices1.size()/choices2.size();
@@ -575,14 +575,14 @@ ChoiceDto choiceDto1 = new ChoiceDto();
 
 
 
-    UserMatch userMatch = new UserMatch();
+    UserMatch userMatchEntity = new UserMatch();
 
-            userMatch.setUserOne(user1);
-            userMatch.setUserTwo(user2);
-            userMatch.setGoalMatch(userMatchService.goalMatch(user1, user2));
-            userMatch.setQualityMatch(userMatchService.qualityMatch(user1, user2));
-            userMatch.setStateMatch(userMatchService.stateMatch(user1, user2));
-            userMatch.setTotalMatch(userMatchService.totalMatch(user1, user2));
+            userMatchEntity.setUserOne(user1);
+            userMatchEntity.setUserTwo(user2);
+            userMatchEntity.setGoalMatch(userMatchService.goalMatch(user1, user2));
+            userMatchEntity.setQualityMatch(userMatchService.qualityMatch(user1, user2));
+            userMatchEntity.setStateMatch(userMatchService.stateMatch(user1, user2));
+            userMatchEntity.setTotalMatch(userMatchService.totalMatch(user1, user2));
 
 
 
@@ -681,8 +681,8 @@ public class UserMatchServiceImpl implements UserMatchService {
     //TODO добавить проверку всех значений и соответствуюшии им Exceptions
 
     @Override
-    public UserMatch insert(UserMatch userMatch) {
-        return userMatchRepository.insert(userMatch);
+    public UserMatch insert(UserMatch userMatchEntity) {
+        return userMatchRepository.insert(userMatchEntity);
     }
 
     @Override
@@ -690,22 +690,22 @@ public class UserMatchServiceImpl implements UserMatchService {
 
     //TODO переделать метод так, чтобы расчитывал значения для всех методов
     @Override
-    public UserMatch match(User user1, User user2, MatchMethod matchMethod){
+    public UserMatch matchEntity(User user1, User user2, MatchMethod matchMethod){
         validate(user1, user2);
 
         //последний сохраненный UserAnswers
-//        UserAnswers userAnswers1 = userAnswersRepository.findAllByUser_IdOrderByPassDateDesc(user1.getId()).get(0);
-//        UserAnswers userAnswers2 = userAnswersRepository.findAllByUser_IdOrderByPassDateDesc(user2.getId()).get(0);
+//        UserAnswers userAnswersEntity1 = userAnswersRepository.findAllByUser_IdOrderByPassDateDesc(user1.getId()).get(0);
+//        UserAnswers userAnswersEntity2 = userAnswersRepository.findAllByUser_IdOrderByPassDateDesc(user2.getId()).get(0);
 
-//        UserAnswers userAnswers1 = userAnswersRepository.findAllByUser_NameOrderByPassDateDesc(user1.getName()).get(0);
-//        UserAnswers userAnswers2 = userAnswersRepository.findAllByUser_NameOrderByPassDateDesc(user2.getName()).get(0);
+//        UserAnswers userAnswersEntity1 = userAnswersRepository.findAllByUser_NameOrderByPassDateDesc(user1.getName()).get(0);
+//        UserAnswers userAnswersEntity2 = userAnswersRepository.findAllByUser_NameOrderByPassDateDesc(user2.getName()).get(0);
 //
-        UserAnswers userAnswers1 = userAnswersRepository.findAllByUser_NameOrderById(user1.getName()).get(0);
-        UserAnswers userAnswers2 = userAnswersRepository.findAllByUser_NameOrderById(user2.getName()).get(0);
+        UserAnswers userAnswersEntity1 = userAnswersRepository.findAllByUser_NameOrderById(user1.getName()).get(0);
+        UserAnswers userAnswersEntity2 = userAnswersRepository.findAllByUser_NameOrderById(user2.getName()).get(0);
 
 
-        Set<Choice> choices1 = userAnswers1.getUserAnswers();
-        Set<Choice> choices2 = userAnswers2.getUserAnswers();
+        Set<Choice> choices1 = userAnswersEntity1.getUserAnswers();
+        Set<Choice> choices2 = userAnswersEntity2.getUserAnswers();
 
        List<Match> matches = matchMap(choices1, choices2, matchMethod);
 
@@ -713,17 +713,17 @@ public class UserMatchServiceImpl implements UserMatchService {
         userNames.add(user1);
         userNames.add(user2);
 
-        UserMatch userMatch = new UserMatch();
-        userMatch.setUsers(userNames);
+        UserMatch userMatchEntity = new UserMatch();
+        userMatchEntity.setUsers(userNames);
 
 
         HashMap<MatchMethod, List<Match>> matchesMap = new HashMap<>();
         matchesMap.put(matchMethod, matches);
-        userMatch.setMatches(matchesMap);
-//        userMatch.setMatchMethod(matchMethod);
+        userMatchEntity.setMatches(matchesMap);
+//        userMatchEntity.setMatchMethod(matchMethod);
 
-        userMatch = userMatchRepository.insert(userMatch);
-        return userMatch;
+        userMatchEntity = userMatchRepository.insert(userMatchEntity);
+        return userMatchEntity;
     }
 
     private List<Match> matchMap(Set<Choice> choices1, Set<Choice> choices2, MatchMethod matchMethod) {
@@ -742,8 +742,8 @@ public class UserMatchServiceImpl implements UserMatchService {
     }
 
     private Match getMatchForMatchMethod(Set<Choice> choices1, Set<Choice> choices2, MatchMethod matchMethod, Area area) {
-        Match match = new Match();
-        match.setArea(area);
+        Match matchEntity = new Match();
+        matchEntity.setArea(area);
 
         Result result = new Result();
         if(matchMethod == MatchMethod.PERCENT){
@@ -752,8 +752,8 @@ public class UserMatchServiceImpl implements UserMatchService {
             result.setText(areaMatchPearson(choices1, choices2, area));
         } else throw new BadRequestException(env.getProperty("error.ThereIsn'tThatMatchMethod"));
 
-        match.setResult(result);
-        return match;
+        matchEntity.setResult(result);
+        return matchEntity;
     }
 
     private String areaMatchPearson(Set<Choice> choices1, Set<Choice> choices2, Area area){

@@ -2,20 +2,18 @@ package com.psycorp.controller.api;
 
 import com.psycorp.model.dto.SimpleUserDto;
 import com.psycorp.model.dto.UserAnswersDto;
-import com.psycorp.model.dto.ValueProfileDto;
+import com.psycorp.model.dto.ValueProfileIndividualDto;
 import com.psycorp.model.entity.Choice;
 import com.psycorp.model.entity.User;
-import com.psycorp.model.entity.UserAnswers;
-import com.psycorp.model.entity.ValueProfile;
+import com.psycorp.model.entity.UserAnswersEntity;
 import com.psycorp.model.enums.Area;
 import com.psycorp.model.enums.UserRole;
+import com.psycorp.model.objects.ValueProfileIndividual;
 import com.psycorp.service.UserAnswersService;
-import com.psycorp.service.UserService;
+import com.psycorp.service.ValueProfileService;
 import com.psycorp.service.security.AuthService;
 import com.psycorp.service.security.TokenService;
-import com.psycorp.сonverter.ChoiceDtoConverter;
-import com.psycorp.сonverter.UserAnswersDtoConverter;
-import com.psycorp.сonverter.UserDtoConverter;
+import com.psycorp.сonverter.*;
 import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.PropertySource;
@@ -35,10 +33,15 @@ import static com.psycorp.security.SecurityConstant.ACCESS_TOKEN_PREFIX;
 @RestController
 @RequestMapping("/test")
 @PropertySource("classpath:errormessages.properties")
+@PropertySource(value = {"classpath:testing/scalesquestionsukrainian.properties"}, encoding = "utf-8", ignoreResourceNotFound = true)
+@PropertySource(value = {"classpath:testing/scalesquestionsrussian.properties"}, encoding = "utf-8")
+@PropertySource(value = {"classpath:testing/scalesquestionsenglish.properties"}, encoding = "utf-8", ignoreResourceNotFound = true)
+@PropertySource(value = {"classpath:valueprofile/scalescommentrussian.properties"}, encoding = "utf-8")
 public class ApiUserAnswersController {
 
     private final UserAnswersService userAnswersService;
-    private final UserService userService;
+    private final ValueProfileService valueProfileService;
+    private final ValueProfileIndividualDtoConverter valueProfileIndividualDtoConverter;
     private final ChoiceDtoConverter choiceDtoConverter;
     private final UserDtoConverter userDtoConverter;
     private final UserAnswersDtoConverter userAnswersDtoConverter;
@@ -48,12 +51,14 @@ public class ApiUserAnswersController {
 
 
     @Autowired
-    public ApiUserAnswersController(UserAnswersService userAnswersService, UserService userService,
+    public ApiUserAnswersController(UserAnswersService userAnswersService, ValueProfileService valueProfileService,
+                                    ValueProfileIndividualDtoConverter valueProfileIndividualDtoConverter,
                                     ChoiceDtoConverter choiceDtoConverter, UserDtoConverter userDtoConverter,
                                     UserAnswersDtoConverter userAnswersDtoConverter,
                                     AuthService authService, TokenService tokenService) {
         this.userAnswersService = userAnswersService;
-        this.userService = userService;
+        this.valueProfileService = valueProfileService;
+        this.valueProfileIndividualDtoConverter = valueProfileIndividualDtoConverter;
         this.choiceDtoConverter = choiceDtoConverter;
         this.userDtoConverter = userDtoConverter;
         this.userAnswersDtoConverter = userAnswersDtoConverter;
@@ -70,7 +75,7 @@ public class ApiUserAnswersController {
 //    @PostMapping
 //    public ResponseEntity<UserAnswersDto> save(@RequestBody @NotNull @Valid UserAnswersDto userAnswersDto){
 //
-//        UserAnswers userAnswers = userAnswersDtoConverter.transform(userAnswersDto);
+//        UserAnswersEntity userAnswers = userAnswersDtoConverter.transform(userAnswersDto);
 //        userAnswers = userAnswersService.save(userAnswers);
 //        userAnswersDto = userAnswersDtoConverter.transform(userAnswers);
 //        return new ResponseEntity<>(userAnswersDto, HttpStatus.CREATED);
@@ -82,34 +87,34 @@ public class ApiUserAnswersController {
     @PostMapping("/goal")
     public ResponseEntity<UserAnswersDto> saveGoal(@RequestBody @NotNull @Valid UserAnswersDto userAnswersDto
             , @RequestHeader(value = "Authorization", required = false) String token){
-        UserAnswers userAnswers = userAnswersDtoConverter.transform(userAnswersDto);
+        UserAnswersEntity userAnswersEntity = userAnswersDtoConverter.transform(userAnswersDto);
         List<Choice> choices = choiceDtoConverter.transform(userAnswersDto.getGoal());
-        userAnswers = userAnswersService.saveChoices(token, userAnswers, choices, Area.GOAL);
-        if((token == null) && userAnswers.getUser().getRole().equals(UserRole.ANONIM)){
-            token = ACCESS_TOKEN_PREFIX + " " + authService.generateAccessTokenForAnonim(userAnswers.getUser());
+        userAnswersEntity = userAnswersService.saveChoices(token, userAnswersEntity, choices, Area.GOAL);
+        if((token == null) && userAnswersEntity.getUser().getRole().equals(UserRole.ANONIM)){
+            token = ACCESS_TOKEN_PREFIX + " " + authService.generateAccessTokenForAnonim(userAnswersEntity.getUser());
         }
         return ResponseEntity.status(HttpStatus.CREATED)
                 .header(HttpHeaders.AUTHORIZATION, token) // или сгенеренный токен или пришедший в хедере (уже с 'Bearer ')
-                .headers(httpHeaders).body(userAnswersDtoConverter.transform(userAnswers));
-//        return ResponseEntity.ok().headers(httpHeaders).body(userAnswersDtoConverter.transform(userAnswers));
+                .headers(httpHeaders).body(userAnswersDtoConverter.transform(userAnswersEntity));
+//        return ResponseEntity.ok().headers(httpHeaders).body(userAnswersDtoConverter.transform(userAnswersEntity));
     }
 
     //save only qualities
     @PostMapping("/quality")
     public ResponseEntity<UserAnswersDto> saveQuality(@RequestBody @NotNull @Valid UserAnswersDto userAnswersDto) {
-        UserAnswers userAnswers = userAnswersDtoConverter.transform(userAnswersDto);
+        UserAnswersEntity userAnswersEntity = userAnswersDtoConverter.transform(userAnswersDto);
         List<Choice> choices = choiceDtoConverter.transform(userAnswersDto.getQuality());
-        userAnswers = userAnswersService.saveChoices(null, userAnswers, choices, Area.QUALITY);
-        return ResponseEntity.ok().headers(httpHeaders).body(userAnswersDtoConverter.transform(userAnswers));
+        userAnswersEntity = userAnswersService.saveChoices(null, userAnswersEntity, choices, Area.QUALITY);
+        return ResponseEntity.ok().headers(httpHeaders).body(userAnswersDtoConverter.transform(userAnswersEntity));
     }
 
     //save only states
     @PostMapping("/state")
     public ResponseEntity<UserAnswersDto> saveState(@RequestBody @NotNull @Valid UserAnswersDto userAnswersDto) {
-        UserAnswers userAnswers = userAnswersDtoConverter.transform(userAnswersDto);
+        UserAnswersEntity userAnswersEntity = userAnswersDtoConverter.transform(userAnswersDto);
         List<Choice> choices = choiceDtoConverter.transform(userAnswersDto.getState());
-        userAnswers = userAnswersService.saveChoices(null, userAnswers, choices, Area.STATE);
-        return ResponseEntity.ok().headers(httpHeaders).body(userAnswersDtoConverter.transform(userAnswers));
+        userAnswersEntity = userAnswersService.saveChoices(null, userAnswersEntity, choices, Area.STATE);
+        return ResponseEntity.ok().headers(httpHeaders).body(userAnswersDtoConverter.transform(userAnswersEntity));
     }
 
     @GetMapping("/getPassedTest")
@@ -129,7 +134,7 @@ public class ApiUserAnswersController {
 //    public ResponseEntity<UserAnswersDto> testRandom(@PathVariable String userName, Principal principal){
 //
 //        User user = userService.findFirstUserByName(userName);
-//        UserAnswers userAnswers = Entity.createRandomUserAnswers(user);
+//        UserAnswersEntity userAnswers = Entity.createRandomUserAnswers(user);
 //        userAnswers = userAnswersService.save(userAnswers);
 //        UserAnswersDto userAnswersDto = userAnswersDtoConverter.transform(userAnswers);
 //        userAnswersDto.setPassed(true);
@@ -156,13 +161,13 @@ public class ApiUserAnswersController {
     }
 
     @PostMapping("/value-profile")
-    public ResponseEntity<ValueProfileDto> getValueProfile(@RequestBody(required = false)
+    public ResponseEntity<ValueProfileIndividualDto> getValueProfile(@RequestBody(required = false)
                                                            @NotNull @Valid SimpleUserDto userDto){
 
         User user = (userDto != null) ? userDtoConverter.transform(userDto) : null;
-        ValueProfile valueProfile = userAnswersService.getValueProfile(user);
-        ValueProfileDto valueProfileDtos = userAnswersDtoConverter.convertToValueProfileDtoList(valueProfile);
-        return ResponseEntity.ok().headers(httpHeaders).body(valueProfileDtos);
+        ValueProfileIndividual valueProfile = valueProfileService.getValueProfileIndividual(user);
+        ValueProfileIndividualDto valueProfileIndividualDto = valueProfileIndividualDtoConverter.transform(valueProfile);
+        return ResponseEntity.ok().headers(httpHeaders).body(valueProfileIndividualDto);
     }
 
     @ExceptionHandler(RuntimeException.class)
