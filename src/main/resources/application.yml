@@ -1,22 +1,38 @@
+
+server:
+  port: 8080
+  servlet:
+    context-path: /api
+
+spring:
+  data:
+    mongodb:
+#      host: localhost
+      host: mongodb
+      port: 27017
+      database: psycorp
+
+
+
 #server
-#server.port=5577
+#server.port=
 #spring.mandatory-file-encoding=UTF-8
-server.servlet.context-path=/api
+#server.servlet.context-path=/api
 
 #database
 #spring.data.mongodb.authentication-database= # Authentication database name.
-spring.data.mongodb.database=psycorp
+#spring.data.mongodb.database=psycorp
 #spring.data.mongodb.field-naming-strategy= # Fully qualified name of the FieldNamingStrategy to use.
 #spring.data.mongodb.grid-fs-database= # GridFS database name.
 # Mongo server host.
-spring.data.mongodb.host=localhost
+#spring.data.mongodb.host=localhost
 #spring.data.mongodb.password=
 
 #standalone mongodb
 #spring.data.mongodb.port=27017
 
 #mongos server for shard mongodb
-spring.data.mongodb.port=27018
+#spring.data.mongodb.port=27018
 #spring.data.mongodb.repositories.enabled=true
 #spring.data.mongodb.uri=mongodb://localhost/test # Mongo database URI. When set, host and port are ignored.
 #spring.data.mongodb.name= # Login user of the mongo server.
@@ -34,4 +50,3 @@ spring.data.mongodb.port=27018
 #logging.level.org.springframework.data.mongodb.core.index.CompoundIndexes=DEBUG
 #logging.level.org.springframework.data.mongodb.core.index.CompoundIndexe=DEBUG
 #logging.level.com.psycorp.repository.UserMatchRepository=DEBUG
-spring.jpa.show-sql=true

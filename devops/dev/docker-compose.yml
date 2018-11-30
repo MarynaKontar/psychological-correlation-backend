@@ -1,0 +1,27 @@
+version: '3.6'
+
+services:
+
+  psychological-correlation-backend:
+    container_name: psychological-correlation-backend
+    build: ./
+    working_dir: /app
+    ports:
+      - "8080:8080"
+    volumes:
+      - ../../:/app
+    depends_on:
+      - mongodb
+    restart: always
+    environment:
+          - MONGODB_URI=mongodb://mongodb:27017/psycorp
+
+  mongodb:
+    container_name: mongodb
+    image: mongo:3.6
+    volumes:
+      - ./data/db:/data/db
+    ports:
+      - "27017:27017"
+    restart: always
+
