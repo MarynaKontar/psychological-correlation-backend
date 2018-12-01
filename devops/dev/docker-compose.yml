@@ -1,24 +1,23 @@
-version: '3.6'
+version: '3.3'
 
 services:
 
-  psychological-correlation-backend:
-    container_name: psychological-correlation-backend
+  psymatch-backend:
+    container_name: psymatch-backend
     build: ./
-    working_dir: /app
     ports:
       - "8080:8080"
     volumes:
       - ../../:/app
     depends_on:
-      - mongodb
+      - psymatch-mongodb
     restart: always
     environment:
-#          - MONGODB_URI=mongodb://mongodb:27017/psycorp
-          SPRING_DATA_MONGODB_URI: mongodb://mongodb:27017/psycorp
+      - DB_HOST=psymatch-mongodb
+      - DB_PORT=27017
 
-  mongodb:
-    container_name: mongodb
+  psymatch-mongodb:
+    container_name: psymatch-mongodb
     image: mongo:3.6
     volumes:
       - ./data/db:/data/db

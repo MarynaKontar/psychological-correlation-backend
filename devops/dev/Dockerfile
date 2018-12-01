@@ -5,4 +5,4 @@ WORKDIR /app
 COPY ./start.sh /bin/start
 RUN chmod u+x /bin/start
 
-CMD ./start.sh
+CMD start

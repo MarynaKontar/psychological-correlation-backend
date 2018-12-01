@@ -7,11 +7,9 @@ server:
 spring:
   data:
     mongodb:
-      host: localhost
-#      host: mongodb
-      port: 27018
-#      uri: mongodb://localhost/psycorp
-      database: psycorp
+      host: ${DB_HOST:localhost}
+      port: ${DB_PORT:27017}
+      database: psymatch
 
 
 
