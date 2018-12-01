@@ -14,7 +14,8 @@ services:
       - mongodb
     restart: always
     environment:
-          - MONGODB_URI=mongodb://mongodb:27017/psycorp
+#          - MONGODB_URI=mongodb://mongodb:27017/psycorp
+          SPRING_DATA_MONGODB_URI: mongodb://mongodb:27017/psycorp
 
   mongodb:
     container_name: mongodb

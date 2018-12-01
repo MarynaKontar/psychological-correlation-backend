@@ -7,9 +7,10 @@ server:
 spring:
   data:
     mongodb:
-#      host: localhost
-      host: mongodb
-      port: 27017
+      host: localhost
+#      host: mongodb
+      port: 27018
+#      uri: mongodb://localhost/psycorp
       database: psycorp
 
 
