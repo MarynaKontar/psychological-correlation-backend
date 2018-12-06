@@ -23,5 +23,8 @@ services:
       - ./data/db:/data/db
     ports:
       - "27017:27017"
+    environment:
+          - MONGO_INITDB_ROOT_USERNAME=mongodb_admin
+          - MONGO_INITDB_ROOT_PASSWORD=MiVpp1g
     restart: always
 

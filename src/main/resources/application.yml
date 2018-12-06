@@ -10,42 +10,6 @@ spring:
       host: ${DB_HOST:localhost}
       port: ${DB_PORT:27017}
       database: psymatch
-
-
-
-#server
-#server.port=
-#spring.mandatory-file-encoding=UTF-8
-#server.servlet.context-path=/api
-
-#database
-#spring.data.mongodb.authentication-database= # Authentication database name.
-#spring.data.mongodb.database=psycorp
-#spring.data.mongodb.field-naming-strategy= # Fully qualified name of the FieldNamingStrategy to use.
-#spring.data.mongodb.grid-fs-database= # GridFS database name.
-# Mongo server host.
-#spring.data.mongodb.host=localhost
-#spring.data.mongodb.password=
-
-#standalone mongodb
-#spring.data.mongodb.port=27017
-
-#mongos server for shard mongodb
-#spring.data.mongodb.port=27018
-#spring.data.mongodb.repositories.enabled=true
-#spring.data.mongodb.uri=mongodb://localhost/test # Mongo database URI. When set, host and port are ignored.
-#spring.data.mongodb.name= # Login user of the mongo server.
-
-
-#log4j.category.org.springframework.data.document = TRACE
-#management.trace.http.enabled=true
-#logging.level.org.springframework=DEBUG
-#logging.level.org.mongodb = DEBUG
-#
-#logging.level.org.springframework.data.mongodb.core.MongoTemplate = DEBUG
-#logging.level.org.springframework.data.mongodb.repository.Query=DEBUG
-#logging.level.org.springframework.data.mongodb.core.index.Index=DEBUG
-#logging.level.org.springframework.data.mongodb.core.index.Indexed=DEBUG
-#logging.level.org.springframework.data.mongodb.core.index.CompoundIndexes=DEBUG
-#logging.level.org.springframework.data.mongodb.core.index.CompoundIndexe=DEBUG
-#logging.level.com.psycorp.repository.UserMatchRepository=DEBUG
+      username: mongodb_admin
+      password: MiVpp1g
+      authentication-database: admin
