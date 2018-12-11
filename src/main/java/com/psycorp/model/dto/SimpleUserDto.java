@@ -1,5 +1,6 @@
 package com.psycorp.model.dto;
 
+import com.psycorp.model.enums.Gender;
 import lombok.Data;
 import org.bson.types.ObjectId;
 
@@ -15,4 +16,6 @@ public class SimpleUserDto extends AbstractDto{
 //    @NotEmpty
     @Email
     private String email;
+    private Integer age;
+    private Gender gender;
 }

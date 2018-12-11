@@ -442,16 +442,27 @@ public class UserMatchServiceImpl implements UserMatchService {
 
         if(area == null || area == Area.TOTAL) {
            return (int) choices1.stream()
-                    .filter(choice -> (choices2.contains(choice)))
+                    .filter(choice -> ifChoicesContainChoiceConsideringScaleShuffle(choices2, choice))
                     .count();
         }
 
        return (int) choices1.stream()
-                .filter(choice -> (
-                        choice.getArea().equals(area)
-                                && choices2.contains(choice)) )
+                .filter(choice -> (choice.getArea().equals(area)
+                        && ifChoicesContainChoiceConsideringScaleShuffle(choices2, choice)))
                 .count();
     }
+
+    /**
+     * If choices contain choice considering first and second scale shuffle.
+     * @param choices list of Choices, in which we are looking for a choice
+     * @param choice we are looking for
+     * @return true if choices contain choice considering first and second scale shuffle, else return false
+     */
+    private Boolean ifChoicesContainChoiceConsideringScaleShuffle(List<Choice> choices, Choice choice) {
+        return  choices.contains(choice) ||
+                choices.contains(new Choice(choice.getArea(), choice.getSecondScale(), choice.getFirstScale(), choice.getChosenScale()));
+    }
+
 
     private void validateUserAnswers(User user){
         Optional<List<UserAnswersEntity>> userAnswers = userAnswersRepository.findAllByUser_IdOrderByIdDesc(user.getId());

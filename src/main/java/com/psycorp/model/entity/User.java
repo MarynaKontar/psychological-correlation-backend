@@ -1,5 +1,6 @@
 package com.psycorp.model.entity;
 
+import com.psycorp.model.enums.Gender;
 import com.psycorp.model.enums.UserRole;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -31,6 +32,9 @@ public class User extends AbstractEntity
     private UserRole role;
     @DBRef
     private List<User> usersForMatching;
+
+    private Integer age;
+    private Gender gender;
 
     public User(String name, UserRole role) {
         this.name = name;

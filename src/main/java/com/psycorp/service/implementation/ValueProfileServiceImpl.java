@@ -119,7 +119,8 @@ public class ValueProfileServiceImpl implements ValueProfileService {
 
         List<ValueProfileComment> valueProfileCommentList = new ArrayList<>();
         valueProfile.getScaleResult()
-                .forEach((key, value) -> valueProfileCommentList.add(ValueProfileCommentUtil.getComment(env, key, value.getNumber())));
+                .forEach((key, value) -> valueProfileCommentList
+                        .add(ValueProfileCommentUtil.getComment(env, key, value.getNumber())));
 
         valueProfileIndividual.setValueProfileCommentList(valueProfileCommentList);
         return valueProfileIndividual;

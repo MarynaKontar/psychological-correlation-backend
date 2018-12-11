@@ -55,12 +55,14 @@ public class ValueProfileCommentUtil {
         // если от low.value до average.value - то significance = average,
         // если больше average.value - то significance = high
         String significance;
+        Integer i = Integer.valueOf(env.getProperty("low.value"));
+        Boolean v = value < Integer.valueOf(env.getProperty("low.value"));
         if (value < Integer.valueOf(env.getProperty("low.value"))) {
-            significance = env.getProperty("low");
+            significance = env.getProperty("low.level");
         } else if(value < Integer.valueOf(env.getProperty("average.value"))) {
-            significance = env.getProperty("average");
+            significance = env.getProperty("average.level");
         } else {
-            significance = env.getProperty("high");
+            significance = env.getProperty("high.level");
         }
         return significance;
     }
