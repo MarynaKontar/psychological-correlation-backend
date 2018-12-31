@@ -2,7 +2,6 @@ package com.psycorp.сonverter;
 
 import com.psycorp.model.dto.CredentialsDto;
 import com.psycorp.model.entity.User;
-import com.psycorp.model.enums.UserRole;
 import com.psycorp.model.security.CredentialsEntity;
 import org.springframework.stereotype.Component;
 

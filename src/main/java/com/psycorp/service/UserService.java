@@ -7,7 +7,7 @@ import java.security.Principal;
 import java.util.List;
 
 public interface UserService {
-    User createUser(User user);
+//    User createUser(User user);
 
     User createAnonimUser();
 
@@ -22,4 +22,6 @@ public interface UserService {
     User updateUser(User user);
 
     User deleteUser(ObjectId userId);
+
+    User addAgeAndGender(User user);
 }

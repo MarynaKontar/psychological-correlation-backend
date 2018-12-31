@@ -5,4 +5,6 @@ import com.psycorp.model.security.CredentialsEntity;
 
 public interface CredentialsService {
     User save(CredentialsEntity credentialsEntity);
+
+    User changePassword(CredentialsEntity credentialsEntity);
 }

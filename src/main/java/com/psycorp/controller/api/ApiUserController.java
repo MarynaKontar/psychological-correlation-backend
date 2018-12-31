@@ -1,6 +1,5 @@
 package com.psycorp.controller.api;
 
-import com.psycorp.model.dto.CredentialsDto;
 import com.psycorp.model.dto.SimpleUserDto;
 import com.psycorp.model.entity.User;
 import com.psycorp.service.CredentialsService;
@@ -39,24 +38,23 @@ public class ApiUserController {
     }
 
 
-//    @PostMapping()
-//    public ResponseEntity<SimpleUserDto> save(@RequestBody @NotNull @Valid SimpleUserDto userDto) {
-//
-//        User user = userService.createUser(userDtoConverter.transform(userDto));
-//        return new ResponseEntity<>(userDtoConverter.transform(user), HttpStatus.CREATED);
-//    }
-
-    @PostMapping
-    public ResponseEntity<SimpleUserDto> save(@RequestBody @NotNull @Valid CredentialsDto credentialsDto) {
-        User user = credentialsService.save(credentialsEntityConverter.transform(credentialsDto));
+    @PostMapping()
+    public ResponseEntity<SimpleUserDto> save(@RequestBody @NotNull @Valid SimpleUserDto userDto) {
+        User user = userService.updateUser(userDtoConverter.transform(userDto));
         return new ResponseEntity<>(userDtoConverter.transform(user), HttpStatus.CREATED);
     }
 
-    //TODO и зачем я это сделала? Єтот permitAll, а верхний - нет. Но надо убрать (на фронте через интерсепторі решу эту проблему)
-    @PostMapping("/save")
-    public ResponseEntity<SimpleUserDto> saveNewUser(@RequestBody @NotNull @Valid CredentialsDto credentialsDto) {
-        User user = credentialsService.save(credentialsEntityConverter.transform(credentialsDto));
-        return new ResponseEntity<>(userDtoConverter.transform(user), HttpStatus.CREATED);
+    //TODO и зачем я это сделала? Этот permitAll, а верхний - нет. Но надо убрать (на фронте через интерсепторы решу эту проблему)
+//    @PostMapping("/save")
+//    public ResponseEntity<SimpleUserDto> saveNewUser(@RequestBody @NotNull @Valid CredentialsDto credentialsDto) {
+//        User user = credentialsService.save(credentialsEntityConverter.transform(credentialsDto));
+//        return new ResponseEntity<>(userDtoConverter.transform(user), HttpStatus.CREATED);
+//    }
+
+    @PostMapping("/addAgeAndGender")
+    public ResponseEntity<SimpleUserDto> addAgeAndGender(@RequestBody @NotNull @Valid SimpleUserDto userDto) {
+        User user = userService.addAgeAndGender(userDtoConverter.transform(userDto));
+        return new ResponseEntity<>(userDtoConverter.transform(user), HttpStatus.OK);
     }
 
     @GetMapping("/{userId}")

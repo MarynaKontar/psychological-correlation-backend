@@ -5,3 +5,15 @@ public enum Gender {
     FEMALE,
     ANOTHER
 }
+
+
+//public enum Gender {
+//    Male, Female, NO_DISCLOSED;
+//
+//
+//    public static Gender of(String gender) {
+//        return "female".equalsIgnoreCase(gender) ? Female
+//                : "male".equalsIgnoreCase(gender) ? Male
+//                : NO_DISCLOSED;
+//    }
+//}

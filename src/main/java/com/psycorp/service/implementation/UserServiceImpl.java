@@ -10,6 +10,7 @@ import com.psycorp.repository.UserAnswersRepository;
 import com.psycorp.repository.UserMatchRepository;
 import com.psycorp.repository.UserRepository;
 import com.psycorp.repository.security.CredentialsRepository;
+import com.psycorp.repository.security.TokenRepository;
 import com.psycorp.security.token.TokenPrincipal;
 import com.psycorp.service.security.AuthService;
 import com.psycorp.util.AuthUtil;
@@ -18,6 +19,12 @@ import org.bson.types.ObjectId;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
+import org.springframework.data.mongodb.core.FindAndModifyOptions;
+import org.springframework.data.mongodb.core.MongoOperations;
+import org.springframework.data.mongodb.core.aggregation.Fields;
+import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -35,25 +42,28 @@ public class UserServiceImpl implements UserService {
     private final UserMatchRepository userMatchRepository;
     @Autowired
     private AuthService authService;
+    private final TokenRepository tokenRepository;
+    private final MongoOperations mongoOperations;
     private final AuthUtil authUtil;
     private final Environment env;
 
     @Autowired
     public UserServiceImpl(UserRepository userRepository, CredentialsRepository credentialsRepository, UserAnswersRepository userAnswersRepository
-            , UserMatchRepository userMatchRepository, AuthUtil serviceUtil, Environment env) {
+            , UserMatchRepository userMatchRepository, TokenRepository tokenRepository, MongoOperations mongoOperations, AuthUtil serviceUtil, Environment env) {
         this.userRepository = userRepository;
         this.credentialsRepository = credentialsRepository;
         this.userAnswersRepository = userAnswersRepository;
         this.userMatchRepository = userMatchRepository;
+        this.tokenRepository = tokenRepository;
+        this.mongoOperations = mongoOperations;
         this.authUtil = serviceUtil;
         this.env = env;
     }
 
-    //TODO добавить проверку всех значений и соответствуюшии им Exceptions
-    @Override
-    public User createUser(User user) {
-        return userRepository.insert(user);
-    }
+//    @Override
+//    public User createUser(User user) {
+//        return userRepository.insert(user);
+//    }
 
     @Override
     @Transactional
@@ -63,6 +73,19 @@ public class UserServiceImpl implements UserService {
         CredentialsEntity credentialsEntity = new CredentialsEntity();
         credentialsEntity.setUser(user);
         credentialsRepository.save(credentialsEntity);
+        return user;
+    }
+
+    @Override
+    public User addAgeAndGender(User user) {
+        User principal = getPrincipalUser();
+        Update updateUser = new Update()
+                .set("age", user.getAge())
+                .set("gender", user.getGender());
+
+        Query queryUser = Query.query(Criteria.where(Fields.UNDERSCORE_ID).is(principal.getId()));
+        user = mongoOperations.findAndModify(queryUser, updateUser
+                , new FindAndModifyOptions().returnNew(true), User.class);
         return user;
     }
 
@@ -104,16 +127,6 @@ public class UserServiceImpl implements UserService {
         if(tokenPrincipal != null && tokenPrincipal.getId() != null) { //если есть токен
             return findById(tokenPrincipal.getId()); // и для него есть пользователь, то берем этого пользователя
         } else { throw new AuthorizationException("User not authorised", ErrorEnum.NOT_AUTHORIZED); } // если токен == null или у него id == null
-
-//        User user;
-//        TokenPrincipal tokenPrincipal = (TokenPrincipal) authService.getAuthPrincipal();
-//
-//        if(tokenPrincipal != null && tokenPrincipal.getId() != null) { //если есть токен
-//            if(userRepository.findById(tokenPrincipal.getId()).isPresent()){ // и для него есть пользователь, то берем этого пользователя
-//                user = userRepository.findById(tokenPrincipal.getId()).get();
-//            } else { throw new BadRequestException(env.getProperty("error.TokenIsNotValid")); } // если для этого токена нет пользователя, то надо кидать ошибку. Это случай, когда в бд не правильно сохраняли)
-//        } else { throw new BadRequestException(env.getProperty("error.TokenIsNotValid")); } // если токен == null или у него id == null
-//        return user;
     }
 
     @Override
@@ -123,7 +136,18 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public User updateUser(User user) {
-        return userRepository.save(user);
+        User principal = getPrincipalUser();
+        Update updateUser = new Update();
+        if(user.getName() != null) { updateUser.set("name", user.getName()); }
+        if(user.getAge() != null) { updateUser.set("age", user.getAge()); }
+        if(user.getGender() != null) { updateUser.set("gender", user.getGender()); }
+        if(user.getEmail() != null) { updateUser.set("email", user.getEmail()); }
+
+        Query queryUser = Query.query(Criteria.where(Fields.UNDERSCORE_ID).is(principal.getId()));
+        user = mongoOperations.findAndModify(queryUser, updateUser
+                , new FindAndModifyOptions().returnNew(true), User.class);
+        return user;
+//        return userRepository.save(user);
     }
 
     @Override
@@ -135,8 +159,11 @@ public class UserServiceImpl implements UserService {
         User user = findById(userId);
         userAnswersRepository.removeAllByUserId(userId);
         userMatchRepository.removeAllByUserId(userId);
+        tokenRepository.removeAllByUserId(userId);
+        //remove user from usersForMatching of another users
         userRepository.delete(user);
         return user;
     }
+
 
 }
