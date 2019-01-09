@@ -1,7 +1,11 @@
 package com.psycorp.controller.api;
 
+import com.psycorp.model.dto.SimpleUserDto;
 import com.psycorp.model.dto.UsernamePasswordDto;
+import com.psycorp.model.entity.User;
+import com.psycorp.service.UserAnswersService;
 import com.psycorp.service.security.AuthService;
+import com.psycorp.сonverter.UserDtoConverter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
@@ -17,17 +21,30 @@ import static com.psycorp.security.SecurityConstant.ACCESS_TOKEN_PREFIX;
 public class AuthenticationController {
 
     private final AuthService authService;
+    private final UserAnswersService userAnswersService;
+    private final UserDtoConverter userDtoConverter;
 
     @Autowired
-    public AuthenticationController(AuthService authService) {
+    public AuthenticationController(AuthService authService, UserAnswersService userAnswersService, UserDtoConverter userDtoConverter) {
         this.authService = authService;
+        this.userAnswersService = userAnswersService;
+        this.userDtoConverter = userDtoConverter;
     }
 
     @PostMapping("/login")
-    public ResponseEntity<Void> login (@RequestBody @Valid UsernamePasswordDto usernamePassword) {
+    public ResponseEntity<SimpleUserDto> login (@RequestBody @Valid UsernamePasswordDto usernamePassword) {
         String token = authService.generateAccessToken(usernamePassword);
+        User user = authService.getUserByToken(token);
+        Boolean isValueCompatibilityTestPassed = userAnswersService.ifTestPassed(user);
 
-        return ResponseEntity.ok().header(HttpHeaders.AUTHORIZATION, ACCESS_TOKEN_PREFIX + " " + token).build();
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("AUTHORIZATION", ACCESS_TOKEN_PREFIX + " " + token);
+        headers.set("isValueCompatibilityTestPassed", isValueCompatibilityTestPassed.toString());
+
+//        return ResponseEntity.ok().header(HttpHeaders.AUTHORIZATION, ACCESS_TOKEN_PREFIX + " " + token)
+//                .body(userDtoConverter.transform(user));
+        return ResponseEntity.ok().headers(headers)
+                .body(userDtoConverter.transform(user));
     }
 
     @ExceptionHandler(RuntimeException.class)

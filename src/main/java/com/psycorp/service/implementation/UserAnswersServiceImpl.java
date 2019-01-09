@@ -300,6 +300,15 @@ public class UserAnswersServiceImpl implements UserAnswersService {
     }
 
     @Override
+    public Boolean ifTestPassed(User user) {
+
+        Optional<UserAnswersEntity> userAnswersEntity = userAnswersRepository.findTopByUser_IdOrderByPassDateDesc(user.getId());
+        if(userAnswersEntity.isPresent()) {
+            return userAnswersEntity.get().getPassed();
+        } else return false;
+    }
+
+    @Override
     public UserAnswersEntity getInitUserAnswers(){
         UserAnswersEntity userAnswersEntity = new UserAnswersEntity();
         userAnswersEntity.setUserAnswers(choiceList());

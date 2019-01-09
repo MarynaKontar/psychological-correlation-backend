@@ -10,6 +10,8 @@ public interface UserAnswersService {
 
     UserAnswersEntity getLastPassedTest(User user);
 
+    Boolean ifTestPassed(User user);
+
     UserAnswersEntity getInitUserAnswers();
 
 //    UserAnswersEntity save(UserAnswersEntity userAnswersEntity);
