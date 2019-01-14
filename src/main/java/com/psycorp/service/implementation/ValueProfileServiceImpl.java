@@ -3,7 +3,7 @@ package com.psycorp.service.implementation;
 import com.psycorp.model.entity.*;
 import com.psycorp.model.enums.Scale;
 import com.psycorp.model.objects.*;
-import com.psycorp.service.UserAnswersService;
+import com.psycorp.service.ValueCompatibilityAnswersService;
 import com.psycorp.service.UserService;
 import com.psycorp.service.ValueProfileService;
 import com.psycorp.util.UserMatchCommentUtil;
@@ -30,13 +30,15 @@ import static java.util.stream.Collectors.groupingBy;
 public class ValueProfileServiceImpl implements ValueProfileService {
 
     private final UserService userService;
-    private final UserAnswersService userAnswersService;
+    private final ValueCompatibilityAnswersService valueCompatibilityAnswersService;
     private final Environment env;
 
     @Autowired
-    public ValueProfileServiceImpl(UserService userService, UserAnswersService userAnswersService, Environment env) {
+    public ValueProfileServiceImpl(UserService userService,
+                                   ValueCompatibilityAnswersService valueCompatibilityAnswersService,
+                                   Environment env) {
         this.userService = userService;
-        this.userAnswersService = userAnswersService;
+        this.valueCompatibilityAnswersService = valueCompatibilityAnswersService;
         this.env = env;
     }
 
@@ -77,12 +79,12 @@ public class ValueProfileServiceImpl implements ValueProfileService {
     }
 
     private ValueProfile getValueProfile(User user, Boolean isPrincipalUser){
-        UserAnswersEntity userAnswer = userAnswersService.getLastPassedTest(user);
+        ValueCompatibilityAnswersEntity answersEntity = valueCompatibilityAnswersService.getLastPassedTest(user);
 
         Map<Scale, Result> valueProfile = new HashMap<>();
         final Integer totalNumberOfQuestions = Integer.valueOf(env.getProperty("total.number.of.questions"));
 
-        userAnswer.getUserAnswers()
+        answersEntity.getUserAnswers()
                 .stream()
                 .collect(groupingBy(choice -> choice.getChosenScale(), counting()))
                 .forEach((scale, value) ->
@@ -146,10 +148,10 @@ public class ValueProfileServiceImpl implements ValueProfileService {
 
     private  Map<Scale, Integer> getScaleValues(User user){
 
-        UserAnswersEntity userAnswerPrincipal = userAnswersService.getLastPassedTest(user);
+        ValueCompatibilityAnswersEntity answersEntityPrincipal = valueCompatibilityAnswersService.getLastPassedTest(user);
         Map<Scale, Integer> scaleValues = new HashMap<>();
 
-        userAnswerPrincipal.getUserAnswers()
+        answersEntityPrincipal.getUserAnswers()
                 .stream()
                 .collect(groupingBy(choice -> choice.getChosenScale(), counting()))
                 .forEach((scale, value) ->
@@ -169,85 +171,3 @@ public class ValueProfileServiceImpl implements ValueProfileService {
         return sortedScaleValues;
     }
 }
-
-
-
-
-
-
-//    @Override
-//    public ValueProfile getValueProfileIndividual(User noPrincipalUser) {
-//
-//        // if there is noPrincipalUser - get it; if not - get principal
-//        User user;
-//        Boolean isPrincipalUser;
-//        if (noPrincipalUser != null) {
-//            user = userService.find(noPrincipalUser);
-//            isPrincipalUser = false;
-//        } else {
-//            user = userService.getPrincipalUser();
-//            isPrincipalUser = true;
-//        }
-//
-//        return getValueProfileIndividual(user, isPrincipalUser);
-//    }
-//
-//    @Override
-//    public ValueProfileMatching getValueProfileForMatching(User noPrincipalUser) {
-//
-//        noPrincipalUser = userService.find(noPrincipalUser);
-//        User principalUser = userService.getPrincipalUser();
-//
-//        ValueProfile valueProfileForNoPrincipalUser = getValueProfileIndividual(noPrincipalUser, false);
-//        ValueProfile valueProfileForPrincipalUser = getValueProfileIndividual(principalUser, true);
-//        ValueProfileMatching valueProfileMatching = new ValueProfileMatching();
-//        valueProfileMatching.setValueProfileList(Arrays.asList(valueProfileForPrincipalUser,valueProfileForNoPrincipalUser));
-//        return new ValueProfileMatching();
-//    }
-//
-//
-//    private ValueProfile getValueProfileIndividual(User user, Boolean isPrincipalUser){
-//        UserAnswersEntity userAnswer = userAnswersService.getLastPassedTest(user);
-//
-//        Map<Scale, Result> valueProfile = new HashMap<>();
-//        final Integer totalNumberOfQuestions = Integer.valueOf(env.getProperty("total.number.of.questions"));
-//
-//        userAnswer.getUserAnswers()
-//                .stream()
-//                .collect(groupingBy(choice -> choice.getChosenScale(), counting()))
-//                .forEach((scale, value) ->
-//                        valueProfile.put(scale, new Result(value.doubleValue()/totalNumberOfQuestions * 100)));
-//
-//        // if user didn't choose some scale at all, than we have to put this scale (testing) to answer with 0 value
-//        List<Scale> scales = getScales();
-//        scales.forEach(scale -> valueProfile.putIfAbsent(scale, new Result(0d)));
-//
-//
-//        //sort by scale in descending order
-//        Map<Scale, Result> sortedValueProfile = valueProfile.entrySet().stream()
-//                .sorted(comparingByKey(Comparator.reverseOrder()))
-//                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue,
-//                        (oldValue, newValue) -> oldValue, LinkedHashMap::new));
-//
-//        //        Map<Scale, ValueProfileComment> valueProfile = new HashMap<>();
-////        final Integer totalNumberOfQuestions = Integer.valueOf(env.getProperty("total.number.of.questions"));
-////
-////        userAnswer.getUserAnswers()
-////                .stream()
-////                .collect(groupingBy(choice -> choice.getChosenScale(), counting()))
-////                .forEach((scale, value) ->
-////                        valueProfile.put(scale,
-////                                ValueProfileCommentUtil.getComment(env, scale, value.doubleValue()/totalNumberOfQuestions * 100)));
-////
-////        // if user didn't choose some scale at all, than we have to put this scale (testing) to answer with 0 value
-////        List<Scale> scales = getScales();
-////        scales.forEach(scale -> valueProfile.putIfAbsent(scale, ValueProfileCommentUtil.getComment(env, scale, 0d)));
-//
-//        //sort by scale in descending order
-////        Map<Scale, ValueProfileComment> sortedValueProfile = valueProfile.entrySet().stream()
-////                .sorted(comparingByKey(Comparator.reverseOrder()))
-////                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue,
-////                        (oldValue, newValue) -> oldValue, LinkedHashMap::new));
-//
-//        return new ValueProfile(sortedValueProfile, isPrincipalUser);
-//    }

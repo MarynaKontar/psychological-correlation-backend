@@ -1,9 +1,9 @@
 package com.psycorp.controller.api;
 
-import com.psycorp.service.UserAnswersService;
+import com.psycorp.service.ValueCompatibilityAnswersService;
 import com.psycorp.service.UserMatchService;
 import com.psycorp.service.UserService;
-import com.psycorp.сonverter.UserAnswersDtoConverter;
+import com.psycorp.сonverter.ValueCompatibilityAnswersDtoConverter;
 import com.psycorp.сonverter.UserMatchDtoConverter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
@@ -17,22 +17,22 @@ import java.security.Principal;
 @RequestMapping
 public class ApiTestController {
 
-    private final UserAnswersService userAnswersService;
+    private final ValueCompatibilityAnswersService valueCompatibilityAnswersService;
     private final UserService userService;
     private final UserMatchService userMatchService;
-    private final UserAnswersDtoConverter userAnswersDtoConverter;
+    private final ValueCompatibilityAnswersDtoConverter valueCompatibilityAnswersDtoConverter;
     private final UserMatchDtoConverter userMatchDtoConverter;
     private Principal principal;
     private HttpHeaders httpHeaders;
 
     @Autowired
-    public ApiTestController(UserAnswersService userAnswersService, UserService userService,
-                             UserMatchService userMatchService, UserAnswersDtoConverter userAnswersDtoConverter,
+    public ApiTestController(ValueCompatibilityAnswersService valueCompatibilityAnswersService, UserService userService,
+                             UserMatchService userMatchService, ValueCompatibilityAnswersDtoConverter valueCompatibilityAnswersDtoConverter,
                              UserMatchDtoConverter userMatchDtoConverter) {
-        this.userAnswersService = userAnswersService;
+        this.valueCompatibilityAnswersService = valueCompatibilityAnswersService;
         this.userService = userService;
         this.userMatchService = userMatchService;
-        this.userAnswersDtoConverter = userAnswersDtoConverter;
+        this.valueCompatibilityAnswersDtoConverter = valueCompatibilityAnswersDtoConverter;
         this.userMatchDtoConverter = userMatchDtoConverter;
     }
 

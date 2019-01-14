@@ -6,7 +6,7 @@ import com.psycorp.model.enums.Area;
 import com.psycorp.model.enums.MatchMethod;
 import com.psycorp.model.objects.Matching;
 import com.psycorp.model.objects.UserMatch;
-import com.psycorp.repository.UserAnswersRepository;
+import com.psycorp.repository.ValueCompatibilityAnswersRepository;
 import com.psycorp.repository.UserMatchRepository;
 import com.psycorp.service.UserMatchService;
 import com.psycorp.service.UserService;
@@ -28,16 +28,16 @@ public class UserMatchServiceImpl implements UserMatchService {
 
     private final UserMatchRepository userMatchRepository;
     private final UserService userService;
-    private final UserAnswersRepository userAnswersRepository;
+    private final ValueCompatibilityAnswersRepository valueCompatibilityAnswersRepository;
 
     private final Environment env;
 
     @Autowired
     public UserMatchServiceImpl(UserMatchRepository userMatchRepository, UserService userService,
-                                UserAnswersRepository userAnswersRepository, Environment env) {
+                                ValueCompatibilityAnswersRepository valueCompatibilityAnswersRepository, Environment env) {
         this.userMatchRepository = userMatchRepository;
         this.userService = userService;
-        this.userAnswersRepository = userAnswersRepository;
+        this.valueCompatibilityAnswersRepository = valueCompatibilityAnswersRepository;
         this.env = env;
     }
 
@@ -74,24 +74,24 @@ public class UserMatchServiceImpl implements UserMatchService {
         User fullUser1 = userService.find(user1);
         User fullUser2 = userService.find(user2);
         validIfUsersCanBeMatching(fullUser1, fullUser2);
-        validateUserAnswers(fullUser1);
-        validateUserAnswers(fullUser2);
+        validateValueCompatibilityAnswers(fullUser1);
+        validateValueCompatibilityAnswers(fullUser2);
 
-        UserAnswersEntity userAnswersEntity1 = userAnswersRepository.findAllByUser_IdOrderByIdDesc(fullUser1.getId()).get().get(0);
-        UserAnswersEntity userAnswersEntity2 = userAnswersRepository.findAllByUser_IdOrderByIdDesc(fullUser2.getId()).get().get(0);
+        ValueCompatibilityAnswersEntity valueCompatibilityAnswersEntity1 = valueCompatibilityAnswersRepository.findAllByUser_IdOrderByIdDesc(fullUser1.getId()).get().get(0);
+        ValueCompatibilityAnswersEntity valueCompatibilityAnswersEntity2 = valueCompatibilityAnswersRepository.findAllByUser_IdOrderByIdDesc(fullUser2.getId()).get().get(0);
 
         List<UserMatchEntity> userMatchEntitiesUser1 = userMatchRepository.findByUserId(fullUser1.getId());
         List<UserMatchEntity> userMatchEntitiesUser2 = userMatchRepository.findByUserId(fullUser2.getId());
 
-        // check if there is record in userMatchEntity collection that is made after of both userAnswers and get it; if not - insert it
+        // check if there is record in userMatchEntity collection that is made after of both valueCompatibilityAnswers and get it; if not - insert it
         UserMatchEntity userMatchEntity = userMatchEntitiesUser1.stream()
                 .filter(userMatchPrincipal ->
                         userMatchEntitiesUser2.contains(userMatchPrincipal)
-                                && userMatchPrincipal.getId().getDate().after(Timestamp.valueOf(userAnswersEntity1.getPassDate()))
-                                && userMatchPrincipal.getId().getDate().after(Timestamp.valueOf(userAnswersEntity2.getPassDate())))
+                                && userMatchPrincipal.getId().getDate().after(Timestamp.valueOf(valueCompatibilityAnswersEntity1.getPassDate()))
+                                && userMatchPrincipal.getId().getDate().after(Timestamp.valueOf(valueCompatibilityAnswersEntity2.getPassDate())))
                 .sorted(Comparator.comparing(UserMatchEntity::getId).reversed()).limit(1).findFirst()
                 .orElseGet(() ->
-                        insert(userAnswersEntity1, userAnswersEntity2, fullUser1, fullUser2, matchMethod)
+                        insert(valueCompatibilityAnswersEntity1, valueCompatibilityAnswersEntity2, fullUser1, fullUser2, matchMethod)
                 );
 
         return getUserMatch(userMatchEntity);
@@ -112,31 +112,31 @@ public class UserMatchServiceImpl implements UserMatchService {
         }
 
         validIfUsersCanBeMatching(principal, user2);
-        validateUserAnswers(principal);
-        validateUserAnswers(user2);
+        validateValueCompatibilityAnswers(principal);
+        validateValueCompatibilityAnswers(user2);
 
-        //последний сохраненный UserAnswersEntity
-//        UserAnswersEntity userAnswersEntity1 = userAnswersRepository.findAllByUser_IdOrderByPassDateDesc(principal.getId()).get(0);
-//        UserAnswersEntity userAnswersEntity2 = userAnswersRepository.findAllByUser_IdOrderByPassDateDesc(user2.getId()).get(0);
+        //последний сохраненный ValueCompatibilityAnswersEntity
+//        ValueCompatibilityAnswersEntity valueCompatibilityAnswersEntity1 = valueCompatibilityAnswersRepository.findAllByUser_IdOrderByPassDateDesc(principal.getId()).get(0);
+//        ValueCompatibilityAnswersEntity valueCompatibilityAnswersEntity2 = valueCompatibilityAnswersRepository.findAllByUser_IdOrderByPassDateDesc(user2.getId()).get(0);
 
-//        UserAnswersEntity userAnswersEntity1 = userAnswersRepository.findAllByUser_NameOrderByPassDateDesc(principal.getName()).get(0);
-//        UserAnswersEntity userAnswersEntity2 = userAnswersRepository.findAllByUser_NameOrderByPassDateDesc(user2.getName()).get(0);
+//        ValueCompatibilityAnswersEntity valueCompatibilityAnswersEntity1 = valueCompatibilityAnswersRepository.findAllByUser_NameOrderByPassDateDesc(principal.getName()).get(0);
+//        ValueCompatibilityAnswersEntity valueCompatibilityAnswersEntity2 = valueCompatibilityAnswersRepository.findAllByUser_NameOrderByPassDateDesc(user2.getName()).get(0);
 //
-        UserAnswersEntity userAnswersEntity1 = userAnswersRepository.findAllByUser_IdOrderByIdDesc(principal.getId()).get().get(0);
-        UserAnswersEntity userAnswersEntity2 = userAnswersRepository.findAllByUser_IdOrderByIdDesc(user2.getId()).get().get(0);
+        ValueCompatibilityAnswersEntity valueCompatibilityAnswersEntity1 = valueCompatibilityAnswersRepository.findAllByUser_IdOrderByIdDesc(principal.getId()).get().get(0);
+        ValueCompatibilityAnswersEntity valueCompatibilityAnswersEntity2 = valueCompatibilityAnswersRepository.findAllByUser_IdOrderByIdDesc(user2.getId()).get().get(0);
 
         List<UserMatchEntity> userMatcheEntitiesPrincipal = userMatchRepository.findByUserId(principal.getId());
         List<UserMatchEntity> userMatchEntitiesUser2 = userMatchRepository.findByUserId(user2.getId());
 
-        // check if there is record in userMatchEntity collection that is after of both userAnswers; if not - insert it
+        // check if there is record in userMatchEntity collection that is after of both valueCompatibilityAnswers; if not - insert it
         UserMatchEntity userMatchEntity = userMatcheEntitiesPrincipal.stream()
                 .filter(userMatchPrincipal ->
                     userMatchEntitiesUser2.contains(userMatchPrincipal)
-                    && userMatchPrincipal.getId().getDate().after(Timestamp.valueOf(userAnswersEntity1.getPassDate()))
-                    && userMatchPrincipal.getId().getDate().after(Timestamp.valueOf(userAnswersEntity2.getPassDate())))
+                    && userMatchPrincipal.getId().getDate().after(Timestamp.valueOf(valueCompatibilityAnswersEntity1.getPassDate()))
+                    && userMatchPrincipal.getId().getDate().after(Timestamp.valueOf(valueCompatibilityAnswersEntity2.getPassDate())))
                 .sorted(Comparator.comparing(UserMatchEntity::getId).reversed()).limit(1).findFirst()
                 .orElseGet(() ->
-                        insert(userAnswersEntity1, userAnswersEntity2, principal, user2, matchMethod)
+                        insert(valueCompatibilityAnswersEntity1, valueCompatibilityAnswersEntity2, principal, user2, matchMethod)
                 );
         return getUserMatch(userMatchEntity);
     }
@@ -159,24 +159,24 @@ public class UserMatchServiceImpl implements UserMatchService {
 //        User fullUser1 = getUser(user1);
 //        User fullUser2 = getUser(user2);
 //        validIfUsersCanBeMatching(fullUser1, fullUser2);
-//        validateUserAnswers(fullUser1);
-//        validateUserAnswers(fullUser2);
+//        validateValueCompatibilityAnswers(fullUser1);
+//        validateValueCompatibilityAnswers(fullUser2);
 //
-//        UserAnswersEntity userAnswers1 = userAnswersRepository.findAllByUser_IdOrderByIdDesc(fullUser1.getId()).get().get(0);
-//        UserAnswersEntity userAnswers2 = userAnswersRepository.findAllByUser_IdOrderByIdDesc(fullUser2.getId()).get().get(0);
+//        ValueCompatibilityAnswersEntity valueCompatibilityAnswers1 = valueCompatibilityAnswersRepository.findAllByUser_IdOrderByIdDesc(fullUser1.getId()).get().get(0);
+//        ValueCompatibilityAnswersEntity valueCompatibilityAnswers2 = valueCompatibilityAnswersRepository.findAllByUser_IdOrderByIdDesc(fullUser2.getId()).get().get(0);
 //
 //        List<UserMatchEntity> userMatchesUser1 = userMatchRepository.findByUserId(fullUser1.getId());
 //        List<UserMatchEntity> userMatchesUser2 = userMatchRepository.findByUserId(fullUser2.getId());
 //
-//        // check if there is record in userMatch collection that is made after of both userAnswers and get it; if not - insert it
+//        // check if there is record in userMatch collection that is made after of both valueCompatibilityAnswers and get it; if not - insert it
 //        UserMatchEntity userMatch = userMatchesUser1.stream()
 //                .filter(userMatchPrincipal ->
 //                        userMatchesUser2.contains(userMatchPrincipal)
-//                                && userMatchPrincipal.getId().getDate().after(Timestamp.valueOf(userAnswers1.getPassDate()))
-//                                && userMatchPrincipal.getId().getDate().after(Timestamp.valueOf(userAnswers2.getPassDate())))
+//                                && userMatchPrincipal.getId().getDate().after(Timestamp.valueOf(valueCompatibilityAnswers1.getPassDate()))
+//                                && userMatchPrincipal.getId().getDate().after(Timestamp.valueOf(valueCompatibilityAnswers2.getPassDate())))
 //                .sorted(Comparator.comparing(UserMatchEntity::getId).reversed()).limit(1).findFirst()
 //                .orElseGet(() ->
-//                        insert(userAnswers1, userAnswers2, fullUser1, fullUser2, matchMethod)
+//                        insert(valueCompatibilityAnswers1, valueCompatibilityAnswers2, fullUser1, fullUser2, matchMethod)
 //                );
 //        return userMatch;
 //    }
@@ -196,31 +196,31 @@ public class UserMatchServiceImpl implements UserMatchService {
 //        }
 //
 //        validIfUsersCanBeMatching(principal, user2);
-//        validateUserAnswers(principal);
-//        validateUserAnswers(user2);
+//        validateValueCompatibilityAnswers(principal);
+//        validateValueCompatibilityAnswers(user2);
 //
-//        //последний сохраненный UserAnswersEntity
-////        UserAnswersEntity userAnswers1 = userAnswersRepository.findAllByUser_IdOrderByPassDateDesc(principal.getId()).get(0);
-////        UserAnswersEntity userAnswers2 = userAnswersRepository.findAllByUser_IdOrderByPassDateDesc(user2.getId()).get(0);
+//        //последний сохраненный ValueCompatibilityAnswersEntity
+////        ValueCompatibilityAnswersEntity valueCompatibilityAnswers1 = valueCompatibilityAnswersRepository.findAllByUser_IdOrderByPassDateDesc(principal.getId()).get(0);
+////        ValueCompatibilityAnswersEntity valueCompatibilityAnswers2 = valueCompatibilityAnswersRepository.findAllByUser_IdOrderByPassDateDesc(user2.getId()).get(0);
 //
-////        UserAnswersEntity userAnswers1 = userAnswersRepository.findAllByUser_NameOrderByPassDateDesc(principal.getName()).get(0);
-////        UserAnswersEntity userAnswers2 = userAnswersRepository.findAllByUser_NameOrderByPassDateDesc(user2.getName()).get(0);
+////        ValueCompatibilityAnswersEntity valueCompatibilityAnswers1 = valueCompatibilityAnswersRepository.findAllByUser_NameOrderByPassDateDesc(principal.getName()).get(0);
+////        ValueCompatibilityAnswersEntity valueCompatibilityAnswers2 = valueCompatibilityAnswersRepository.findAllByUser_NameOrderByPassDateDesc(user2.getName()).get(0);
 ////
-//        UserAnswersEntity userAnswers1 = userAnswersRepository.findAllByUser_IdOrderByIdDesc(principal.getId()).get().get(0);
-//        UserAnswersEntity userAnswers2 = userAnswersRepository.findAllByUser_IdOrderByIdDesc(user2.getId()).get().get(0);
+//        ValueCompatibilityAnswersEntity valueCompatibilityAnswers1 = valueCompatibilityAnswersRepository.findAllByUser_IdOrderByIdDesc(principal.getId()).get().get(0);
+//        ValueCompatibilityAnswersEntity valueCompatibilityAnswers2 = valueCompatibilityAnswersRepository.findAllByUser_IdOrderByIdDesc(user2.getId()).get().get(0);
 //
 //        List<UserMatchEntity> userMatchesPrincipal = userMatchRepository.findByUserId(principal.getId());
 //        List<UserMatchEntity> userMatchesUser2 = userMatchRepository.findByUserId(user2.getId());
 //
-//        // check if there is record in userMatch collection that is after of both userAnswers; if not - insert it
+//        // check if there is record in userMatch collection that is after of both valueCompatibilityAnswers; if not - insert it
 //        UserMatchEntity userMatch = userMatchesPrincipal.stream()
 //                .filter(userMatchPrincipal ->
 //                        userMatchesUser2.contains(userMatchPrincipal)
-//                                && userMatchPrincipal.getId().getDate().after(Timestamp.valueOf(userAnswers1.getPassDate()))
-//                                && userMatchPrincipal.getId().getDate().after(Timestamp.valueOf(userAnswers2.getPassDate())))
+//                                && userMatchPrincipal.getId().getDate().after(Timestamp.valueOf(valueCompatibilityAnswers1.getPassDate()))
+//                                && userMatchPrincipal.getId().getDate().after(Timestamp.valueOf(valueCompatibilityAnswers2.getPassDate())))
 //                .sorted(Comparator.comparing(UserMatchEntity::getId).reversed()).limit(1).findFirst()
 //                .orElseGet(() ->
-//                        insert(userAnswers1, userAnswers2, principal, user2, matchMethod)
+//                        insert(valueCompatibilityAnswers1, valueCompatibilityAnswers2, principal, user2, matchMethod)
 //                );
 //        return userMatch;
 //    }
@@ -248,10 +248,10 @@ public class UserMatchServiceImpl implements UserMatchService {
 //        }
     }
 
-    private UserMatchEntity insert(UserAnswersEntity userAnswersEntity1, UserAnswersEntity userAnswersEntity2, User principal, User user,
+    private UserMatchEntity insert(ValueCompatibilityAnswersEntity valueCompatibilityAnswersEntity1, ValueCompatibilityAnswersEntity valueCompatibilityAnswersEntity2, User principal, User user,
                                    MatchMethod matchMethod) {
-        List<Choice> choices1 = userAnswersEntity1.getUserAnswers();
-        List<Choice> choices2 = userAnswersEntity2.getUserAnswers();
+        List<Choice> choices1 = valueCompatibilityAnswersEntity1.getUserAnswers();
+        List<Choice> choices2 = valueCompatibilityAnswersEntity2.getUserAnswers();
 
         List<MatchEntity> matches = matchMap(choices1, choices2, matchMethod);
 
@@ -464,9 +464,10 @@ public class UserMatchServiceImpl implements UserMatchService {
     }
 
 
-    private void validateUserAnswers(User user){
-        Optional<List<UserAnswersEntity>> userAnswers = userAnswersRepository.findAllByUser_IdOrderByIdDesc(user.getId());
-        if(!userAnswersRepository.findAllByUser_IdOrderByIdDesc(user.getId()).isPresent())
+    private void validateValueCompatibilityAnswers(User user){
+        Optional<List<ValueCompatibilityAnswersEntity>> valueCompatibilityAnswers = valueCompatibilityAnswersRepository
+                .findAllByUser_IdOrderByIdDesc(user.getId());
+        if(!valueCompatibilityAnswersRepository.findAllByUser_IdOrderByIdDesc(user.getId()).isPresent())
             throw new BadRequestException(env.getProperty("error.noTestWasPassed"));
     }
 

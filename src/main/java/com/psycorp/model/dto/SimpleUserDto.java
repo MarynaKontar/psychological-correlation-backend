@@ -18,4 +18,5 @@ public class SimpleUserDto extends AbstractDto{
     private String email;
     private Integer age;
     private Gender gender;
+//    private Map<List>
 }

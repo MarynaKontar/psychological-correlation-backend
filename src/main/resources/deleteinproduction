@@ -488,11 +488,11 @@ ChoiceDto choiceDto1 = new ChoiceDto();
         validateUsers(user1, user2);
 
         //последний сохраненный UserAnswers
-        UserAnswers userAnswersEntity1 = userAnswersRepository.findAllByUser_IdOrderByPassDateDesc(user1.getId()).get(0);
-        UserAnswers userAnswersEntity2 = userAnswersRepository.findAllByUser_IdOrderByPassDateDesc(user2.getId()).get(0);
+        UserAnswers valueCompatibilityAnswersEntity1 = userAnswersRepository.findAllByUser_IdOrderByPassDateDesc(user1.getId()).get(0);
+        UserAnswers valueCompatibilityAnswersEntity2 = userAnswersRepository.findAllByUser_IdOrderByPassDateDesc(user2.getId()).get(0);
 
-        Set<Choice> choices1 =  userAnswersEntity1.getUserAnswers();
-        Set<Choice> choices2 =  userAnswersEntity2.getUserAnswers();
+        Set<Choice> choices1 =  valueCompatibilityAnswersEntity1.getUserAnswers();
+        Set<Choice> choices2 =  valueCompatibilityAnswersEntity2.getUserAnswers();
 
         choices1.removeIf(choice -> !choice.getArea().equals(Area.GOAL));
         choices2.removeIf(choice -> !choice.getArea().equals(Area.GOAL));
@@ -508,11 +508,11 @@ ChoiceDto choiceDto1 = new ChoiceDto();
         validateUsers(user1, user2);
 
         //последний сохраненный UserAnswers
-        UserAnswers userAnswersEntity1 = userAnswersRepository.findAllByUser_IdOrderByPassDateDesc(user1.getId()).get(0);
-        UserAnswers userAnswersEntity2 = userAnswersRepository.findAllByUser_IdOrderByPassDateDesc(user2.getId()).get(0);
+        UserAnswers valueCompatibilityAnswersEntity1 = userAnswersRepository.findAllByUser_IdOrderByPassDateDesc(user1.getId()).get(0);
+        UserAnswers valueCompatibilityAnswersEntity2 = userAnswersRepository.findAllByUser_IdOrderByPassDateDesc(user2.getId()).get(0);
 
-        Set<Choice> choices1 =  userAnswersEntity1.getUserAnswers();
-        Set<Choice> choices2 =  userAnswersEntity2.getUserAnswers();
+        Set<Choice> choices1 =  valueCompatibilityAnswersEntity1.getUserAnswers();
+        Set<Choice> choices2 =  valueCompatibilityAnswersEntity2.getUserAnswers();
 
         choices1.removeIf(choice -> !choice.getArea().equals(Area.QUALITY));
         choices2.removeIf(choice -> !choice.getArea().equals(Area.QUALITY));
@@ -529,11 +529,11 @@ ChoiceDto choiceDto1 = new ChoiceDto();
         validateUsers(user1, user2);
 
         //последний сохраненный UserAnswers
-        UserAnswers userAnswersEntity1 = userAnswersRepository.findAllByUser_IdOrderByPassDateDesc(user1.getId()).get(0);
-        UserAnswers userAnswersEntity2 = userAnswersRepository.findAllByUser_IdOrderByPassDateDesc(user2.getId()).get(0);
+        UserAnswers valueCompatibilityAnswersEntity1 = userAnswersRepository.findAllByUser_IdOrderByPassDateDesc(user1.getId()).get(0);
+        UserAnswers valueCompatibilityAnswersEntity2 = userAnswersRepository.findAllByUser_IdOrderByPassDateDesc(user2.getId()).get(0);
 
-        Set<Choice> choices1 =  userAnswersEntity1.getUserAnswers();
-        Set<Choice> choices2 =  userAnswersEntity2.getUserAnswers();
+        Set<Choice> choices1 =  valueCompatibilityAnswersEntity1.getUserAnswers();
+        Set<Choice> choices2 =  valueCompatibilityAnswersEntity2.getUserAnswers();
 
         choices1.removeIf(choice -> !choice.getArea().equals(Area.STATE));
         choices2.removeIf(choice -> !choice.getArea().equals(Area.STATE));
@@ -549,11 +549,11 @@ ChoiceDto choiceDto1 = new ChoiceDto();
         validateUsers(user1, user2);
 
         //последний сохраненный UserAnswers
-        UserAnswers userAnswersEntity1 = userAnswersRepository.findAllByUser_IdOrderByPassDateDesc(user1.getId()).get(0);
-        UserAnswers userAnswersEntity2 = userAnswersRepository.findAllByUser_IdOrderByPassDateDesc(user2.getId()).get(0);
+        UserAnswers valueCompatibilityAnswersEntity1 = userAnswersRepository.findAllByUser_IdOrderByPassDateDesc(user1.getId()).get(0);
+        UserAnswers valueCompatibilityAnswersEntity2 = userAnswersRepository.findAllByUser_IdOrderByPassDateDesc(user2.getId()).get(0);
 
-        Set<Choice> choices1 =  userAnswersEntity1.getUserAnswers();
-        Set<Choice> choices2 =  userAnswersEntity2.getUserAnswers();
+        Set<Choice> choices1 =  valueCompatibilityAnswersEntity1.getUserAnswers();
+        Set<Choice> choices2 =  valueCompatibilityAnswersEntity2.getUserAnswers();
 
         choices1.removeAll(choices2);
         double totalMatchPercentInt = 100 * choices1.size()/choices2.size();
@@ -694,18 +694,18 @@ public class UserMatchServiceImpl implements UserMatchService {
         validate(user1, user2);
 
         //последний сохраненный UserAnswers
-//        UserAnswers userAnswersEntity1 = userAnswersRepository.findAllByUser_IdOrderByPassDateDesc(user1.getId()).get(0);
-//        UserAnswers userAnswersEntity2 = userAnswersRepository.findAllByUser_IdOrderByPassDateDesc(user2.getId()).get(0);
+//        UserAnswers valueCompatibilityAnswersEntity1 = userAnswersRepository.findAllByUser_IdOrderByPassDateDesc(user1.getId()).get(0);
+//        UserAnswers valueCompatibilityAnswersEntity2 = userAnswersRepository.findAllByUser_IdOrderByPassDateDesc(user2.getId()).get(0);
 
-//        UserAnswers userAnswersEntity1 = userAnswersRepository.findAllByUser_NameOrderByPassDateDesc(user1.getName()).get(0);
-//        UserAnswers userAnswersEntity2 = userAnswersRepository.findAllByUser_NameOrderByPassDateDesc(user2.getName()).get(0);
+//        UserAnswers valueCompatibilityAnswersEntity1 = userAnswersRepository.findAllByUser_NameOrderByPassDateDesc(user1.getName()).get(0);
+//        UserAnswers valueCompatibilityAnswersEntity2 = userAnswersRepository.findAllByUser_NameOrderByPassDateDesc(user2.getName()).get(0);
 //
-        UserAnswers userAnswersEntity1 = userAnswersRepository.findAllByUser_NameOrderById(user1.getName()).get(0);
-        UserAnswers userAnswersEntity2 = userAnswersRepository.findAllByUser_NameOrderById(user2.getName()).get(0);
+        UserAnswers valueCompatibilityAnswersEntity1 = userAnswersRepository.findAllByUser_NameOrderById(user1.getName()).get(0);
+        UserAnswers valueCompatibilityAnswersEntity2 = userAnswersRepository.findAllByUser_NameOrderById(user2.getName()).get(0);
 
 
-        Set<Choice> choices1 = userAnswersEntity1.getUserAnswers();
-        Set<Choice> choices2 = userAnswersEntity2.getUserAnswers();
+        Set<Choice> choices1 = valueCompatibilityAnswersEntity1.getUserAnswers();
+        Set<Choice> choices2 = valueCompatibilityAnswersEntity2.getUserAnswers();
 
        List<Match> matches = matchMap(choices1, choices2, matchMethod);
 

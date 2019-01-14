@@ -1,9 +1,9 @@
 package com.psycorp.сonverter;
 
 import com.psycorp.model.dto.ChoiceDto;
-import com.psycorp.model.dto.UserAnswersDto;
+import com.psycorp.model.dto.ValueCompatibilityAnswersDto;
 import com.psycorp.model.entity.Choice;
-import com.psycorp.model.entity.UserAnswersEntity;
+import com.psycorp.model.entity.ValueCompatibilityAnswersEntity;
 import com.psycorp.model.enums.Area;
 import com.psycorp.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,30 +14,30 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Component
-public class UserAnswersDtoConverter extends AbstractDtoConverter<UserAnswersEntity, UserAnswersDto>{
+public class ValueCompatibilityAnswersDtoConverter extends AbstractDtoConverter<ValueCompatibilityAnswersEntity, ValueCompatibilityAnswersDto>{
 
     private final UserRepository userRepository;
     private final Environment env;
 
     @Autowired
-    public UserAnswersDtoConverter(UserRepository userRepository, Environment env) {
+    public ValueCompatibilityAnswersDtoConverter(UserRepository userRepository, Environment env) {
         this.userRepository = userRepository;
         this.env = env;
     }
 
 
     @Override
-    protected UserAnswersDto createNewDto() {
-        return new UserAnswersDto();
+    protected ValueCompatibilityAnswersDto createNewDto() {
+        return new ValueCompatibilityAnswersDto();
     }
 
     @Override
-    protected UserAnswersEntity createNewEntity() {
-        return new UserAnswersEntity();
+    protected ValueCompatibilityAnswersEntity createNewEntity() {
+        return new ValueCompatibilityAnswersEntity();
     }
 
     @Override
-    protected void convertFromEntity(UserAnswersEntity entity, UserAnswersDto dto) {
+    protected void convertFromEntity(ValueCompatibilityAnswersEntity entity, ValueCompatibilityAnswersDto dto) {
 
         ChoiceDtoConverter choiceDtoConverter = new ChoiceDtoConverter(env);
 
@@ -71,7 +71,7 @@ public class UserAnswersDtoConverter extends AbstractDtoConverter<UserAnswersEnt
     }
 
     @Override
-    protected void convertFromDto(UserAnswersDto dto, UserAnswersEntity entity) {
+    protected void convertFromDto(ValueCompatibilityAnswersDto dto, ValueCompatibilityAnswersEntity entity) {
 
         ChoiceDtoConverter choiceDtoConverter = new ChoiceDtoConverter(env);
         List<Choice> choices = new ArrayList<>(choiceDtoConverter.transform(dto.getGoal()));

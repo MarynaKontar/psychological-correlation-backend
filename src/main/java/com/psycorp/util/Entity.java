@@ -2,7 +2,7 @@ package com.psycorp.util;
 
 import com.psycorp.model.entity.Choice;
 import com.psycorp.model.entity.User;
-import com.psycorp.model.entity.UserAnswersEntity;
+import com.psycorp.model.entity.ValueCompatibilityAnswersEntity;
 import com.psycorp.model.enums.Area;
 import com.psycorp.model.enums.Scale;
 
@@ -19,22 +19,22 @@ public class Entity {
     /**
      *
      * @param user
-     * @return UserAnswersEntity for user
+     * @return ValueCompatibilityAnswersEntity for user
      */
-    public static UserAnswersEntity createRandomUserAnswers(User user){
-        UserAnswersEntity userAnswersEntity = new UserAnswersEntity();
-        userAnswersEntity.setUser(user);
+    public static ValueCompatibilityAnswersEntity createRandomUserAnswers(User user){
+        ValueCompatibilityAnswersEntity valueCompatibilityAnswersEntity = new ValueCompatibilityAnswersEntity();
+        valueCompatibilityAnswersEntity.setUser(user);
 
         List<Choice> choices = new ArrayList<>();
         choices.addAll(getChoices(Area.GOAL));
         choices.addAll(getChoices(Area.QUALITY));
         choices.addAll(getChoices(Area.STATE));
 
-        userAnswersEntity.setUserAnswers(choices);
-        userAnswersEntity.setCreationDate(LocalDateTime.now());
-        userAnswersEntity.setPassDate(LocalDateTime.now());
+        valueCompatibilityAnswersEntity.setUserAnswers(choices);
+        valueCompatibilityAnswersEntity.setCreationDate(LocalDateTime.now());
+        valueCompatibilityAnswersEntity.setPassDate(LocalDateTime.now());
 
-        return userAnswersEntity;
+        return valueCompatibilityAnswersEntity;
     }
 
     private static Set<Choice> getChoices(Area area) {

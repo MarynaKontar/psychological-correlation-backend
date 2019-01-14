@@ -13,7 +13,7 @@ public class TestDb {
 
 ////    private final Environment env;
 //
-////    private final UserAnswersService userAnswersService;
+////    private final ValueCompatibilityAnswersService userAnswersService;
 //    private final UserService userService;
 //
 //    @Autowired
@@ -28,7 +28,7 @@ public class TestDb {
 ////
 ////
 ////    @Autowired
-////    public TestDb(Environment env, UserAnswersService userAnswersService, UserService userService,
+////    public TestDb(Environment env, ValueCompatibilityAnswersService userAnswersService, UserService userService,
 ////                  UserMatchService userMatchService) {
 ////        this.env = env;
 ////        this.userAnswersService = userAnswersService;
@@ -44,7 +44,7 @@ public class TestDb {
 //        user1.setEmail("email6");
 //        user1 = userService.createUser(user1);
 ////
-////        UserAnswersEntity userAnswers1 = Entity.createRandomUserAnswers(user1);
+////        ValueCompatibilityAnswersEntity userAnswers1 = Entity.createRandomUserAnswers(user1);
 ////        userAnswersService.createUser(userAnswers1);
 ////
 //        User user2 = new User();
@@ -52,7 +52,7 @@ public class TestDb {
 //        user2.setEmail("email7");
 //        user2 = userService.createUser(user2);
 ////
-////        UserAnswersEntity userAnswers2 = Entity.createRandomUserAnswers(user2);
+////        ValueCompatibilityAnswersEntity userAnswers2 = Entity.createRandomUserAnswers(user2);
 ////        userAnswersService.createUser(userAnswers2);
 ////
 ////
@@ -60,7 +60,7 @@ public class TestDb {
 ////        user3.setEmail("email8");
 ////        user3 = userService.createUser(user3);
 ////
-////        UserAnswersEntity userAnswers3 = Entity.createRandomUserAnswers(user3);
+////        ValueCompatibilityAnswersEntity userAnswers3 = Entity.createRandomUserAnswers(user3);
 ////        userAnswersService.createUser(userAnswers3);
 ////
 //    }
@@ -104,18 +104,18 @@ public class TestDb {
 ////        User user1 = userService.findUserByNameOrEmail("email7");
 ////        User user2 = userService.findUserByNameOrEmail("email8");
 ////
-////        UserAnswersEntity userAnswers1 = Entity.createRandomUserAnswers(user1);
+////        ValueCompatibilityAnswersEntity userAnswers1 = Entity.createRandomUserAnswers(user1);
 ////        userAnswersService.createUser(userAnswers1);
 ////
-////        UserAnswersEntity userAnswers2 = Entity.createRandomUserAnswers(user2);
+////        ValueCompatibilityAnswersEntity userAnswers2 = Entity.createRandomUserAnswers(user2);
 ////        userAnswersService.createUser(userAnswers2);
 ////
-////        List<UserAnswersEntity> userAnswersSet1 = userAnswersService.findAllUserAnswersByUser_IdOrderByPassDateDesc(user1.getId());
-////        List<UserAnswersEntity> userAnswersSet3 = userAnswersService.findAllUserAnswersByUser_IdOrderByPassDateDesc(user2.getId());
+////        List<ValueCompatibilityAnswersEntity> userAnswersSet1 = userAnswersService.findAllUserAnswersByUser_IdOrderByPassDateDesc(user1.getId());
+////        List<ValueCompatibilityAnswersEntity> userAnswersSet3 = userAnswersService.findAllUserAnswersByUser_IdOrderByPassDateDesc(user2.getId());
 ////
 ////        UserAnswersDtoConverter userAnswersDtoConverter = new UserAnswersDtoConverter(env);
-////        List<UserAnswersDto> userAnswersDtos1 = userAnswersDtoConverter.transform(userAnswersSet1);
-////        List<UserAnswersDto> userAnswersDtos2 = userAnswersDtoConverter.transform(userAnswersSet3);
+////        List<ValueCompatibilityAnswersDto> userAnswersDtos1 = userAnswersDtoConverter.transform(userAnswersSet1);
+////        List<ValueCompatibilityAnswersDto> userAnswersDtos2 = userAnswersDtoConverter.transform(userAnswersSet3);
 ////
 ////
 ////        System.out.println("+++++++++++++++++++++++++++++++++");

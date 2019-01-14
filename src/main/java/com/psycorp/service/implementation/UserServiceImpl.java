@@ -6,7 +6,7 @@ import com.psycorp.model.entity.User;
 import com.psycorp.model.enums.ErrorEnum;
 import com.psycorp.model.enums.UserRole;
 import com.psycorp.model.security.CredentialsEntity;
-import com.psycorp.repository.UserAnswersRepository;
+import com.psycorp.repository.ValueCompatibilityAnswersRepository;
 import com.psycorp.repository.UserMatchRepository;
 import com.psycorp.repository.UserRepository;
 import com.psycorp.repository.security.CredentialsRepository;
@@ -38,7 +38,7 @@ public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
     private final CredentialsRepository credentialsRepository;
-    private final UserAnswersRepository userAnswersRepository;
+    private final ValueCompatibilityAnswersRepository valueCompatibilityAnswersRepository;
     private final UserMatchRepository userMatchRepository;
     @Autowired
     private AuthService authService;
@@ -48,11 +48,11 @@ public class UserServiceImpl implements UserService {
     private final Environment env;
 
     @Autowired
-    public UserServiceImpl(UserRepository userRepository, CredentialsRepository credentialsRepository, UserAnswersRepository userAnswersRepository
+    public UserServiceImpl(UserRepository userRepository, CredentialsRepository credentialsRepository, ValueCompatibilityAnswersRepository valueCompatibilityAnswersRepository
             , UserMatchRepository userMatchRepository, TokenRepository tokenRepository, MongoOperations mongoOperations, AuthUtil serviceUtil, Environment env) {
         this.userRepository = userRepository;
         this.credentialsRepository = credentialsRepository;
-        this.userAnswersRepository = userAnswersRepository;
+        this.valueCompatibilityAnswersRepository = valueCompatibilityAnswersRepository;
         this.userMatchRepository = userMatchRepository;
         this.tokenRepository = tokenRepository;
         this.mongoOperations = mongoOperations;
@@ -109,13 +109,16 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public User findUserByNameOrEmail(String nameOrEmail) {
+        if(nameOrEmail == null) throw new BadRequestException(env.getProperty("error.noUserFound"));
         return userRepository.findUserByNameOrEmail(nameOrEmail, nameOrEmail)
                 .orElseThrow(() -> new BadRequestException(env.getProperty("error.noUserFound") + " for name or email: "
                         + nameOrEmail));
     }
 
+    //TODO delete
     @Override
     public User findFirstUserByName(String name) {
+        if(name == null) throw new BadRequestException(env.getProperty("error.noUserFound"));
         return userRepository.findFirstByName(name)
                 .orElseThrow(() -> new BadRequestException(env.getProperty("error.noUserFound") + " for user name: " + name));
     }
@@ -157,7 +160,7 @@ public class UserServiceImpl implements UserService {
 //        authUtil.userAuthorization(userId);
 
         User user = findById(userId);
-        userAnswersRepository.removeAllByUserId(userId);
+        valueCompatibilityAnswersRepository.removeAllByUserId(userId);
         userMatchRepository.removeAllByUserId(userId);
         tokenRepository.removeAllByUserId(userId);
         //remove user from usersForMatching of another users

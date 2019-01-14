@@ -28,4 +28,7 @@ public class TokenEntity {
     private String token;
     @DBRef
     private User user;
+
+    //id of some user that invited this user
+    private ObjectId whoInvitedUser;
 }

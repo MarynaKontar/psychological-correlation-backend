@@ -78,10 +78,10 @@ public class ApiUserMatchController {
 //           user = userDtoConverter.transform(userDto);
 //       } else {throw new BadRequestException("User can't be null.");}
 //
-//       ValueProfile valueProfilePrincipal = userAnswersService.getValueProfileIndividual(null);
-//       ValueProfile valueProfile = userAnswersService.getValueProfileIndividual(user);
-//       ValueProfileDto valueProfilePrincipalDto = userAnswersDtoConverter.convertToValueProfileDto(valueProfilePrincipal);
-//       ValueProfileDto valueProfile = userAnswersDtoConverter.convertToValueProfileDto(valueProfile);
+//       ValueProfile valueProfilePrincipal = valueCompatibilityAnswersService.getValueProfileIndividual(null);
+//       ValueProfile valueProfile = valueCompatibilityAnswersService.getValueProfileIndividual(user);
+//       ValueProfileDto valueProfilePrincipalDto = valueCompatibilityAnswersDtoConverter.convertToValueProfileDto(valueProfilePrincipal);
+//       ValueProfileDto valueProfile = valueCompatibilityAnswersDtoConverter.convertToValueProfileDto(valueProfile);
 //       List<ValueProfileDto> valueProfileDtos =Arrays.asList(valueProfile, valueProfilePrincipalDto);
 //       return ResponseEntity.ok().headers(httpHeaders).body(valueProfileDtos);
 //    }

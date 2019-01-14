@@ -10,7 +10,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @Data
-public class UserAnswersDto extends AbstractDto {
+public class ValueCompatibilityAnswersDto extends AbstractDto {
 
     private ObjectId id;
 //    private String userName;

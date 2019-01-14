@@ -41,7 +41,7 @@ public class AuthServiceImpl implements AuthService {
     public UserDetails getAuthPrincipal() {
         SecurityContext securityContext = SecurityContextHolder.getContext();
         Authentication authentication = securityContext.getAuthentication();
-        if(authentication.getPrincipal().equals("anonymousUser")) { // if user is not registered yet
+        if(authentication.getPrincipal().equals("anonymousUser")) { // if user is not registered yet, then in Authentication principal="anonymousUser"
             return null;
         }
         return (UserDetails) authentication.getPrincipal();
@@ -52,8 +52,6 @@ public class AuthServiceImpl implements AuthService {
     @Override
     public String generateAccessToken(UsernamePasswordDto usernamePassword) {
 
-//        User user = userRepository.findFirstByName(usernamePassword.getName())
-        //TODO findUserByNameOrEmail не работает, если не писать два раза (и для name и для email)
         User user = userService.findUserByNameOrEmail(usernamePassword.getName());
         CredentialsEntity credentialsEntity = credentialRepository.findByUser_Id(user.getId())
                 .orElseThrow(() -> new UsernameNotFoundException("User not found"));

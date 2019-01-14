@@ -44,13 +44,6 @@ public class ApiUserController {
         return new ResponseEntity<>(userDtoConverter.transform(user), HttpStatus.CREATED);
     }
 
-    //TODO и зачем я это сделала? Этот permitAll, а верхний - нет. Но надо убрать (на фронте через интерсепторы решу эту проблему)
-//    @PostMapping("/save")
-//    public ResponseEntity<SimpleUserDto> saveNewUser(@RequestBody @NotNull @Valid CredentialsDto credentialsDto) {
-//        User user = credentialsService.save(credentialsEntityConverter.transform(credentialsDto));
-//        return new ResponseEntity<>(userDtoConverter.transform(user), HttpStatus.CREATED);
-//    }
-
     @PostMapping("/addAgeAndGender")
     public ResponseEntity<SimpleUserDto> addAgeAndGender(@RequestBody @NotNull @Valid SimpleUserDto userDto) {
         User user = userService.addAgeAndGender(userDtoConverter.transform(userDto));
@@ -69,8 +62,8 @@ public class ApiUserController {
 
     // выдаст любому залогиненному пользователю инфор. о любом другом пользователе по его name or email
     @GetMapping("/NameOrEmail")
-    public ResponseEntity<SimpleUserDto> getByNameOrEmail(@RequestParam String email){
-        return ResponseEntity.ok().body(userDtoConverter.transform(userService.findUserByNameOrEmail(email)));
+    public ResponseEntity<SimpleUserDto> getByNameOrEmail(@RequestParam String nameOrEmail){
+        return ResponseEntity.ok().body(userDtoConverter.transform(userService.findUserByNameOrEmail(nameOrEmail)));
     }
 
     @PutMapping
