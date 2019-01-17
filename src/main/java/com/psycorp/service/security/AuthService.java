@@ -2,6 +2,7 @@ package com.psycorp.service.security;
 
 import com.psycorp.model.dto.UsernamePasswordDto;
 import com.psycorp.model.entity.User;
+import com.psycorp.model.enums.TokenType;
 import com.psycorp.model.security.TokenEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
@@ -28,5 +29,7 @@ public interface AuthService {
     String generateAccessTokenForAnonim(User user);
 
     User getUserByToken(String token);
+
+    Boolean ifExistTokenByTypeAndToken(TokenType type, String token);
 //    String generateDeviceToken();
 }

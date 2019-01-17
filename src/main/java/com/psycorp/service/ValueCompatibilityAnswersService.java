@@ -22,4 +22,6 @@ public interface ValueCompatibilityAnswersService {
     List<ValueCompatibilityAnswersEntity> findAllByUserNameOrderByCreationDateDesc(String userName);
 
     ValueCompatibilityAnswersEntity getLastPassedTest();
+
+    void changeInviteTokenToAccess(String token);
 }

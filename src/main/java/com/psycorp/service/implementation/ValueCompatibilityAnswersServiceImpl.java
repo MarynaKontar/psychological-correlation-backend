@@ -6,12 +6,15 @@ import com.psycorp.model.entity.*;
 import com.psycorp.model.enums.Area;
 import com.psycorp.model.enums.ErrorEnum;
 import com.psycorp.model.enums.Scale;
+import com.psycorp.model.enums.TokenType;
+import com.psycorp.model.security.TokenEntity;
 import com.psycorp.repository.ValueCompatibilityAnswersRepository;
 import com.psycorp.repository.UserRepository;
 import com.psycorp.security.token.TokenPrincipal;
 import com.psycorp.service.ValueCompatibilityAnswersService;
 import com.psycorp.service.UserService;
 import com.psycorp.service.security.AuthService;
+import com.psycorp.service.security.TokenService;
 import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
@@ -36,6 +39,8 @@ public class ValueCompatibilityAnswersServiceImpl implements ValueCompatibilityA
     private final UserRepository userRepository;
     private final AuthService authService;
     private final UserService userService;
+    @Autowired
+    private TokenService tokenService;
     private final MongoOperations mongoOperations;
     private final Environment env;
 
@@ -199,6 +204,19 @@ public class ValueCompatibilityAnswersServiceImpl implements ValueCompatibilityA
         User user = getPrincipal();
         return valueCompatibilityAnswersRepository.findTopByUser_IdAndPassedOrderByPassDateDesc(user.getId(),true)
                 .orElseThrow(() -> new BadRequestException(env.getProperty("error.noPassedValueCompatibilityAnswersFind")));
+    }
+
+    @Override
+    public void changeInviteTokenToAccess(String token) {
+        if (tokenService.ifExistByTypeAndToken(TokenType.INVITE_TOKEN, token)) {
+            TokenEntity tokenEntity = tokenService.getByTypeAndToken(TokenType.INVITE_TOKEN, token);
+
+            // UPDATE TOKENTYPE and EXPIRATIONDATE
+            Update update = new Update().set("type", TokenType.ACCESS_TOKEN)
+                                        .set("expirationDate", tokenService.getTokenExpirationDate(TokenType.ACCESS_TOKEN));
+            Query query = Query.query(Criteria.where(Fields.UNDERSCORE_ID).is(tokenEntity.getId()));
+            mongoOperations.updateFirst(query, update, TokenEntity.class);
+        }
     }
 
     @Override

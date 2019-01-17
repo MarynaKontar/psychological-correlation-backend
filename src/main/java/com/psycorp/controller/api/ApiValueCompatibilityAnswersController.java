@@ -75,24 +75,21 @@ public class ApiValueCompatibilityAnswersController {
                 .transform(valueCompatibilityAnswersService.getInitValueCompatibilityAnswers()));
     }
 
-//    @PostMapping
-//    public ResponseEntity<ValueCompatibilityAnswersDto> save(@RequestBody @NotNull @Valid ValueCompatibilityAnswersDto valueCompatibilityAnswersDto){
-//
-//        ValueCompatibilityAnswersEntity valueCompatibilityAnswers = valueCompatibilityAnswersDtoConverter.transform(valueCompatibilityAnswersDto);
-//        valueCompatibilityAnswers = valueCompatibilityAnswersService.save(valueCompatibilityAnswers);
-//        valueCompatibilityAnswersDto = valueCompatibilityAnswersDtoConverter.transform(valueCompatibilityAnswers);
-//        return new ResponseEntity<>(valueCompatibilityAnswersDto, HttpStatus.CREATED);
-//    }
-
     //save only goals
     //TODO сделать, чтобы возврашал Void (чтобі лишняя инфа и нагрузка не ходила по http), потом как отдельній запрос
     // идет ValueCompatibilityAnswersDto ("дайте мне результаты моего теста"). токен генерить в сервисе или как здесь?
     @PostMapping("/goal")
-    public ResponseEntity<ValueCompatibilityAnswersDto> saveGoal(@RequestBody @NotNull @Valid ValueCompatibilityAnswersDto valueCompatibilityAnswersDto
-            , @RequestHeader(value = "Authorization", required = false) String token){
+    public ResponseEntity<ValueCompatibilityAnswersDto> saveGoal(
+            @RequestBody @NotNull @Valid ValueCompatibilityAnswersDto valueCompatibilityAnswersDto,
+            @RequestHeader(value = "Authorization", required = false) String token){
+
         ValueCompatibilityAnswersEntity valueCompatibilityAnswersEntity = valueCompatibilityAnswersDtoConverter.transform(valueCompatibilityAnswersDto);
         List<Choice> choices = choiceDtoConverter.transform(valueCompatibilityAnswersDto.getGoal());
+
+        if(token != null) {valueCompatibilityAnswersService.changeInviteTokenToAccess(token); }
+
         valueCompatibilityAnswersEntity = valueCompatibilityAnswersService.saveChoices(token, valueCompatibilityAnswersEntity, choices, Area.GOAL);
+
         if((token == null) && valueCompatibilityAnswersEntity.getUser().getRole().equals(UserRole.ANONIM)){
             token = ACCESS_TOKEN_PREFIX + " " + authService.generateAccessTokenForAnonim(valueCompatibilityAnswersEntity.getUser());
         }
@@ -104,7 +101,8 @@ public class ApiValueCompatibilityAnswersController {
 
     //save only qualities
     @PostMapping("/quality")
-    public ResponseEntity<ValueCompatibilityAnswersDto> saveQuality(@RequestBody @NotNull @Valid ValueCompatibilityAnswersDto valueCompatibilityAnswersDto) {
+    public ResponseEntity<ValueCompatibilityAnswersDto> saveQuality(
+            @RequestBody @NotNull @Valid ValueCompatibilityAnswersDto valueCompatibilityAnswersDto) {
         ValueCompatibilityAnswersEntity valueCompatibilityAnswersEntity = valueCompatibilityAnswersDtoConverter.transform(valueCompatibilityAnswersDto);
         List<Choice> choices = choiceDtoConverter.transform(valueCompatibilityAnswersDto.getQuality());
         valueCompatibilityAnswersEntity = valueCompatibilityAnswersService.saveChoices(null, valueCompatibilityAnswersEntity, choices, Area.QUALITY);
@@ -113,7 +111,8 @@ public class ApiValueCompatibilityAnswersController {
 
     //save only states
     @PostMapping("/state")
-    public ResponseEntity<ValueCompatibilityAnswersDto> saveState(@RequestBody @NotNull @Valid ValueCompatibilityAnswersDto valueCompatibilityAnswersDto) {
+    public ResponseEntity<ValueCompatibilityAnswersDto> saveState(
+            @RequestBody @NotNull @Valid ValueCompatibilityAnswersDto valueCompatibilityAnswersDto) {
         ValueCompatibilityAnswersEntity valueCompatibilityAnswersEntity = valueCompatibilityAnswersDtoConverter.transform(valueCompatibilityAnswersDto);
         List<Choice> choices = choiceDtoConverter.transform(valueCompatibilityAnswersDto.getState());
         valueCompatibilityAnswersEntity = valueCompatibilityAnswersService.saveChoices(null, valueCompatibilityAnswersEntity, choices, Area.STATE);

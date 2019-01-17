@@ -52,16 +52,16 @@ public class TokenServiceImpl implements TokenService {
         tokenEntity.setToken(token);
         tokenEntity.setUser(user);
         tokenEntity.setType(tokenType);
-        Integer days = getTokenExpirationDate(tokenType);
-        tokenEntity.setExpirationDate(LocalDateTime.now().plusDays(days));
+        tokenEntity.setExpirationDate(getTokenExpirationDate(tokenType));
 
         tokenRepository.save(tokenEntity);
 
         return tokenEntity;
     }
 
-    private Integer getTokenExpirationDate(TokenType tokenType) {
-        Integer days = 0;
+    @Override
+    public LocalDateTime getTokenExpirationDate(TokenType tokenType) {
+        Integer days;
         switch (tokenType) {
             case INVITE_TOKEN: {
                 days = Integer.valueOf(env.getProperty("invite.token.expiration.date"));
@@ -79,7 +79,7 @@ public class TokenServiceImpl implements TokenService {
                 days = 0;
             }
         }
-        return days;
+        return LocalDateTime.now().plusDays(days);
     }
 
     @Override
@@ -124,6 +124,16 @@ public class TokenServiceImpl implements TokenService {
         TokenEntity tokenEntity = tokenRepository.findByToken(token)
                 .orElseThrow(() -> new AuthorizationException("", ErrorEnum.TOKEN_EXPIRED));
        return userService.findById(tokenEntity.getUser().getId());
+    }
+
+    @Override
+    public Boolean ifExistByTypeAndToken(TokenType type, String token){
+        return tokenRepository.findByTypeAndToken(type, token).isPresent();
+    }
+
+    @Override
+    public TokenEntity getByTypeAndToken(TokenType type, String token){
+        return tokenRepository.findByTypeAndToken(type, token).orElse(null);
     }
 
 //    @Override

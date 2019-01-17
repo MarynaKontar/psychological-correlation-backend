@@ -75,6 +75,11 @@ public class AuthServiceImpl implements AuthService {
         return tokenService.getUserByToken(token);
     }
 
+    @Override
+    public Boolean ifExistTokenByTypeAndToken(TokenType type, String token){
+        return tokenService.ifExistByTypeAndToken(type, token);
+    }
+
 //    @Override
 //    public String generateDeviceToken() {
 //        return tokenService.createJwtToken();
