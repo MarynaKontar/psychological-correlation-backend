@@ -9,6 +9,8 @@ import com.psycorp.repository.security.TokenRepository;
 import com.psycorp.service.UserService;
 import com.psycorp.service.security.TokenService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.PropertySource;
+import org.springframework.core.env.Environment;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.aggregation.Fields;
 import org.springframework.data.mongodb.core.query.Criteria;
@@ -24,17 +26,20 @@ import java.util.List;
 import java.util.UUID;
 
 @Service
+@PropertySource(value = {"classpath:common.properties"}, encoding = "utf-8")
 public class TokenServiceImpl implements TokenService {
 
     private final TokenRepository tokenRepository;
     @Autowired
     private UserService userService;
     private final MongoOperations mongoOperations;
+    private final Environment env;
 
     @Autowired
-    public TokenServiceImpl(TokenRepository tokenRepository, MongoOperations mongoOperations) {
+    public TokenServiceImpl(TokenRepository tokenRepository, MongoOperations mongoOperations, Environment env) {
         this.tokenRepository = tokenRepository;
         this.mongoOperations = mongoOperations;
+        this.env = env;
     }
 
 //    private JwtService jwtService;
@@ -47,16 +52,39 @@ public class TokenServiceImpl implements TokenService {
         tokenEntity.setToken(token);
         tokenEntity.setUser(user);
         tokenEntity.setType(tokenType);
-        tokenEntity.setExpirationDate(LocalDateTime.now().plusDays(7));
+        Integer days = getTokenExpirationDate(tokenType);
+        tokenEntity.setExpirationDate(LocalDateTime.now().plusDays(days));
 
         tokenRepository.save(tokenEntity);
 
         return tokenEntity;
     }
 
+    private Integer getTokenExpirationDate(TokenType tokenType) {
+        Integer days = 0;
+        switch (tokenType) {
+            case INVITE_TOKEN: {
+                days = Integer.valueOf(env.getProperty("invite.token.expiration.date"));
+                break;
+            }
+            case ACCESS_TOKEN: {
+                days = Integer.valueOf(env.getProperty("access.token.expiration.date"));
+                break;
+            }
+            case REFRESH_TOKEN: {
+                days = Integer.valueOf(env.getProperty("refresh.token.expiration.date"));
+                break;
+            }
+            default: {
+                days = 0;
+            }
+        }
+        return days;
+    }
+
     @Override
     @Transactional
-    public List<String> generateTokenList(Integer n){ //n tokens
+    public List<String> generateInviteTokenList(Integer n){ //n tokens
 //        User principal = getUser();
         User principal = userService.getPrincipalUser();
         List<User> usersForMatching = new ArrayList<>(n);
@@ -67,7 +95,7 @@ public class TokenServiceImpl implements TokenService {
 
         List<String> tokens= new ArrayList<>(n);
         usersForMatching.forEach(user -> {
-            tokens.add(createUserToken(user, TokenType.ACCESS_TOKEN).getToken());
+            tokens.add(createUserToken(user, TokenType.INVITE_TOKEN).getToken());
             mongoOperations.updateFirst(  // UPDATE USERSFORMATCHING for all n users (add them principal)
                     Query.query(Criteria.where(Fields.UNDERSCORE_ID).is(user.getId())),
                     new Update().push("usersForMatching").each(Arrays.asList(principal)),

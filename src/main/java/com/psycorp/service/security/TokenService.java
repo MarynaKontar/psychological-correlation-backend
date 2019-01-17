@@ -10,7 +10,7 @@ import java.util.List;
 public interface TokenService {
     TokenEntity createUserToken(User userEntity, TokenType tokenType);
 
-    List<String> generateTokenList(Integer n);
+    List<String> generateInviteTokenList(Integer n);
 
     User getUserByToken(String token);
 //    String createJwtToken();

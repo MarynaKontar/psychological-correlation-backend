@@ -37,6 +37,7 @@ import static com.psycorp.security.SecurityConstant.ACCESS_TOKEN_PREFIX;
 @PropertySource(value = {"classpath:testing/scalesquestionsrussian.properties"}, encoding = "utf-8")
 @PropertySource(value = {"classpath:testing/scalesquestionsenglish.properties"}, encoding = "utf-8", ignoreResourceNotFound = true)
 @PropertySource(value = {"classpath:valueprofile/scalescommentrussian.properties"}, encoding = "utf-8")
+//@PropertySource(value = {"classpath:common.properties"}, encoding = "utf-8")
 public class ApiValueCompatibilityAnswersController {
 
     private final ValueCompatibilityAnswersService valueCompatibilityAnswersService;
@@ -126,8 +127,8 @@ public class ApiValueCompatibilityAnswersController {
     }
 
     @GetMapping("/generateTokenList")
-    public ResponseEntity<List<String>> generateTokenList(){
-        return ResponseEntity.ok().headers(httpHeaders).body(tokenService.generateTokenList(3));
+    public ResponseEntity<List<String>> generateInviteTokenList(){
+        return ResponseEntity.ok().headers(httpHeaders).body(tokenService.generateInviteTokenList(3));
     }
 
 
