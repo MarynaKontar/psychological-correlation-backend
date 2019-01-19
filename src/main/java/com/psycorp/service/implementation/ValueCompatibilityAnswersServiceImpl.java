@@ -1,5 +1,6 @@
 package com.psycorp.service.implementation;
 
+import com.mongodb.client.result.UpdateResult;
 import com.psycorp.exception.AuthorizationException;
 import com.psycorp.exception.BadRequestException;
 import com.psycorp.model.entity.*;
@@ -23,6 +24,7 @@ import org.springframework.data.mongodb.core.aggregation.Fields;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
+import org.springframework.data.mongodb.repository.DeleteQuery;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -63,7 +65,7 @@ public class ValueCompatibilityAnswersServiceImpl implements ValueCompatibilityA
         validateChoices(choices, area);
         User user = getUserByToken(token);
         answersEntity = valueCompatibilityAnswersRepository.findTopByUser_IdAndPassedOrderByPassDateDesc(user.getId(), false)
-                .map((answers) -> update(answers, choices))
+                .map((answers) -> update(answers, choices, area))
                 .orElseGet(() -> insert(choices, user));
         return answersEntity;
     }
@@ -141,13 +143,21 @@ public class ValueCompatibilityAnswersServiceImpl implements ValueCompatibilityA
         return valueCompatibilityAnswersRepository.insert(answersEntity);
     }
 
-    private ValueCompatibilityAnswersEntity update(ValueCompatibilityAnswersEntity answersEntity, List<Choice> choices) {
+    private ValueCompatibilityAnswersEntity update(ValueCompatibilityAnswersEntity answersEntity, List<Choice> choices,
+                                                   Area area) {
 
         // засетить юзера, если был аноним, а стал нормальным principal
 
+        Query query = Query.query(Criteria.where(Fields.UNDERSCORE_ID).is(answersEntity.getId()));
+
+        // if there are answers with this area in answersEntity already, delete them
+        if(answersEntity.getUserAnswers().stream().anyMatch(choice -> choice.getArea() == area)) {
+            Update update = new Update().pull("userAnswers",  Query.query(Criteria.where("area").is(area)));
+            mongoOperations.updateFirst(query, update, ValueCompatibilityAnswersEntity.class);
+        }
+
         // UPDATE CHOICES
         Update updateAnswers = new Update().set("passDate", LocalDateTime.now()).push("userAnswers").each(choices);
-        Query query = Query.query(Criteria.where(Fields.UNDERSCORE_ID).is(answersEntity.getId()));
         mongoOperations.updateFirst(query, updateAnswers, ValueCompatibilityAnswersEntity.class);
 
         answersEntity = valueCompatibilityAnswersRepository.findById(answersEntity.getId())
@@ -206,8 +216,10 @@ public class ValueCompatibilityAnswersServiceImpl implements ValueCompatibilityA
                 .orElseThrow(() -> new BadRequestException(env.getProperty("error.noPassedValueCompatibilityAnswersFind")));
     }
 
+    // remove to tokenService
     @Override
     public void changeInviteTokenToAccess(String token) {
+        token = token.substring(ACCESS_TOKEN_PREFIX.length() + 1);
         if (tokenService.ifExistByTypeAndToken(TokenType.INVITE_TOKEN, token)) {
             TokenEntity tokenEntity = tokenService.getByTypeAndToken(TokenType.INVITE_TOKEN, token);
 
@@ -215,7 +227,7 @@ public class ValueCompatibilityAnswersServiceImpl implements ValueCompatibilityA
             Update update = new Update().set("type", TokenType.ACCESS_TOKEN)
                                         .set("expirationDate", tokenService.getTokenExpirationDate(TokenType.ACCESS_TOKEN));
             Query query = Query.query(Criteria.where(Fields.UNDERSCORE_ID).is(tokenEntity.getId()));
-            mongoOperations.updateFirst(query, update, TokenEntity.class);
+           UpdateResult updateResult = mongoOperations.updateFirst(query, update, TokenEntity.class);
         }
     }
 

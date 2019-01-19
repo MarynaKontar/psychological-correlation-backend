@@ -13,3 +13,4 @@ spring:
 #      username: mongodb_admin
 #      password: MiVpp1g
 #      authentication-database: admin
+#при пуше на git, убрать комментарии и сменить порт на 27017
