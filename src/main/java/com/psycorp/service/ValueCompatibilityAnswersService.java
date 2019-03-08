@@ -23,5 +23,4 @@ public interface ValueCompatibilityAnswersService {
 
     ValueCompatibilityAnswersEntity getLastPassedTest();
 
-    void changeInviteTokenToAccess(String token);
 }

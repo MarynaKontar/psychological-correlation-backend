@@ -12,6 +12,7 @@ import com.psycorp.security.token.TokenPrincipal;
 import com.psycorp.service.CredentialsService;
 import com.psycorp.service.UserService;
 import com.psycorp.service.security.AuthService;
+import com.psycorp.service.security.TokenService;
 import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
@@ -30,6 +31,7 @@ public class CredentialsServiceImpl implements CredentialsService{
 
     private final CredentialsRepository credentialsRepository;
     private final UserRepository userRepository;
+    private final TokenService tokenService;
     private final UserService userService;
     private final MongoOperations mongoOperations;
     private final AuthService authService;
@@ -38,10 +40,12 @@ public class CredentialsServiceImpl implements CredentialsService{
 
     @Autowired
     public CredentialsServiceImpl(CredentialsRepository credentialsRepository, UserRepository userRepository,
-                                  UserService userService, MongoOperations mongoOperations, AuthService authService,
+                                  TokenService tokenService, UserService userService,
+                                  MongoOperations mongoOperations, AuthService authService,
                                   Environment env, PasswordEncoder passwordEncoder) {
         this.credentialsRepository = credentialsRepository;
         this.userRepository = userRepository;
+        this.tokenService = tokenService;
         this.userService = userService;
         this.mongoOperations = mongoOperations;
         this.authService = authService;
@@ -55,8 +59,17 @@ public class CredentialsServiceImpl implements CredentialsService{
 
         TokenPrincipal tokenPrincipal = (TokenPrincipal) authService.getAuthPrincipal();
         User user;
-        if(tokenPrincipal != null && tokenPrincipal.getId() != null) { //если есть токен
+        if(tokenPrincipal != null && tokenPrincipal.getId() != null) { //если есть пользователь
             ObjectId principalId = tokenPrincipal.getId();
+
+
+
+
+
+
+
+//            if(token != null) {tokenService.changeInviteTokenToAccess(token); }
+//            tokenService.findByUserId(principalId).getToken()
             if(userRepository.findById(principalId).isPresent()){ // и для него есть пользователь, то берем этого пользователя
                 user = update(credentialsEntity, principalId);
             } else {

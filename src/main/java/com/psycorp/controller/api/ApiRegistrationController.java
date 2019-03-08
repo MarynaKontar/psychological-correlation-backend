@@ -32,7 +32,9 @@ public class ApiRegistrationController {
     }
 
     @PostMapping
-    public ResponseEntity<SimpleUserDto> register(@RequestBody @NotNull @Valid CredentialsDto credentialsDto) {
+    public ResponseEntity<SimpleUserDto> register(@RequestBody @NotNull @Valid CredentialsDto credentialsDto,
+                                                  @RequestHeader(value = "Authorization", required = false) String token) {
+
         User user = credentialsService.save(credentialsEntityConverter.transform(credentialsDto));
         return new ResponseEntity<>(userDtoConverter.transform(user), HttpStatus.CREATED);
     }

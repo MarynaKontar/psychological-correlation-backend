@@ -4,6 +4,7 @@ package com.psycorp.service.security;
 import com.psycorp.model.entity.User;
 import com.psycorp.model.enums.TokenType;
 import com.psycorp.model.security.TokenEntity;
+import org.bson.types.ObjectId;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -17,8 +18,11 @@ public interface TokenService {
 
     User getUserByToken(String token);
 
+    void changeInviteTokenToAccess(String token);
+
     Boolean ifExistByTypeAndToken(TokenType type, String token);
 
-    TokenEntity getByTypeAndToken(TokenType type, String token);
+    TokenEntity findByUserId(ObjectId userId);
+
 //    String createJwtToken();
 }

@@ -86,7 +86,7 @@ public class ApiValueCompatibilityAnswersController {
         ValueCompatibilityAnswersEntity valueCompatibilityAnswersEntity = valueCompatibilityAnswersDtoConverter.transform(valueCompatibilityAnswersDto);
         List<Choice> choices = choiceDtoConverter.transform(valueCompatibilityAnswersDto.getGoal());
 
-        if(token != null) {valueCompatibilityAnswersService.changeInviteTokenToAccess(token); }
+        if(token != null) {tokenService.changeInviteTokenToAccess(token); }
 
         valueCompatibilityAnswersEntity = valueCompatibilityAnswersService.saveChoices(token, valueCompatibilityAnswersEntity, choices, Area.GOAL);
 

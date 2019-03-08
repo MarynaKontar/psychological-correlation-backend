@@ -1,5 +1,6 @@
 package com.psycorp.service.security.implementation;
 
+import com.mongodb.client.result.UpdateResult;
 import com.psycorp.exception.AuthorizationException;
 import com.psycorp.model.entity.User;
 import com.psycorp.model.enums.ErrorEnum;
@@ -8,6 +9,7 @@ import com.psycorp.model.security.TokenEntity;
 import com.psycorp.repository.security.TokenRepository;
 import com.psycorp.service.UserService;
 import com.psycorp.service.security.TokenService;
+import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.PropertySource;
 import org.springframework.core.env.Environment;
@@ -21,6 +23,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.*;
+
+import static com.psycorp.security.SecurityConstant.ACCESS_TOKEN_PREFIX;
 
 @Service
 @PropertySource(value = {"classpath:common.properties"}, encoding = "utf-8")
@@ -124,14 +128,35 @@ public class TokenServiceImpl implements TokenService {
     }
 
     @Override
+    public void changeInviteTokenToAccess(String token) {
+        token = token.substring(ACCESS_TOKEN_PREFIX.length() + 1);
+        if (ifExistByTypeAndToken(TokenType.INVITE_TOKEN, token)) {
+            TokenEntity tokenEntity = getByTypeAndToken(TokenType.INVITE_TOKEN, token);
+
+            // UPDATE TOKENTYPE and EXPIRATIONDATE
+            Update update = new Update().set("type", TokenType.ACCESS_TOKEN)
+                    .set("expirationDate", getTokenExpirationDate(TokenType.ACCESS_TOKEN));
+            Query query = Query.query(Criteria.where(Fields.UNDERSCORE_ID).is(tokenEntity.getId()));
+            UpdateResult updateResult = mongoOperations.updateFirst(query, update, TokenEntity.class);
+        }
+    }
+
+    @Override
     public Boolean ifExistByTypeAndToken(TokenType type, String token){
         return tokenRepository.findByTypeAndToken(type, token).isPresent();
     }
 
     @Override
-    public TokenEntity getByTypeAndToken(TokenType type, String token){
+    public TokenEntity findByUserId(ObjectId userId) {
+        return tokenRepository.findByUser_Id(userId)
+                .orElseThrow(() -> new RuntimeException(env.getProperty("error.TokenIsNotValid")));
+    }
+
+    private TokenEntity getByTypeAndToken(TokenType type, String token){
         return tokenRepository.findByTypeAndToken(type, token).orElse(null);
     }
+
+
 
 //    @Override
 //    public void updateUserToken(String token, LocalDateTime lastUsed) {

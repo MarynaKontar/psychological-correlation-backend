@@ -216,21 +216,6 @@ public class ValueCompatibilityAnswersServiceImpl implements ValueCompatibilityA
                 .orElseThrow(() -> new BadRequestException(env.getProperty("error.noPassedValueCompatibilityAnswersFind")));
     }
 
-    // remove to tokenService
-    @Override
-    public void changeInviteTokenToAccess(String token) {
-        token = token.substring(ACCESS_TOKEN_PREFIX.length() + 1);
-        if (tokenService.ifExistByTypeAndToken(TokenType.INVITE_TOKEN, token)) {
-            TokenEntity tokenEntity = tokenService.getByTypeAndToken(TokenType.INVITE_TOKEN, token);
-
-            // UPDATE TOKENTYPE and EXPIRATIONDATE
-            Update update = new Update().set("type", TokenType.ACCESS_TOKEN)
-                                        .set("expirationDate", tokenService.getTokenExpirationDate(TokenType.ACCESS_TOKEN));
-            Query query = Query.query(Criteria.where(Fields.UNDERSCORE_ID).is(tokenEntity.getId()));
-           UpdateResult updateResult = mongoOperations.updateFirst(query, update, TokenEntity.class);
-        }
-    }
-
     @Override
     public ValueCompatibilityAnswersEntity getLastPassedTest(User user) {
         if(user != null && user.getId() != null) {
