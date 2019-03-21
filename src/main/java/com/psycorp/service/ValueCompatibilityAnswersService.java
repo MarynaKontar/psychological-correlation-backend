@@ -15,7 +15,9 @@ public interface ValueCompatibilityAnswersService {
     ValueCompatibilityAnswersEntity getInitValueCompatibilityAnswers();
 
 //    ValueCompatibilityAnswersEntity save(ValueCompatibilityAnswersEntity valueCompatibilityAnswersEntity);
-    ValueCompatibilityAnswersEntity saveChoices(String token, ValueCompatibilityAnswersEntity valueCompatibilityAnswersEntity, List<Choice> choices, Area area);
+    ValueCompatibilityAnswersEntity saveChoices(String token, String userForMatchingToken,
+                                                ValueCompatibilityAnswersEntity valueCompatibilityAnswersEntity,
+                                                List<Choice> choices, Area area);
 
     ValueCompatibilityAnswersEntity findById(ObjectId id);
     ValueCompatibilityAnswersEntity findLastValueCompatibilityAnswersByUserNameOrEmail(String userName);

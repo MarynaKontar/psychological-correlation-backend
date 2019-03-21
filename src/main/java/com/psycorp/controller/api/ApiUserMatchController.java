@@ -62,8 +62,10 @@ public class ApiUserMatchController {
 
 
     @PostMapping("/value-profile-for-matching")
-    public ResponseEntity<ValueProfileMatchingDto> getValueProfilesForMatching(@RequestBody
-                            @NotNull @Valid SimpleUserDto userDto) throws BadRequestException {
+    public ResponseEntity<ValueProfileMatchingDto> getValueProfilesForMatching(
+            @RequestBody @NotNull @Valid SimpleUserDto userDto,
+            @RequestHeader(value = "userForMatchingToken", required = false) String userForMatchingToken)
+                            throws BadRequestException {
         User user = userDtoConverter.transform(userDto); // если null, то вернет new User()
         return ResponseEntity.ok().headers(httpHeaders).body(valueProfileMatchingDtoConverter.transform(
                 valueProfileService.getValueProfileForMatching(user)));

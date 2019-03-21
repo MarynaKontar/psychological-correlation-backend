@@ -12,5 +12,6 @@ public class ScaleDto extends AbstractDto
 //    @NotNull
     private Scale scale;
 //    @NotEmpty
-    private String scaleName;
+    private String scaleHeader;
+    private String scaleDescription;
 }

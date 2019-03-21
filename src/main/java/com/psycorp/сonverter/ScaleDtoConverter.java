@@ -21,9 +21,13 @@ class ScaleDtoConverter {
 
         if(entity == null || dto == null) return; //chosenScale can be null, so "return"
 
-        String scaleName = area.toString().toLowerCase() + "." + entity.toString().toLowerCase();//goal.one
+        // TODO сделать объект ValueCompatibilityAnswers, и эту логику перенести в сервис
+        String scaleHeader = area.toString().toLowerCase() + ".header." + entity.toString().toLowerCase();
+        String scaleDescription = area.toString().toLowerCase() + "." + entity.toString().toLowerCase();//goal.one
+
         dto.setScale(entity);
-        dto.setScaleName(env.getProperty(scaleName));
+        dto.setScaleHeader(env.getProperty(scaleHeader));
+        dto.setScaleDescription(env.getProperty(scaleDescription));
     }
 
     protected Scale convertFromDto(ScaleDto dto) {

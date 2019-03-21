@@ -60,7 +60,8 @@ public class ValueCompatibilityAnswersServiceImpl implements ValueCompatibilityA
 
     @Override
     @Transactional
-    public ValueCompatibilityAnswersEntity saveChoices(String token, ValueCompatibilityAnswersEntity answersEntity,
+    public ValueCompatibilityAnswersEntity saveChoices(String token, String userForMatchingToken,
+                                                       ValueCompatibilityAnswersEntity answersEntity,
                                                        List<Choice> choices, Area area){
         validateChoices(choices, area);
         User user = getUserByToken(token);

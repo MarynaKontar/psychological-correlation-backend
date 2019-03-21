@@ -81,14 +81,16 @@ public class ApiValueCompatibilityAnswersController {
     @PostMapping("/goal")
     public ResponseEntity<ValueCompatibilityAnswersDto> saveGoal(
             @RequestBody @NotNull @Valid ValueCompatibilityAnswersDto valueCompatibilityAnswersDto,
-            @RequestHeader(value = "Authorization", required = false) String token){
+            @RequestHeader(value = "Authorization", required = false) String token,
+            @RequestHeader(value = "userForMatchingToken", required = false) String userForMatchingToken){
 
         ValueCompatibilityAnswersEntity valueCompatibilityAnswersEntity = valueCompatibilityAnswersDtoConverter.transform(valueCompatibilityAnswersDto);
         List<Choice> choices = choiceDtoConverter.transform(valueCompatibilityAnswersDto.getGoal());
 
         if(token != null) {tokenService.changeInviteTokenToAccess(token); }
 
-        valueCompatibilityAnswersEntity = valueCompatibilityAnswersService.saveChoices(token, valueCompatibilityAnswersEntity, choices, Area.GOAL);
+        valueCompatibilityAnswersEntity = valueCompatibilityAnswersService.saveChoices(token, userForMatchingToken,
+                valueCompatibilityAnswersEntity, choices, Area.GOAL);
 
         if((token == null) && valueCompatibilityAnswersEntity.getUser().getRole().equals(UserRole.ANONIM)){
             token = ACCESS_TOKEN_PREFIX + " " + authService.generateAccessTokenForAnonim(valueCompatibilityAnswersEntity.getUser());
@@ -105,7 +107,8 @@ public class ApiValueCompatibilityAnswersController {
             @RequestBody @NotNull @Valid ValueCompatibilityAnswersDto valueCompatibilityAnswersDto) {
         ValueCompatibilityAnswersEntity valueCompatibilityAnswersEntity = valueCompatibilityAnswersDtoConverter.transform(valueCompatibilityAnswersDto);
         List<Choice> choices = choiceDtoConverter.transform(valueCompatibilityAnswersDto.getQuality());
-        valueCompatibilityAnswersEntity = valueCompatibilityAnswersService.saveChoices(null, valueCompatibilityAnswersEntity, choices, Area.QUALITY);
+        valueCompatibilityAnswersEntity = valueCompatibilityAnswersService
+                .saveChoices(null, null, valueCompatibilityAnswersEntity, choices, Area.QUALITY);
         return ResponseEntity.ok().headers(httpHeaders).body(valueCompatibilityAnswersDtoConverter.transform(valueCompatibilityAnswersEntity));
     }
 
@@ -115,7 +118,8 @@ public class ApiValueCompatibilityAnswersController {
             @RequestBody @NotNull @Valid ValueCompatibilityAnswersDto valueCompatibilityAnswersDto) {
         ValueCompatibilityAnswersEntity valueCompatibilityAnswersEntity = valueCompatibilityAnswersDtoConverter.transform(valueCompatibilityAnswersDto);
         List<Choice> choices = choiceDtoConverter.transform(valueCompatibilityAnswersDto.getState());
-        valueCompatibilityAnswersEntity = valueCompatibilityAnswersService.saveChoices(null, valueCompatibilityAnswersEntity, choices, Area.STATE);
+        valueCompatibilityAnswersEntity = valueCompatibilityAnswersService
+                .saveChoices(null, null, valueCompatibilityAnswersEntity, choices, Area.STATE);
         return ResponseEntity.ok().headers(httpHeaders).body(valueCompatibilityAnswersDtoConverter.transform(valueCompatibilityAnswersEntity));
     }
 
