@@ -92,6 +92,7 @@ public class ApiValueCompatibilityAnswersController {
         valueCompatibilityAnswersEntity = valueCompatibilityAnswersService.saveChoices(token, userForMatchingToken,
                 valueCompatibilityAnswersEntity, choices, Area.GOAL);
 
+        // не ставить выше valueCompatibilityAnswersEntity =..., так как тогда еще не сгенерен пользователь для анонима и будет ошибка
         if((token == null) && valueCompatibilityAnswersEntity.getUser().getRole().equals(UserRole.ANONIM)){
             token = ACCESS_TOKEN_PREFIX + " " + authService.generateAccessTokenForAnonim(valueCompatibilityAnswersEntity.getUser());
         }

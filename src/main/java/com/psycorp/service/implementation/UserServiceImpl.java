@@ -28,6 +28,8 @@ import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
@@ -145,12 +147,25 @@ public class UserServiceImpl implements UserService {
         if(user.getAge() != null) { updateUser.set("age", user.getAge()); }
         if(user.getGender() != null) { updateUser.set("gender", user.getGender()); }
         if(user.getEmail() != null) { updateUser.set("email", user.getEmail()); }
-
+        if(user.getUsersForMatching() !=null && !user.getUsersForMatching().isEmpty()) {
+            updateUser.set("usersForMatching", user.getUsersForMatching());
+        }
         Query queryUser = Query.query(Criteria.where(Fields.UNDERSCORE_ID).is(principal.getId()));
-        user = mongoOperations.findAndModify(queryUser, updateUser
-                , new FindAndModifyOptions().returnNew(true), User.class);
+        user = mongoOperations.findAndModify(queryUser, updateUser,
+                new FindAndModifyOptions().returnNew(true), User.class);
         return user;
 //        return userRepository.save(user);
+    }
+    @Override
+    public User addNewUsersForMatching(User user, List<User> usersForMatching){
+        Update updateUser = new Update();
+        updateUser.push("usersForMatching")
+                  .atPosition(Update.Position.FIRST)
+                  .each(usersForMatching);
+        Query queryUser = Query.query(Criteria.where(Fields.UNDERSCORE_ID).is(user.getId()));
+        user = mongoOperations.findAndModify(queryUser, updateUser,
+                new FindAndModifyOptions().returnNew(true), User.class);
+        return user;
     }
 
     @Override

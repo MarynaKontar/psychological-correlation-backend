@@ -21,6 +21,8 @@ public interface UserService {
 
     User updateUser(User user);
 
+    User addNewUsersForMatching(User user, List<User> userForMatching);
+
     User deleteUser(ObjectId userId);
 
     User addAgeAndGender(User user);

@@ -1,14 +1,11 @@
 package com.psycorp.service.implementation;
 
-import com.mongodb.client.result.UpdateResult;
 import com.psycorp.exception.AuthorizationException;
 import com.psycorp.exception.BadRequestException;
 import com.psycorp.model.entity.*;
 import com.psycorp.model.enums.Area;
 import com.psycorp.model.enums.ErrorEnum;
 import com.psycorp.model.enums.Scale;
-import com.psycorp.model.enums.TokenType;
-import com.psycorp.model.security.TokenEntity;
 import com.psycorp.repository.ValueCompatibilityAnswersRepository;
 import com.psycorp.repository.UserRepository;
 import com.psycorp.security.token.TokenPrincipal;
@@ -24,12 +21,10 @@ import org.springframework.data.mongodb.core.aggregation.Fields;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
-import org.springframework.data.mongodb.repository.DeleteQuery;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.time.Period;
 import java.util.*;
 
 import static com.psycorp.security.SecurityConstant.ACCESS_TOKEN_PREFIX;
@@ -65,10 +60,18 @@ public class ValueCompatibilityAnswersServiceImpl implements ValueCompatibilityA
                                                        List<Choice> choices, Area area){
         validateChoices(choices, area);
         User user = getUserByToken(token);
+        addUserForMatching(userForMatchingToken, user);
         answersEntity = valueCompatibilityAnswersRepository.findTopByUser_IdAndPassedOrderByPassDateDesc(user.getId(), false)
                 .map((answers) -> update(answers, choices, area))
                 .orElseGet(() -> insert(choices, user));
         return answersEntity;
+    }
+
+    private void addUserForMatching(String userForMatchingToken, User user) {
+        if (userForMatchingToken != null && !userForMatchingToken.isEmpty()) {
+            User userForMatching = getUserByToken(userForMatchingToken);
+            userService.addNewUsersForMatching(user, Collections.singletonList(userForMatching));
+        }
     }
 
     private void userAuthorization(ObjectId userId) {
