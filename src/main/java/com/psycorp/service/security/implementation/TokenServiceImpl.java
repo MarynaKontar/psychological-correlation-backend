@@ -99,12 +99,12 @@ public class TokenServiceImpl implements TokenService {
             tokens.add(createUserToken(user, TokenType.INVITE_TOKEN).getToken());
             mongoOperations.updateFirst(  // UPDATE USERSFORMATCHING for all n users (add them principal)
                     Query.query(Criteria.where(Fields.UNDERSCORE_ID).is(user.getId())),
-                    new Update().push("usersForMatching").each(Arrays.asList(principal)),
+                    new Update().push("usersForMatching").each(Collections.singletonList(principal)),
                     User.class);
         });
 
         // UPDATE USERSFORMATCHING for principal user
-        Update updateUser = new Update().push("usersForMatching").each(usersForMatching);
+        Update updateUser = new Update().push("usersForMatching").atPosition(Update.Position.LAST).each(usersForMatching);
         Query query = Query.query(Criteria.where(Fields.UNDERSCORE_ID).is(principal.getId()));
         mongoOperations.updateFirst(query, updateUser, User.class);
 
@@ -150,6 +150,11 @@ public class TokenServiceImpl implements TokenService {
     public TokenEntity findByUserId(ObjectId userId) {
         return tokenRepository.findByUser_Id(userId)
                 .orElseThrow(() -> new RuntimeException(env.getProperty("error.TokenIsNotValid")));
+    }
+    @Override
+    public TokenEntity findByUserIdAndTokenType(ObjectId userId, TokenType tokenType) {
+        return tokenRepository.findByUser_IdAndAndType(userId, tokenType)
+                .orElse(null);
     }
 
     private TokenEntity getByTypeAndToken(TokenType type, String token){

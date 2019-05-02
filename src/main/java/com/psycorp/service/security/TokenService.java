@@ -24,5 +24,7 @@ public interface TokenService {
 
     TokenEntity findByUserId(ObjectId userId);
 
+    TokenEntity findByUserIdAndTokenType(ObjectId userId, TokenType tokenType);
+
 //    String createJwtToken();
 }

@@ -1,6 +1,7 @@
 package com.psycorp.model.objects;
 
 import com.psycorp.model.entity.AbstractEntity;
+import com.psycorp.model.entity.User;
 import lombok.Data;
 
 import javax.validation.Valid;
@@ -8,11 +9,11 @@ import javax.validation.constraints.NotNull;
 import java.util.List;
 
 @Data
-public class ValueProfileIndividual extends AbstractEntity {
-
+public class UserAccount extends AbstractEntity {
     @NotNull @Valid
-    private ValueProfile valueProfile;
+    private User user;
 
-    @NotNull
-    private List<ValueProfileComment> valueProfileCommentList;
+    private Boolean isValueCompatibilityTestPassed;
+    private List<String> inviteTokens;
+
 }

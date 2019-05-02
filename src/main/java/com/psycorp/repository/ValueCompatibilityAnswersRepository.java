@@ -14,11 +14,6 @@ import java.util.Optional;
 @RepositoryRestResource(collectionResourceRel = "valueCompatibilityAnswersEntity", path = "valueCompatibilityAnswersEntity")
 public interface ValueCompatibilityAnswersRepository extends MongoRepository<ValueCompatibilityAnswersEntity, ObjectId> {
 
-//    Optional<ValueCompatibilityAnswersEntity> findByUserIdOrderByIdDesc(ObjectId userId);
-
-    //TODO сейчас не сработает, т.к. User хоть и не встроен в ValueCompatibilityAnswersEntity (@DBRef - true linking), но в User primary key теперь не name, а id
-//    List<ValueCompatibilityAnswersEntity> findAllByUser_NameOrderByPassDateDesc(String name);
-
     //должен быть такой же как  findAllByUserIdOrderByPassDateDesc, так как ObjectId  ("OrderById") отсортирован по дате создания
     //правда с точностью 1 сек. Но наверное findAllByUserIdOrderByPassDateDesc будет использовать сортировку
     // в памяти, а  findAllByUser_NameOrderByIdDesc нет
@@ -32,9 +27,5 @@ public interface ValueCompatibilityAnswersRepository extends MongoRepository<Val
 
     Optional<ValueCompatibilityAnswersEntity> findTopByUser_IdAndPassedOrderByPassDateDesc(ObjectId userId, Boolean passed);
 
-//    Optional<ValueCompatibilityAnswersEntity> findFirstByUser_NameOrderByIdDesc(String name);
-//    Optional<List<ValueCompatibilityAnswersEntity>> findAllByUser_NameOrderByIdDesc(String name);
-
-//    void removeAllByUser_Id (ObjectId userId);
     void removeAllByUserId (ObjectId userId);
 }

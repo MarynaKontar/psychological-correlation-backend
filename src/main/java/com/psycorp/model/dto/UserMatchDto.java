@@ -10,8 +10,9 @@ import java.util.List;
 @Data
 public class UserMatchDto extends AbstractDto{
     private ObjectId id;
-    @NotNull
-    @Valid
+
+    //TODO пока на фронт посылаем SimpleUserDto, так как не ясно, какую еще информацию про пользователей Юра захочет выводить, но скорее всего, надо будет только имя пользователей
+    @NotNull @Valid
     private List<SimpleUserDto> users;
     @NotNull @Valid
     private List<MatchingDto> matches;

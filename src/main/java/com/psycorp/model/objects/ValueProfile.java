@@ -10,7 +10,6 @@ import lombok.NoArgsConstructor;
 
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
-import java.util.List;
 import java.util.Map;
 
 @Data
@@ -21,8 +20,6 @@ public class ValueProfile extends AbstractEntity {
     @NotNull @Valid
     private User user;
     @Valid
-//    private Map<Scale, ValueProfileComment> scaleResult;
-//    private Map<Scale, Map <Result, ValueProfileComment> scaleResult;
     private Map<Scale, Result> scaleResult;
     @NotNull
     private Boolean isPrincipalUser;

@@ -71,24 +71,6 @@ public class ApiUserMatchController {
                 valueProfileService.getValueProfileForMatching(user)));
     }
 
-    // TODO если будет сравнивать больше двух пользователей, то List<SimpleUserDto> userDtos с фронта
-//    @PostMapping("/value-profile-for-matching")
-//    public ResponseEntity<List<ValueProfileDto>> getValueProfilesForMatching(@RequestBody
-//                                         @NotNull @Valid SimpleUserDto userDto) throws BadRequestException {
-//       User user;
-//       if(userDto != null) {
-//           user = userDtoConverter.transform(userDto);
-//       } else {throw new BadRequestException("User can't be null.");}
-//
-//       ValueProfile valueProfilePrincipal = valueCompatibilityAnswersService.getValueProfileIndividual(null);
-//       ValueProfile valueProfile = valueCompatibilityAnswersService.getValueProfileIndividual(user);
-//       ValueProfileDto valueProfilePrincipalDto = valueCompatibilityAnswersDtoConverter.convertToValueProfileDto(valueProfilePrincipal);
-//       ValueProfileDto valueProfile = valueCompatibilityAnswersDtoConverter.convertToValueProfileDto(valueProfile);
-//       List<ValueProfileDto> valueProfileDtos =Arrays.asList(valueProfile, valueProfilePrincipalDto);
-//       return ResponseEntity.ok().headers(httpHeaders).body(valueProfileDtos);
-//    }
-
-
     //TODO надо передавать лист с users для тех, с кем идет сравнение
     @PostMapping(value = "/Pearson")
     public ResponseEntity<UserMatchDto> getUserMatchPearson(@RequestBody(required = false) SimpleUserDto userDto){
@@ -99,28 +81,6 @@ public class ApiUserMatchController {
                         .match(user, MatchMethod.PEARSONCORRELATION)));
     }
 
-
-//    @PostMapping(value = "/Pearson")
-//    public ResponseEntity<UserMatchDto> getUserMatchPearson(@RequestBody String token){
-//        return ResponseEntity.created(httpHeaders.getLocation())
-//                .headers(httpHeaders).body(userMatchDtoConverter.transform(userMatchService
-//                        .match(token, MatchMethod.PEARSONCORRELATION)));
-//    }
-
-
-//    @PostMapping(value = "/Pearson/{userName1}/{userName2}", produces = "application/json")
-//    public ResponseEntity<UserMatchDto> getUserMatchPearson(@PathVariable("userName1") String userName1
-//            , @PathVariable("userName2") String userName2, Principal principal){
-//
-////        if(principal.getName() == null ||
-////                (!principal.getName().equals(userName1) && !principal.getName().equals(userName2)) )
-////            return ResponseEntity.badRequest().build();
-//        return ResponseEntity.created(httpHeaders.getLocation())
-//                .headers(httpHeaders).body(userMatchDtoConverter.transform(userMatchService
-//                .match(userService.findFirstUserByName(userName1), userService.findFirstUserByName(userName2)
-//                        , MatchMethod.PEARSONCORRELATION)));
-//    }
-
     @PostMapping(value = "/Percent")
     public ResponseEntity<UserMatchDto> getUserMatchPercent(@RequestBody(required = false) SimpleUserDto userDto){
 
@@ -129,40 +89,6 @@ public class ApiUserMatchController {
                 .headers(httpHeaders).body(userMatchDtoConverter.transform(userMatchService
                         .match(user, MatchMethod.PERCENT)));
     }
-
-//    @GetMapping(value = "/{userName}", produces = "application/json")
-//    public ResponseEntity<List<UserMatchDto>> getAllMatches(Principal principal, @PathVariable String userName){
-////TODO после подключения security, убрать @PathVariable String userName и использовать principal.getName()
-////        User user = userService.findFirstUserByName(userName);
-////        if (user == null) return ResponseEntity.badRequest().build();
-//        return ResponseEntity.ok().headers(httpHeaders).body(userMatchDtoConverter.transform(userMatchService
-//                .findByUserName(userName)));
-//
-////        return ResponseEntity.ok().headers(httpHeaders).body(userMatchDtoConverter.transform(userMatchService.getAll()));
-//    }
-//
-//    //TODO убрать в production
-//    @GetMapping(value = "/getAllByMatchMethod/{matchMethodString}", produces = "application/json")
-//    public ResponseEntity<List<UserMatchDto>> getAllByMatchMethod(@PathVariable String matchMethodString){
-//        MatchMethod matchMethod = MatchMethod.valueOf(matchMethodString.toUpperCase());
-//
-//        return ResponseEntity.ok().headers(httpHeaders).body(userMatchDtoConverter.transform(userMatchService
-//                .findByMatchMethod(matchMethod)));
-//    }
-
-//    @GetMapping(value = "/{userName}/{matchMethodString}", produces = "application/json")
-//    public ResponseEntity<List<UserMatchDto>> getAllByUserNameAndMatchMethod(@PathVariable String userName
-//            , @PathVariable String matchMethodString){
-//        //TODO после подключения security, убрать @PathVariable String userName и использовать principal.getName()
-////        if(principal.getName() == null ||
-////                (!principal.getName().equals(userName) && !principal.getName().equals(userName2)) )
-////            return ResponseEntity.badRequest().build();
-//
-//        MatchMethod matchMethod = MatchMethod.valueOf(matchMethodString.toUpperCase());
-//
-//        return ResponseEntity.ok().headers(httpHeaders).body(userMatchDtoConverter.transform(userMatchService
-//                .findByUserNameAndMatchMethod(userName, matchMethod)));
-//    }
 
     @ExceptionHandler(RuntimeException.class)
     public ResponseEntity<HttpHeaders> handleException(RuntimeException ex, HttpServletRequest request) {

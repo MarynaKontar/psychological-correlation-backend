@@ -9,5 +9,4 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class Result {
     private Double number;
-//    private Integer numberOfScales;
 }

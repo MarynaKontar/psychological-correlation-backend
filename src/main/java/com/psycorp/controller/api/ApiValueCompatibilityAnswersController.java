@@ -37,7 +37,6 @@ import static com.psycorp.security.SecurityConstant.ACCESS_TOKEN_PREFIX;
 @PropertySource(value = {"classpath:testing/scalesquestionsrussian.properties"}, encoding = "utf-8")
 @PropertySource(value = {"classpath:testing/scalesquestionsenglish.properties"}, encoding = "utf-8", ignoreResourceNotFound = true)
 @PropertySource(value = {"classpath:valueprofile/scalescommentrussian.properties"}, encoding = "utf-8")
-//@PropertySource(value = {"classpath:common.properties"}, encoding = "utf-8")
 public class ApiValueCompatibilityAnswersController {
 
     private final ValueCompatibilityAnswersService valueCompatibilityAnswersService;
@@ -76,8 +75,7 @@ public class ApiValueCompatibilityAnswersController {
     }
 
     //save only goals
-    //TODO сделать, чтобы возврашал Void (чтобі лишняя инфа и нагрузка не ходила по http), потом как отдельній запрос
-    // идет ValueCompatibilityAnswersDto ("дайте мне результаты моего теста"). токен генерить в сервисе или как здесь?
+    //TODO сделать, чтобы возврашал Void (чтобы лишняя инфа и нагрузка не ходила по http), потом как отдельный запрос
     @PostMapping("/goal")
     public ResponseEntity<ValueCompatibilityAnswersDto> saveGoal(
             @RequestBody @NotNull @Valid ValueCompatibilityAnswersDto valueCompatibilityAnswersDto,
@@ -87,10 +85,11 @@ public class ApiValueCompatibilityAnswersController {
         ValueCompatibilityAnswersEntity valueCompatibilityAnswersEntity = valueCompatibilityAnswersDtoConverter.transform(valueCompatibilityAnswersDto);
         List<Choice> choices = choiceDtoConverter.transform(valueCompatibilityAnswersDto.getGoal());
 
-        if(token != null) {tokenService.changeInviteTokenToAccess(token); }
-
+        //TODO make separate transactional method in ValueCompatibilityAnswersService saveFirstPartOfTests()
         valueCompatibilityAnswersEntity = valueCompatibilityAnswersService.saveChoices(token, userForMatchingToken,
                 valueCompatibilityAnswersEntity, choices, Area.GOAL);
+
+        if(token != null) {tokenService.changeInviteTokenToAccess(token); }
 
         // не ставить выше valueCompatibilityAnswersEntity =..., так как тогда еще не сгенерен пользователь для анонима и будет ошибка
         if((token == null) && valueCompatibilityAnswersEntity.getUser().getRole().equals(UserRole.ANONIM)){
@@ -99,7 +98,6 @@ public class ApiValueCompatibilityAnswersController {
         return ResponseEntity.status(HttpStatus.CREATED)
                 .header(HttpHeaders.AUTHORIZATION, token) // или сгенеренный токен или пришедший в хедере (уже с 'Bearer ')
                 .headers(httpHeaders).body(valueCompatibilityAnswersDtoConverter.transform(valueCompatibilityAnswersEntity));
-//        return ResponseEntity.ok().headers(httpHeaders).body(valueCompatibilityAnswersDtoConverter.transform(valueCompatibilityAnswersEntity));
     }
 
     //save only qualities
@@ -134,19 +132,6 @@ public class ApiValueCompatibilityAnswersController {
     public ResponseEntity<List<String>> generateInviteTokenList(){
         return ResponseEntity.ok().headers(httpHeaders).body(tokenService.generateInviteTokenList(3));
     }
-
-
-//    // TODO убрать в production
-//    @PostMapping("/random/{userName}")
-//    public ResponseEntity<ValueCompatibilityAnswersDto> testRandom(@PathVariable String userName, Principal principal){
-//
-//        User user = userService.findFirstUserByName(userName);
-//        ValueCompatibilityAnswersEntity valueCompatibilityAnswers = Entity.createRandomUserAnswers(user);
-//        valueCompatibilityAnswers = valueCompatibilityAnswersService.save(valueCompatibilityAnswers);
-//        ValueCompatibilityAnswersDto valueCompatibilityAnswersDto = valueCompatibilityAnswersDtoConverter.transform(valueCompatibilityAnswers);
-//        valueCompatibilityAnswersDto.setPassed(true);
-//        return new ResponseEntity<>(valueCompatibilityAnswersDto, HttpStatus.CREATED);
-//    }
 
     @GetMapping("/{id}")
     public ResponseEntity<ValueCompatibilityAnswersDto> getLastTest(@PathVariable @NotNull ObjectId id){

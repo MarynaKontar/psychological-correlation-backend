@@ -4,8 +4,10 @@ import com.psycorp.exception.AuthorizationException;
 import com.psycorp.exception.BadRequestException;
 import com.psycorp.model.entity.User;
 import com.psycorp.model.enums.ErrorEnum;
+import com.psycorp.model.enums.TokenType;
 import com.psycorp.model.enums.UserRole;
 import com.psycorp.model.security.CredentialsEntity;
+import com.psycorp.model.security.TokenEntity;
 import com.psycorp.repository.UserRepository;
 import com.psycorp.repository.security.CredentialsRepository;
 import com.psycorp.security.token.TokenPrincipal;
@@ -55,33 +57,29 @@ public class CredentialsServiceImpl implements CredentialsService{
 
     @Override
     @Transactional
-    public User save(CredentialsEntity credentialsEntity){
-
+    public User save(CredentialsEntity credentialsEntity, String token){
+        //TODO продумать, когда может приходить токен; пока его не использую
         TokenPrincipal tokenPrincipal = (TokenPrincipal) authService.getAuthPrincipal();
         User user;
         if(tokenPrincipal != null && tokenPrincipal.getId() != null) { //если есть пользователь
             ObjectId principalId = tokenPrincipal.getId();
 
+            //если регистрируется пользователь по INVITE_TOKEN, то меняем его на ACCESS_TOKEN
+            TokenEntity tokenEntity = tokenService.findByUserId(principalId);
+            if(tokenEntity.getToken() != null && tokenEntity.getType() == TokenType.INVITE_TOKEN) {
+                tokenService.changeInviteTokenToAccess(tokenEntity.getToken());
+            }
 
-
-
-
-
-
-//            if(token != null) {tokenService.changeInviteTokenToAccess(token); }
-//            tokenService.findByUserId(principalId).getToken()
             if(userRepository.findById(principalId).isPresent()){ // и для него есть пользователь, то берем этого пользователя
                 user = update(credentialsEntity, principalId);
             } else {
-//                user = insert(credentialsEntity);
                 throw new BadRequestException(env.getProperty("error.noUserFound") + " for user id: " + principalId);
             }
         } else {
+            // если токен == null или у него id == null, то создаем нового пользователя
             user = insert(credentialsEntity);
-
-        } // если токен == null или у него id == null, то создаем нового пользователя
-
-       return user;
+        }
+        return user;
     }
 
     @Override

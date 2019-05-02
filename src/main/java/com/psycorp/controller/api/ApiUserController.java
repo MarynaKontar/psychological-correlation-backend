@@ -25,16 +25,12 @@ import java.util.List;
 public class ApiUserController {
 
     private final UserService userService;
-    private final CredentialsService credentialsService;
     private final UserDtoConverter userDtoConverter;
-    private final CredentialsEntityConverter credentialsEntityConverter;
 
     @Autowired
-    public ApiUserController(UserService userService, CredentialsService credentialsService, UserDtoConverter userDtoConverter, CredentialsEntityConverter credentialsEntityConverter) {
+    public ApiUserController(UserService userService, UserDtoConverter userDtoConverter) {
         this.userService = userService;
-        this.credentialsService = credentialsService;
         this.userDtoConverter = userDtoConverter;
-        this.credentialsEntityConverter = credentialsEntityConverter;
     }
 
 
@@ -47,7 +43,7 @@ public class ApiUserController {
     @PostMapping("/addAgeAndGender")
     public ResponseEntity<SimpleUserDto> addAgeAndGender(@RequestBody @NotNull @Valid SimpleUserDto userDto) {
         User user = userService.addAgeAndGender(userDtoConverter.transform(userDto));
-        return new ResponseEntity<>(userDtoConverter.transform(user), HttpStatus.OK);
+        return ResponseEntity.ok().body(userDtoConverter.transform(user));
     }
 
     @GetMapping("/{userId}")
@@ -60,7 +56,7 @@ public class ApiUserController {
         return ResponseEntity.ok().body(userDtoConverter.transform(userService.findAll()));
     }
 
-    // выдаст любому залогиненному пользователю инфор. о любом другом пользователе по его name or email
+    //Убрать: выдаст любому залогиненному пользователю инфор. о любом другом пользователе по его name or email. Возможно понадобится, если будем разрешать видеть часть информации пользователя, с которым сравниваем профиль
     @GetMapping("/NameOrEmail")
     public ResponseEntity<SimpleUserDto> getByNameOrEmail(@RequestParam String nameOrEmail){
         return ResponseEntity.ok().body(userDtoConverter.transform(userService.findUserByNameOrEmail(nameOrEmail)));

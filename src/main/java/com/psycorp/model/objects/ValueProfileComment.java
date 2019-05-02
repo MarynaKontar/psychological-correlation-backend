@@ -1,6 +1,5 @@
 package com.psycorp.model.objects;
 
-import com.psycorp.model.enums.Scale;
 import lombok.Data;
 
 import java.util.List;

@@ -2,11 +2,6 @@ package com.psycorp.model.objects;
 
 import com.psycorp.model.enums.AspectLevel;
 import lombok.Data;
-import org.bson.types.ObjectId;
-
-import javax.validation.Valid;
-import javax.validation.constraints.NotNull;
-import java.util.List;
 
 /**
  * Comment for user match
@@ -14,7 +9,6 @@ import java.util.List;
 @Data
 public class UserMatchComment {
 
-//    private Double result;
     private String aspect;
     private String aspectDescription;
     private AspectLevel level;

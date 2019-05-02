@@ -32,8 +32,6 @@ public class UserDetailsServiceImpl implements UserDetailsService{
         CredentialsEntity credential = credentialsRepository.findByUser_Id(user.getId())
                 .orElseThrow(() -> new UsernameNotFoundException("User not found"));
 
-//        CredentialsEntity credential = credentialsRepository.findByUserName(name);
-//                .orElseThrow(() -> new UsernameNotFoundException("User not Found"));
         TokenPrincipal tokenPrincipal = new TokenPrincipal();
         tokenPrincipal.setId(credential.getUser().getId());
         tokenPrincipal.setUsername(credential.getUser().getName());

@@ -41,6 +41,7 @@ public class ValueCompatibilityAnswersServiceImpl implements ValueCompatibilityA
     private final MongoOperations mongoOperations;
     private final Environment env;
 
+    //TODO return in public methods ValueCompatibilityAnswers (create in /objects)
     @Autowired
     public ValueCompatibilityAnswersServiceImpl(ValueCompatibilityAnswersRepository valueCompatibilityAnswersRepository, UserRepository userRepository,
                                                 AuthService authService, UserService userService, MongoOperations mongoOperations,
@@ -192,8 +193,8 @@ public class ValueCompatibilityAnswersServiceImpl implements ValueCompatibilityA
         ValueCompatibilityAnswersEntity answersEntity;
         Optional<List<ValueCompatibilityAnswersEntity>> answersEntityOptional = valueCompatibilityAnswersRepository
                 .findAllByUser_IdOrderByIdDesc(user.getId());
-        Boolean userAnswersIsPresent = !answersEntityOptional.get().isEmpty();
-        if(userAnswersIsPresent) {
+//        Boolean userAnswersIsPresent = !answersEntityOptional.get().isEmpty();
+        if(answersEntityOptional.isPresent() && !answersEntityOptional.get().isEmpty()) {
             answersEntity = valueCompatibilityAnswersRepository
                     .findAllByUser_IdOrderByIdDesc(user.getId()).get().get(0);
         } else answersEntity = getInitValueCompatibilityAnswers();

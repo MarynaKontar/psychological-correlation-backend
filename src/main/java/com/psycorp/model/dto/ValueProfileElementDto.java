@@ -1,6 +1,5 @@
 package com.psycorp.model.dto;
 
-import com.psycorp.model.objects.ValueProfileComment;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -17,6 +16,4 @@ public class ValueProfileElementDto {
     private String scaleName;
     @NotNull
     private Double percentResult;
-//    @NotNull
-//    private ValueProfileComment comment;
 }

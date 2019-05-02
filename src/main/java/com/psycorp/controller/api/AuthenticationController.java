@@ -1,11 +1,12 @@
 package com.psycorp.controller.api;
 
-import com.psycorp.model.dto.SimpleUserDto;
+import com.psycorp.model.dto.UserAccountDto;
 import com.psycorp.model.dto.UsernamePasswordDto;
 import com.psycorp.model.entity.User;
-import com.psycorp.service.ValueCompatibilityAnswersService;
+import com.psycorp.model.objects.UserAccount;
+import com.psycorp.service.UserAccountService;
 import com.psycorp.service.security.AuthService;
-import com.psycorp.сonverter.UserDtoConverter;
+import com.psycorp.сonverter.UserAccountDtoConverter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
@@ -21,32 +22,27 @@ import static com.psycorp.security.SecurityConstant.ACCESS_TOKEN_PREFIX;
 public class AuthenticationController {
 
     private final AuthService authService;
-    private final ValueCompatibilityAnswersService valueCompatibilityAnswersService;
-    private final UserDtoConverter userDtoConverter;
+    private final UserAccountDtoConverter userAccountDtoConverter;
+    private final UserAccountService userAccountService;
 
     @Autowired
-    public AuthenticationController(AuthService authService,
-                                    ValueCompatibilityAnswersService valueCompatibilityAnswersService,
-                                    UserDtoConverter userDtoConverter) {
+    public AuthenticationController(AuthService authService, UserAccountDtoConverter userAccountDtoConverter,
+                                    UserAccountService userAccountService) {
         this.authService = authService;
-        this.valueCompatibilityAnswersService = valueCompatibilityAnswersService;
-        this.userDtoConverter = userDtoConverter;
+        this.userAccountDtoConverter = userAccountDtoConverter;
+        this.userAccountService = userAccountService;
     }
 
     @PostMapping("/login")
-    public ResponseEntity<SimpleUserDto> login (@RequestBody @Valid UsernamePasswordDto usernamePassword) {
+    public ResponseEntity<UserAccountDto> login (@RequestBody @Valid UsernamePasswordDto usernamePassword) {
         String token = authService.generateAccessToken(usernamePassword);
         User user = authService.getUserByToken(token);
-        Boolean isValueCompatibilityTestPassed = valueCompatibilityAnswersService.ifTestPassed(user);
+        UserAccount userAccount = userAccountService.getUserAccount(user);
 
         HttpHeaders headers = new HttpHeaders();
         headers.set("AUTHORIZATION", ACCESS_TOKEN_PREFIX + " " + token);
-        headers.set("isValueCompatibilityTestPassed", isValueCompatibilityTestPassed.toString());
-
-//        return ResponseEntity.ok().header(HttpHeaders.AUTHORIZATION, ACCESS_TOKEN_PREFIX + " " + token)
-//                .body(userDtoConverter.transform(user));
         return ResponseEntity.ok().headers(headers)
-                .body(userDtoConverter.transform(user));
+                .body(userAccountDtoConverter.transform(userAccount));
     }
 
     @ExceptionHandler(RuntimeException.class)

@@ -10,12 +10,10 @@ import org.springframework.stereotype.Component;
 public class UserDtoConverter extends AbstractDtoConverter<User, SimpleUserDto>{
 
 
-    private final Environment env;
+//    private final Environment env;
 
     @Autowired
-    public UserDtoConverter(Environment env) {
-        this.env = env;
-    }
+    public UserDtoConverter() { }
 
     @Override
     protected SimpleUserDto createNewDto() {
