@@ -26,5 +26,5 @@ public interface UserService {
 
     User deleteUser(ObjectId userId);
 
-    User addAgeAndGender(User user);
+    User addNameAgeAndGender(User user);
 }

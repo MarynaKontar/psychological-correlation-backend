@@ -72,6 +72,7 @@ public class ValueCompatibilityAnswersServiceImpl implements ValueCompatibilityA
         if (userForMatchingToken != null && !userForMatchingToken.isEmpty()) {
             User userForMatching = getUserByToken(userForMatchingToken);
             userService.addNewUsersForMatching(user, Collections.singletonList(userForMatching));
+            userService.addNewUsersForMatching(userForMatching, Collections.singletonList(user));
         }
     }
 

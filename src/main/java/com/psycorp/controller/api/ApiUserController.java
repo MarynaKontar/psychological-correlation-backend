@@ -2,9 +2,7 @@ package com.psycorp.controller.api;
 
 import com.psycorp.model.dto.SimpleUserDto;
 import com.psycorp.model.entity.User;
-import com.psycorp.service.CredentialsService;
 import com.psycorp.service.UserService;
-import com.psycorp.сonverter.CredentialsEntityConverter;
 import com.psycorp.сonverter.UserDtoConverter;
 import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -40,9 +38,9 @@ public class ApiUserController {
         return new ResponseEntity<>(userDtoConverter.transform(user), HttpStatus.CREATED);
     }
 
-    @PostMapping("/addAgeAndGender")
-    public ResponseEntity<SimpleUserDto> addAgeAndGender(@RequestBody @NotNull @Valid SimpleUserDto userDto) {
-        User user = userService.addAgeAndGender(userDtoConverter.transform(userDto));
+    @PostMapping("/anonimRegistration")
+    public ResponseEntity<SimpleUserDto> anonimRegistration(@RequestBody @NotNull @Valid SimpleUserDto userDto) {
+        User user = userService.addNameAgeAndGender(userDtoConverter.transform(userDto));
         return ResponseEntity.ok().body(userDtoConverter.transform(user));
     }
 

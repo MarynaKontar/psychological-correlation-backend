@@ -46,6 +46,7 @@ public class TokenServiceImpl implements TokenService {
 //    private JwtService jwtService;
 
     @Override
+    @Transactional
     public TokenEntity createUserToken(User user, TokenType tokenType) {
         String token = UUID.randomUUID().toString();
 

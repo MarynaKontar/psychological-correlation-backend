@@ -70,11 +70,12 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public User addAgeAndGender(User user) {
+    public User addNameAgeAndGender(User user) {
         User principal = getPrincipalUser();
         Update updateUser = new Update()
-                .set("age", user.getAge())
-                .set("gender", user.getGender());
+                .set("name", (user.getName() != null && !user.getName().isEmpty()) ? user.getName() : principal.getName())
+                .set("age", (user.getAge() != null) ? user.getAge() : principal.getAge())
+                .set("gender", (user.getGender() != null) ? user.getGender() : principal.getGender());
 
         Query queryUser = Query.query(Criteria.where(Fields.UNDERSCORE_ID).is(principal.getId()));
         user = mongoOperations.findAndModify(queryUser, updateUser

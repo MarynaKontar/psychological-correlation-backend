@@ -235,6 +235,7 @@ public class UserMatchServiceImpl implements UserMatchService {
             List<ObjectId> ids1 = user1.getUsersForMatching().stream().map(User::getId).collect(Collectors.toList());
             List<ObjectId> ids2 = user2.getUsersForMatching().stream().map(User::getId).collect(Collectors.toList());
 
+            //TODO пропустит только если у user1 в  UsersForMatching есть user2 и наоборот. В дальнейшем добавить, чтобы пропускало, если "открытые" профили
             if (!ids1.contains(user2.getId()) || !ids2.contains(user1.getId())) {
                 throw new BadRequestException(env.getProperty("error.UsersCan`tBeMatching"));
             }

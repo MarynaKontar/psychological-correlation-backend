@@ -1,6 +1,7 @@
 package com.psycorp.service;
 
 import com.psycorp.model.entity.User;
+import com.psycorp.model.objects.UserAccount;
 import com.psycorp.model.security.CredentialsEntity;
 
 public interface CredentialsService {

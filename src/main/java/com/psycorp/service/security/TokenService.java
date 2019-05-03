@@ -5,11 +5,13 @@ import com.psycorp.model.entity.User;
 import com.psycorp.model.enums.TokenType;
 import com.psycorp.model.security.TokenEntity;
 import org.bson.types.ObjectId;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
 
 public interface TokenService {
+
     TokenEntity createUserToken(User userEntity, TokenType tokenType);
 
     LocalDateTime getTokenExpirationDate(TokenType tokenType);
