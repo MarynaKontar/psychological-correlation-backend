@@ -130,9 +130,11 @@ public class TokenServiceImpl implements TokenService {
 
     @Override
     public void changeInviteTokenToAccess(String token) {
-        token = token.substring(ACCESS_TOKEN_PREFIX.length() + 1);
+        token = token.substring(ACCESS_TOKEN_PREFIX.length() + 1); //delete "Bearer "
+        TokenEntity tokenEntity = tokenRepository.findByToken(token).orElseThrow(() -> new AuthorizationException("", ErrorEnum.TOKEN_NOT_FOUND));
+        if (tokenEntity.getType().equals(TokenType.ACCESS_TOKEN)) { return; }
         if (ifExistByTypeAndToken(TokenType.INVITE_TOKEN, token)) {
-            TokenEntity tokenEntity = getByTypeAndToken(TokenType.INVITE_TOKEN, token);
+            tokenEntity = getByTypeAndToken(TokenType.INVITE_TOKEN, token);
 
             // UPDATE TOKENTYPE and EXPIRATIONDATE
             Update update = new Update().set("type", TokenType.ACCESS_TOKEN)

@@ -45,6 +45,18 @@ public class AuthenticationController {
                 .body(userAccountDtoConverter.transform(userAccount));
     }
 
+    @PostMapping("/loginFriendAccount")
+    public ResponseEntity<UserAccountDto> loginFriendAccount (@RequestHeader(value = "userForMatchingToken") String userForMatchingToken) {
+        userForMatchingToken = userForMatchingToken.substring(ACCESS_TOKEN_PREFIX.length() + 1);
+        User user = authService.getUserByToken(userForMatchingToken);
+        UserAccount userAccount = userAccountService.getUserAccount(user);
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("AUTHORIZATION", ACCESS_TOKEN_PREFIX + " " + userForMatchingToken);
+        return ResponseEntity.ok().headers(headers)
+                .body(userAccountDtoConverter.transform(userAccount));
+    }
+
     @ExceptionHandler(RuntimeException.class)
     public ResponseEntity<HttpHeaders> handleException(RuntimeException ex, HttpServletRequest request) {
         HttpHeaders httpHeaders = new HttpHeaders();

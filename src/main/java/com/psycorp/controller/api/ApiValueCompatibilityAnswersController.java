@@ -79,22 +79,26 @@ public class ApiValueCompatibilityAnswersController {
     @PostMapping("/goal")
     public ResponseEntity<ValueCompatibilityAnswersDto> saveGoal(
             @RequestBody @NotNull @Valid ValueCompatibilityAnswersDto valueCompatibilityAnswersDto,
-            @RequestHeader(value = "Authorization", required = false) String token,
-            @RequestHeader(value = "userForMatchingToken", required = false) String userForMatchingToken){
+            @RequestHeader(value = "Authorization", required = false) String token, // или пользователь уже проходил тестирование, или ему выслали ссылку с токеном
+            @RequestHeader(value = "userForMatchingToken", required = false) String userForMatchingToken){ // два пользователя тестируются на одном компьютере
 
         ValueCompatibilityAnswersEntity valueCompatibilityAnswersEntity = valueCompatibilityAnswersDtoConverter.transform(valueCompatibilityAnswersDto);
         List<Choice> choices = choiceDtoConverter.transform(valueCompatibilityAnswersDto.getGoal());
 
-        //TODO make separate transactional method in ValueCompatibilityAnswersService saveFirstPartOfTests()
-        valueCompatibilityAnswersEntity = valueCompatibilityAnswersService.saveChoices(token, userForMatchingToken,
+        valueCompatibilityAnswersEntity = valueCompatibilityAnswersService.saveFirstPartOfTests(token, userForMatchingToken,
                 valueCompatibilityAnswersEntity, choices, Area.GOAL);
+        token = ACCESS_TOKEN_PREFIX + " " + tokenService.findByUserId(valueCompatibilityAnswersEntity.getUser().getId()).getToken();
 
-        if(token != null) {tokenService.changeInviteTokenToAccess(token); }
-
-        // не ставить выше valueCompatibilityAnswersEntity =..., так как тогда еще не сгенерен пользователь для анонима и будет ошибка
-        if((token == null) && valueCompatibilityAnswersEntity.getUser().getRole().equals(UserRole.ANONIM)){
-            token = ACCESS_TOKEN_PREFIX + " " + authService.generateAccessTokenForAnonim(valueCompatibilityAnswersEntity.getUser());
-        }
+//        //TODO if make separate transactional method in ValueCompatibilityAnswersService saveFirstPartOfTests(), than can't return new token (return only ValueCompatibilityAnswersEntity)
+//        valueCompatibilityAnswersEntity = valueCompatibilityAnswersService.saveChoices(token, userForMatchingToken,
+//                valueCompatibilityAnswersEntity, choices, Area.GOAL);
+//
+//        if(token != null) {tokenService.changeInviteTokenToAccess(token); }
+//
+//        // не ставить выше valueCompatibilityAnswersEntity =..., так как тогда еще не сгенерен пользователь для анонима и будет ошибка
+//        if((token == null) && valueCompatibilityAnswersEntity.getUser().getRole().equals(UserRole.ANONIM)){
+//            token = ACCESS_TOKEN_PREFIX + " " + authService.generateAccessTokenForAnonim(valueCompatibilityAnswersEntity.getUser());
+//        }
         return ResponseEntity.status(HttpStatus.CREATED)
                 .header(HttpHeaders.AUTHORIZATION, token) // или сгенеренный токен или пришедший в хедере (уже с 'Bearer ')
                 .headers(httpHeaders).body(valueCompatibilityAnswersDtoConverter.transform(valueCompatibilityAnswersEntity));

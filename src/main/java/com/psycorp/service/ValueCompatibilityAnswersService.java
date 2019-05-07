@@ -3,6 +3,7 @@ package com.psycorp.service;
 import com.psycorp.model.entity.*;
 import com.psycorp.model.enums.Area;
 import org.bson.types.ObjectId;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -14,7 +15,12 @@ public interface ValueCompatibilityAnswersService {
 
     ValueCompatibilityAnswersEntity getInitValueCompatibilityAnswers();
 
-//    ValueCompatibilityAnswersEntity save(ValueCompatibilityAnswersEntity valueCompatibilityAnswersEntity);
+    @Transactional
+    ValueCompatibilityAnswersEntity saveFirstPartOfTests(String token, String userForMatchingToken,
+                                                         ValueCompatibilityAnswersEntity answersEntity,
+                                                         List<Choice> choices, Area area);
+
+    //    ValueCompatibilityAnswersEntity save(ValueCompatibilityAnswersEntity valueCompatibilityAnswersEntity);
     ValueCompatibilityAnswersEntity saveChoices(String token, String userForMatchingToken,
                                                 ValueCompatibilityAnswersEntity valueCompatibilityAnswersEntity,
                                                 List<Choice> choices, Area area);

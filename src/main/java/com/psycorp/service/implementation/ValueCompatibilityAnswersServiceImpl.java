@@ -6,6 +6,7 @@ import com.psycorp.model.entity.*;
 import com.psycorp.model.enums.Area;
 import com.psycorp.model.enums.ErrorEnum;
 import com.psycorp.model.enums.Scale;
+import com.psycorp.model.enums.UserRole;
 import com.psycorp.repository.ValueCompatibilityAnswersRepository;
 import com.psycorp.repository.UserRepository;
 import com.psycorp.security.token.TokenPrincipal;
@@ -52,6 +53,23 @@ public class ValueCompatibilityAnswersServiceImpl implements ValueCompatibilityA
         this.userService = userService;
         this.mongoOperations = mongoOperations;
         this.env = env;
+    }
+
+    @Override
+    @Transactional
+    public ValueCompatibilityAnswersEntity saveFirstPartOfTests(String token, String userForMatchingToken,
+                                                                ValueCompatibilityAnswersEntity answersEntity,
+                                                                List<Choice> choices, Area area) {
+
+        User principal;
+       if (token == null) {
+           principal = userService.createAnonimUser(); // если токен == null, то создаем анонимного пользователя
+           token = ACCESS_TOKEN_PREFIX + " " + authService.generateAccessTokenForAnonim(principal);
+       } else {
+           tokenService.changeInviteTokenToAccess(token);
+       }
+
+       return saveChoices(token, userForMatchingToken, answersEntity, choices, area);
     }
 
     @Override
@@ -114,14 +132,16 @@ public class ValueCompatibilityAnswersServiceImpl implements ValueCompatibilityA
 
     private User getPrincipal() {
 
-        User principal;
+//        User principal;
         TokenPrincipal tokenPrincipal = (TokenPrincipal) authService.getAuthPrincipal();
 
-        if(tokenPrincipal != null && tokenPrincipal.getId() != null) { //если есть токен
-            principal = userService.findById(tokenPrincipal.getId());
-        } else { principal = userService.createAnonimUser(); } // если токен == null или у него id == null, то создаем анонимного пользователя
+        return userService.findById(tokenPrincipal.getId());
 
-        return principal;
+//        if(tokenPrincipal != null && tokenPrincipal.getId() != null) { //если есть токен
+//            principal = userService.findById(tokenPrincipal.getId());
+//        } else { principal = userService.createAnonimUser(); } // если токен == null или у него id == null, то создаем анонимного пользователя
+
+//        return principal;
     }
 
     private Boolean isPassed(ValueCompatibilityAnswersEntity answersEntity) {
