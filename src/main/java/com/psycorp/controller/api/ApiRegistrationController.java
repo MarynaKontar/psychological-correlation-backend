@@ -6,7 +6,7 @@ import com.psycorp.model.entity.User;
 import com.psycorp.model.objects.UserAccount;
 import com.psycorp.service.CredentialsService;
 import com.psycorp.service.UserAccountService;
-import com.psycorp.сonverter.CredentialsEntityConverter;
+import com.psycorp.сonverter.CredentialsDtoConverter;
 import com.psycorp.сonverter.UserAccountDtoConverter;
 import org.springframework.context.annotation.PropertySource;
 import org.springframework.http.HttpHeaders;
@@ -26,28 +26,28 @@ public class ApiRegistrationController {
     private final CredentialsService credentialsService;
     private final UserAccountService userAccountService;
     private final UserAccountDtoConverter userAccountDtoConverter;
-    private final CredentialsEntityConverter credentialsEntityConverter;
+    private final CredentialsDtoConverter credentialsDtoConverter;
 
     public ApiRegistrationController(CredentialsService credentialsService, UserAccountService userAccountService, UserAccountDtoConverter userAccountDtoConverter,
-                                     CredentialsEntityConverter credentialsEntityConverter) {
+                                     CredentialsDtoConverter credentialsDtoConverter) {
         this.credentialsService = credentialsService;
         this.userAccountService = userAccountService;
         this.userAccountDtoConverter = userAccountDtoConverter;
-        this.credentialsEntityConverter = credentialsEntityConverter;
+        this.credentialsDtoConverter = credentialsDtoConverter;
     }
 
     @PostMapping
     public ResponseEntity<UserAccountDto> register(@RequestBody @NotNull @Valid CredentialsDto credentialsDto,
                                                    @RequestHeader(value = "Authorization", required = false) String token) {
 
-        User user = credentialsService.save(credentialsEntityConverter.transform(credentialsDto), token);
+        User user = credentialsService.save(credentialsDtoConverter.transform(credentialsDto), token);
         UserAccount userAccount = userAccountService.getUserAccount(user);
         return new ResponseEntity<>(userAccountDtoConverter.transform(userAccount), HttpStatus.CREATED);
     }
 
     @PostMapping("/changePassword")
     public ResponseEntity<Void> changePassword(@RequestBody @NotNull CredentialsDto credentialsDto) {
-        credentialsService.changePassword(credentialsEntityConverter.transform(credentialsDto));
+        credentialsService.changePassword(credentialsDtoConverter.transform(credentialsDto));
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 

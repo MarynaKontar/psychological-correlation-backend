@@ -9,6 +9,7 @@ import com.psycorp.repository.security.CredentialsRepository;
 import com.psycorp.service.UserService;
 import com.psycorp.service.security.AuthService;
 import com.psycorp.service.security.TokenService;
+import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.Authentication;
@@ -53,20 +54,20 @@ public class AuthServiceImpl implements AuthService {
     public String generateAccessToken(UsernamePasswordDto usernamePassword) {
 
         User user = userService.findUserByNameOrEmail(usernamePassword.getName());
-        CredentialsEntity credentialsEntity = credentialRepository.findByUser_Id(user.getId())
+        CredentialsEntity credentialsEntity = credentialRepository.findByUserId(user.getId())
                 .orElseThrow(() -> new UsernameNotFoundException("User not found"));
 
         validateUserPassword (usernamePassword.getPassword(), credentialsEntity.getPassword());
-        user = credentialsEntity.getUser();
+        ObjectId userId = credentialsEntity.getUserId();
 
-       TokenEntity token =  tokenService.createUserToken(user, TokenType.ACCESS_TOKEN);
+       TokenEntity token =  tokenService.createUserToken(userId, TokenType.ACCESS_TOKEN);
         return token.getToken();
     }
 
     @Override
     public String generateAccessTokenForAnonim(User user) {
        user = userService.find(user);
-       TokenEntity token =  tokenService.createUserToken(user, TokenType.ACCESS_TOKEN);
+       TokenEntity token =  tokenService.createUserToken(user.getId(), TokenType.ACCESS_TOKEN);
        return token.getToken();
     }
 

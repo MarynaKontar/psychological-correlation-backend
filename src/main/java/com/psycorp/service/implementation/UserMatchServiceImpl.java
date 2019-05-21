@@ -47,26 +47,17 @@ public class UserMatchServiceImpl implements UserMatchService {
     }
 
     @Override
-    public List<UserMatchEntity> findByUserName(String userName) {
-        //TODO сделать через MongoOperations
-        return userMatchRepository.findByUserName(userName);
-    }
-
-    @Override
     public List<UserMatchEntity> findByMatchMethod(MatchMethod matchMethod) {
         return userMatchRepository.findByMatchMethod(matchMethod);
     }
 
     @Override
-    public List<UserMatchEntity> findByUserNameAndMatchMethod(String userName, MatchMethod matchMethod) {
-        //TODO не получается через постмен сделать empty или null
-        // (просто пропуск имени или метода(.../getAll//pearsoncorrelation) выдает 404)
-        if(userName == null || userName.isEmpty() || matchMethod.name().isEmpty()) throw new BadRequestException("user name not valid");
-        return userMatchRepository.findByUserNameAndMatchMethod(userName, matchMethod);
+    public List<UserMatch> getAll(){
+        List<UserMatchEntity> matchEntities = userMatchRepository.findAll();
+        List<UserMatch> matches = new ArrayList<>();
+        matchEntities.forEach(matchEntity -> matches.add(getUserMatch(matchEntity)));
+        return matches;
     }
-
-    @Override
-    public List<UserMatchEntity> getAll(){return userMatchRepository.findAll();}
 
     @Override
     public UserMatch match(User user1, User user2, MatchMethod matchMethod){
@@ -78,8 +69,8 @@ public class UserMatchServiceImpl implements UserMatchService {
         ValueCompatibilityAnswersEntity valueCompatibilityAnswersEntity1 = getValueCompatibilityAnswers(fullUser1).get(0);
         ValueCompatibilityAnswersEntity valueCompatibilityAnswersEntity2 = getValueCompatibilityAnswers(fullUser2).get(0);
 
-        List<UserMatchEntity> userMatchEntitiesUser1 = userMatchRepository.findByUserId(fullUser1.getId());
-        List<UserMatchEntity> userMatchEntitiesUser2 = userMatchRepository.findByUserId(fullUser2.getId());
+        List<UserMatchEntity> userMatchEntitiesUser1 = userMatchRepository.findByUsersIdContaining(fullUser1.getId());
+        List<UserMatchEntity> userMatchEntitiesUser2 = userMatchRepository.findByUsersIdContaining(fullUser2.getId());
 
         // check if there is record in userMatchEntity collection that is made after of both valueCompatibilityAnswers and get it; if not - insert it
         UserMatchEntity userMatchEntity = userMatchEntitiesUser1.stream()
@@ -95,7 +86,7 @@ public class UserMatchServiceImpl implements UserMatchService {
         return getUserMatch(userMatchEntity);
     }
 
-    // TODO какой-то глюк: principal.getUsersForMatching().get(0) дает user только с одним элементом в usersForMatching, поэтому приходится брать через репозиторий
+    // TODO какой-то глюк: principal.getUsersForMatchingId().get(0) дает user только с одним элементом в usersForMatchingId, поэтому приходится брать через репозиторий
     @Override
     public UserMatch match(User user, MatchMethod matchMethod){
         User principal = userService.getPrincipalUser();
@@ -104,8 +95,8 @@ public class UserMatchServiceImpl implements UserMatchService {
         if (user != null) { // if get user from controller, than get it;
             user2 = userService.find(user);
         } else { //if not (user firstly tests and matching with user, that sent him token) - get first user from userForMatching list
-            if(!principal.getUsersForMatching().isEmpty()) {
-                    user2 = userService.findById(principal.getUsersForMatching().get(0).getId());
+            if(!principal.getUsersForMatchingId().isEmpty()) {
+                    user2 = userService.findById(principal.getUsersForMatchingId().get(0));
             } else throw new BadRequestException(env.getProperty("error.noUserFound"));
         }
 
@@ -115,8 +106,8 @@ public class UserMatchServiceImpl implements UserMatchService {
         ValueCompatibilityAnswersEntity valueCompatibilityAnswersEntity1 = getValueCompatibilityAnswers(principal).get(0);
         ValueCompatibilityAnswersEntity valueCompatibilityAnswersEntity2 = getValueCompatibilityAnswers(user2).get(0);
 
-        List<UserMatchEntity> userMatcheEntitiesPrincipal = userMatchRepository.findByUserId(principal.getId());
-        List<UserMatchEntity> userMatchEntitiesUser2 = userMatchRepository.findByUserId(user2.getId());
+        List<UserMatchEntity> userMatcheEntitiesPrincipal = userMatchRepository.findByUsersIdContaining(principal.getId());
+        List<UserMatchEntity> userMatchEntitiesUser2 = userMatchRepository.findByUsersIdContaining(user2.getId());
 
         // check if there is record in userMatchEntity collection that is after of both valueCompatibilityAnswers; if not - insert it
         UserMatchEntity userMatchEntity = userMatcheEntitiesPrincipal.stream()
@@ -139,17 +130,26 @@ public class UserMatchServiceImpl implements UserMatchService {
         UserMatch userMatch = new UserMatch();
         userMatch.setId(userMatchEntity.getId());
         userMatch.setMatches(matches);
-        userMatch.setUsers(userMatchEntity.getUsers());
+
+        userMatch.setUsers(getUsers(userMatchEntity.getUsersId()));
         return userMatch;
     }
 
+    private Set<User> getUsers(Set<ObjectId> usersId) {
+        return usersId
+                .stream()
+                .map(userService::findById)
+                .collect(Collectors.toSet());
+    }
+
     private void validIfUsersCanBeMatching(User user1, User user2) {
-        if (user1.getUsersForMatching() == null || user2.getUsersForMatching() == null) {
+        if (user1.getUsersForMatchingId() == null || user2.getUsersForMatchingId() == null) {
             throw new BadRequestException(env.getProperty("error.UsersCan`tBeMatching"));
         }
-        if (user1.getUsersForMatching() != null && user2.getUsersForMatching() != null) {
-            List<ObjectId> ids1 = user1.getUsersForMatching().stream().map(User::getId).collect(Collectors.toList());
-            List<ObjectId> ids2 = user2.getUsersForMatching().stream().map(User::getId).collect(Collectors.toList());
+        if (user1.getUsersForMatchingId() != null && user2.getUsersForMatchingId() != null) {
+//            List<ObjectId> ids1 = user1.getUsersForMatchingId().stream().map(User::getId).collect(Collectors.toList());
+            List<ObjectId> ids1 = new ArrayList<>(user1.getUsersForMatchingId());
+            List<ObjectId> ids2 = new ArrayList<>(user2.getUsersForMatchingId());
 
             //TODO пропустит только если у user1 в  UsersForMatching есть user2 и наоборот. В дальнейшем добавить, чтобы пропускало, если "открытые" профили
             if (!ids1.contains(user2.getId()) || !ids2.contains(user1.getId())) {
@@ -158,26 +158,28 @@ public class UserMatchServiceImpl implements UserMatchService {
         }
 
         // TODO если напрямую проверять содержат ли UsersForMatching user, то не получается (то ли зацикливание, то еще что)
-//        if (user1.getUsersForMatching() == null || user2.getUsersForMatching() == null
-//                || !user1.getUsersForMatching().contains(user2)
-//                || !user2.getUsersForMatching().contains(user1)) {
+//        if (user1.getUsersForMatchingId() == null || user2.getUsersForMatchingId() == null
+//                || !user1.getUsersForMatchingId().contains(user2)
+//                || !user2.getUsersForMatchingId().contains(user1)) {
 //            throw new BadRequestException(env.getProperty("error.UsersCan`tBeMatching"));
 //        }
     }
 
-    private UserMatchEntity insert(ValueCompatibilityAnswersEntity valueCompatibilityAnswersEntity1, ValueCompatibilityAnswersEntity valueCompatibilityAnswersEntity2, User principal, User user,
+    private UserMatchEntity insert(ValueCompatibilityAnswersEntity valueCompatibilityAnswersEntity1,
+                                   ValueCompatibilityAnswersEntity valueCompatibilityAnswersEntity2,
+                                   User principal, User user,
                                    MatchMethod matchMethod) {
         List<Choice> choices1 = valueCompatibilityAnswersEntity1.getUserAnswers();
         List<Choice> choices2 = valueCompatibilityAnswersEntity2.getUserAnswers();
 
         List<MatchEntity> matches = matchMap(choices1, choices2, matchMethod);
 
-        Set<User> users = new HashSet<>();
-        users.add(principal);
-        users.add(user);
+        Set<ObjectId> usersId = new HashSet<>();
+        usersId.add(principal.getId());
+        usersId.add(user.getId());
 
         UserMatchEntity userMatchEntity = new UserMatchEntity();
-        userMatchEntity.setUsers(users);
+        userMatchEntity.setUsersId(usersId);
 
         userMatchEntity.setMatches(matches);
 
@@ -353,11 +355,11 @@ public class UserMatchServiceImpl implements UserMatchService {
 
     private List<ValueCompatibilityAnswersEntity> getValueCompatibilityAnswers(User user){
 //        Optional<List<ValueCompatibilityAnswersEntity>> valueCompatibilityAnswers = valueCompatibilityAnswersRepository
-//                .findAllByUser_IdOrderByIdDesc(user.getId());
+//                .findAllByUserIdOrderByIdDesc(user.getId());
 //        if(!valueCompatibilityAnswers.isPresent()) {
 //            throw new BadRequestException(env.getProperty("error.noTestWasPassed"));
 //        } else return valueCompatibilityAnswers.get();
-        return valueCompatibilityAnswersRepository.findAllByUser_IdOrderByIdDesc(user.getId())
+        return valueCompatibilityAnswersRepository.findAllByUserIdOrderByIdDesc(user.getId())
                 .orElseThrow(() -> new BadRequestException(env.getProperty("error.noTestWasPassed")));
     }
 

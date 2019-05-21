@@ -13,25 +13,15 @@ import java.util.List;
 @Repository
 public interface UserMatchRepository extends MongoRepository<UserMatchEntity, ObjectId>{
 
-    @Query("{'users.$id': ?0}")
-    List<UserMatchEntity> findByUserId(ObjectId userId);
-
-    @Query("{'users.name': ?0}")
-//    @Query("{'users': {'$ref':'user', '$name':{'$oname':?0}}}")
-    List<UserMatchEntity> findByUserName(String userName);
-
+//    @Query("{'usersId': ?0}")
+    List<UserMatchEntity> findByUsersIdContaining(ObjectId userId);
 
     @Query("{'matches.matchMethod': ?0}")
     List<UserMatchEntity> findByMatchMethod(MatchMethod matchMethod);
 
-    @Query("{'users.$id': ?0, 'matches.matchMethod': ?1}")
-    List<UserMatchEntity> findByUserIdAndMatchMethod(ObjectId userId, MatchMethod matchMethod);
+    @Query("{'usersId': ?0, 'matches.matchMethod': ?1}")
+    List<UserMatchEntity> findByUsersIdContainingAndMatchMethod(ObjectId userId, MatchMethod matchMethod);
 
-    @Query("{'users.name': ?0, 'matches.matchMethod': ?1}")
-    List<UserMatchEntity> findByUserNameAndMatchMethod(String userName, MatchMethod matchMethod);
-
-    @DeleteQuery("{'users.$id': ?0}")
-    void removeAllByUserId(ObjectId userId);
-
+    void removeAllByUsersId(ObjectId userId);
 
 }

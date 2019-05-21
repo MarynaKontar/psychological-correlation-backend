@@ -1,11 +1,10 @@
 package com.psycorp.service;
 
 import com.psycorp.model.entity.User;
-import com.psycorp.model.objects.UserAccount;
-import com.psycorp.model.security.CredentialsEntity;
+import com.psycorp.model.objects.Credentials;
 
 public interface CredentialsService {
-    User save(CredentialsEntity credentialsEntity, String token);
+    User save(Credentials credentials, String token);
 
-    User changePassword(CredentialsEntity credentialsEntity);
+    User changePassword(Credentials credentials);
 }

@@ -26,16 +26,15 @@ public class UserDetailsServiceImpl implements UserDetailsService{
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-//        User user = userRepository.findFirstByName(name)
         User user = userRepository.findUserByNameOrEmail(username, username)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found"));
-        CredentialsEntity credential = credentialsRepository.findByUser_Id(user.getId())
+        CredentialsEntity credential = credentialsRepository.findByUserId(user.getId())
                 .orElseThrow(() -> new UsernameNotFoundException("User not found"));
 
         TokenPrincipal tokenPrincipal = new TokenPrincipal();
-        tokenPrincipal.setId(credential.getUser().getId());
-        tokenPrincipal.setUsername(credential.getUser().getName());
-        tokenPrincipal.setRole(credential.getUser().getRole());
+        tokenPrincipal.setId(credential.getUserId());
+        tokenPrincipal.setUsername(user.getName());
+        tokenPrincipal.setRole(user.getRole());
         tokenPrincipal.setPassword(credential.getPassword());
 
         return tokenPrincipal;

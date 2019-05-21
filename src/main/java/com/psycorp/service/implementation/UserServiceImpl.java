@@ -2,6 +2,7 @@ package com.psycorp.service.implementation;
 
 import com.psycorp.exception.AuthorizationException;
 import com.psycorp.exception.BadRequestException;
+import com.psycorp.model.dto.SomeDto;
 import com.psycorp.model.entity.User;
 import com.psycorp.model.enums.ErrorEnum;
 import com.psycorp.model.enums.UserRole;
@@ -21,7 +22,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
 import org.springframework.data.mongodb.core.FindAndModifyOptions;
 import org.springframework.data.mongodb.core.MongoOperations;
+import org.springframework.data.mongodb.core.aggregation.Aggregation;
+import org.springframework.data.mongodb.core.aggregation.AggregationResults;
 import org.springframework.data.mongodb.core.aggregation.Fields;
+import org.springframework.data.mongodb.core.aggregation.LookupOperation;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
@@ -29,7 +33,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
+
+import static org.springframework.data.mongodb.core.aggregation.Aggregation.unwind;
 
 @Service
 public class UserServiceImpl implements UserService {
@@ -61,10 +69,13 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional
     public User createAnonimUser() {
-        User user;
-        user = userRepository.save(new User(UUID.randomUUID().toString(), UserRole.ANONIM));
+        User user = new User();
+        user.setName(UUID.randomUUID().toString());
+        user.setRole(UserRole.ANONIM);
+        user = userRepository.save(user);
+//        user = userRepository.save(new User(UUID.randomUUID().toString(), UserRole.ANONIM));
         CredentialsEntity credentialsEntity = new CredentialsEntity();
-        credentialsEntity.setUser(user);
+        credentialsEntity.setUserId(user.getId());
         credentialsRepository.save(credentialsEntity);
         return user;
     }
@@ -86,9 +97,10 @@ public class UserServiceImpl implements UserService {
     @Override
     public User addNewUsersForMatching(User user, List<User> usersForMatching){
         Update updateUser = new Update();
-        updateUser.push("usersForMatching")
+        Set<ObjectId> usersForMatchingId = usersForMatching.stream().map(User::getId).collect(Collectors.toSet());
+        updateUser.push("usersForMatchingId")
                 .atPosition(Update.Position.FIRST)
-                .each(usersForMatching);
+                .each(usersForMatchingId);
         Query queryUser = Query.query(Criteria.where(Fields.UNDERSCORE_ID).is(user.getId()));
         user = mongoOperations.findAndModify(queryUser, updateUser,
                 new FindAndModifyOptions().returnNew(true), User.class);
@@ -139,8 +151,31 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    public List<User> getUsersForMatching() {
+        User principal = getPrincipalUser();
+        return principal.getUsersForMatchingId().stream().map(this::findById).collect(Collectors.toList());
+    }
+
+    @Override
     public List<User> findAll() {
         return userRepository.findAll();
+    }
+
+
+    @Override
+    public List<SomeDto> getVCAnswersWithUserInfo() {
+        LookupOperation lookupOperation = LookupOperation.newLookup()
+                .from("user")
+                .localField("user.$id")
+                .foreignField("id")
+                .as("userInfo");
+
+        Aggregation aggregation = Aggregation.newAggregation(Aggregation.match(Criteria.where("passed").is(true)), lookupOperation);
+
+//        List<SomeDto> results = mongoOperations.aggregate(aggregation, "valueCompatibilityAnswersEntity", SomeDto.class).getMappedResults();
+        AggregationResults<SomeDto> aggregationResults = mongoOperations.aggregate(aggregation, "valueCompatibilityAnswersEntity", SomeDto.class);
+        List<SomeDto> results = aggregationResults.getMappedResults();
+        return results;
     }
 
     @Override
@@ -152,8 +187,8 @@ public class UserServiceImpl implements UserService {
         if(user.getGender() != null) { updateUser.set("gender", user.getGender()); }
         if(user.getEmail() != null) { updateUser.set("email", user.getEmail()); }
         //TODO наверное не надо позволять так менять UsersForMatching, делать это в отдельном методе
-        if(user.getUsersForMatching() !=null && !user.getUsersForMatching().isEmpty()) {
-            updateUser.set("usersForMatching", user.getUsersForMatching());
+        if(user.getUsersForMatchingId() !=null && !user.getUsersForMatchingId().isEmpty()) {
+            updateUser.set("usersForMatchingId", user.getUsersForMatchingId());
         }
         Query queryUser = Query.query(Criteria.where(Fields.UNDERSCORE_ID).is(principal.getId()));
         user = mongoOperations.findAndModify(queryUser, updateUser,
@@ -167,12 +202,12 @@ public class UserServiceImpl implements UserService {
     public User deleteUser(ObjectId userId) {
 //проверку на principal
 //        authUtil.userAuthorization(userId);
-        //TODO remove user from usersForMatching in all users
+        //TODO remove user from usersForMatchingId in all users
         User user = findById(userId);
         valueCompatibilityAnswersRepository.removeAllByUserId(userId);
-        userMatchRepository.removeAllByUserId(userId);
+        userMatchRepository.removeAllByUsersId(userId);
         tokenRepository.removeAllByUserId(userId);
-        //remove user from usersForMatching of another users
+        //remove user from usersForMatchingId of another users
         userRepository.delete(user);
         return user;
     }

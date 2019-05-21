@@ -23,7 +23,7 @@ public class Entity {
      */
     public static ValueCompatibilityAnswersEntity createRandomUserAnswers(User user){
         ValueCompatibilityAnswersEntity valueCompatibilityAnswersEntity = new ValueCompatibilityAnswersEntity();
-        valueCompatibilityAnswersEntity.setUser(user);
+        valueCompatibilityAnswersEntity.setUserId(user.getId());
 
         List<Choice> choices = new ArrayList<>();
         choices.addAll(getChoices(Area.GOAL));

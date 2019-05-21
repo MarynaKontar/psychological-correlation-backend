@@ -1,16 +1,18 @@
 package com.psycorp.controller.api;
 
 import com.psycorp.model.dto.UserAccountDto;
+import com.psycorp.model.objects.UserAccount;
 import com.psycorp.service.UserAccountService;
 import com.psycorp.сonverter.UserAccountDtoConverter;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
+import java.util.List;
 
 @RestController
 @RequestMapping("account")
@@ -23,8 +25,28 @@ public class ApiUserAccountController {
         this.userAccountDtoConverter = userAccountDtoConverter;
     }
 
+    @GetMapping("/getAll")
+    public ResponseEntity<List<UserAccountDto>> getAll() {
+     return ResponseEntity.ok().body(userAccountDtoConverter.transform(userAccountService.getAll()));
+    }
+
+    @PostMapping("/inviteForMatching")
+    public ResponseEntity<UserAccountDto> inviteForMatching(@RequestBody @NotNull @Valid UserAccountDto userAccountDto) {
+//        userAccountService.inviteForMatching(userAccountDtoConverter.transform(userAccountDto));
+//        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+        return ResponseEntity.ok(userAccountDtoConverter.transform(
+                userAccountService.inviteForMatching(userAccountDtoConverter.transform(userAccountDto))));
+    }
     @PutMapping
     public ResponseEntity<UserAccountDto> update(@RequestBody @NotNull @Valid UserAccountDto userAccountDto) {
         return ResponseEntity.ok().body(userAccountDtoConverter.transform(userAccountService.update(userAccountDtoConverter.transform(userAccountDto))));
+    }
+
+    @ExceptionHandler(RuntimeException.class)
+    public ResponseEntity<HttpHeaders> handleException(RuntimeException ex, HttpServletRequest request) {
+        HttpHeaders httpHeaders = new HttpHeaders();
+        httpHeaders.add("messageError", "Something wrong: " + ex.getMessage()
+                + "; path: " + request.getServletPath());
+        return ResponseEntity.badRequest().headers(httpHeaders).build();
     }
 }

@@ -12,6 +12,7 @@ import com.psycorp.service.ValueProfileService;
 import com.psycorp.сonverter.UserDtoConverter;
 import com.psycorp.сonverter.UserMatchDtoConverter;
 import com.psycorp.сonverter.ValueProfileMatchingDtoConverter;
+import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.PropertySource;
 import org.springframework.http.HttpHeaders;
@@ -21,7 +22,6 @@ import org.springframework.web.bind.annotation.*;
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
-import java.security.Principal;
 import java.util.List;
 
 @RestController
@@ -55,20 +55,25 @@ public class ApiUserMatchController {
     }
 
     @GetMapping("/getUsersForMatching")
-    public ResponseEntity<List<User>> getUsersForMatching() {
+    public ResponseEntity<List<SimpleUserDto>> getUsersForMatching() {
         return ResponseEntity.ok().headers(httpHeaders)
-                .body(userService.getPrincipalUser().getUsersForMatching());
+                .body(userDtoConverter.transform(userService.getUsersForMatching()));
     }
 
+    @GetMapping("/getAll")
+    public ResponseEntity<List<UserMatchDto>> getAllMatching() {
+//        Map<AccountType,
+        return ResponseEntity.ok().headers(httpHeaders).body(userMatchDtoConverter.transform(userMatchService.getAll()));
+    }
 
     @PostMapping("/value-profile-for-matching")
     public ResponseEntity<ValueProfileMatchingDto> getValueProfilesForMatching(
-            @RequestBody @NotNull @Valid SimpleUserDto userDto,
+            @RequestBody @NotNull @Valid ObjectId userId,
             @RequestHeader(value = "userForMatchingToken", required = false) String userForMatchingToken)
                             throws BadRequestException {
-        User user = userDtoConverter.transform(userDto); // если null, то вернет new User()
+//        User user = userDtoConverter.transform(userId); // если null, то вернет new User()
         return ResponseEntity.ok().headers(httpHeaders).body(valueProfileMatchingDtoConverter.transform(
-                valueProfileService.getValueProfileForMatching(user)));
+                valueProfileService.getValueProfileForMatching(userId)));
     }
 
     //TODO надо передавать лист с users для тех, с кем идет сравнение

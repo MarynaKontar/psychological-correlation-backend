@@ -6,7 +6,6 @@ import com.psycorp.model.entity.*;
 import com.psycorp.model.enums.Area;
 import com.psycorp.model.enums.ErrorEnum;
 import com.psycorp.model.enums.Scale;
-import com.psycorp.model.enums.UserRole;
 import com.psycorp.repository.ValueCompatibilityAnswersRepository;
 import com.psycorp.repository.UserRepository;
 import com.psycorp.security.token.TokenPrincipal;
@@ -17,6 +16,7 @@ import com.psycorp.service.security.TokenService;
 import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
+import org.springframework.data.mongodb.core.FindAndModifyOptions;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.aggregation.Fields;
 import org.springframework.data.mongodb.core.query.Criteria;
@@ -41,6 +41,7 @@ public class ValueCompatibilityAnswersServiceImpl implements ValueCompatibilityA
     private TokenService tokenService;
     private final MongoOperations mongoOperations;
     private final Environment env;
+    private ValueCompatibilityAnswersEntity answersEntity;
 
     //TODO return in public methods ValueCompatibilityAnswers (create in /objects)
     @Autowired
@@ -80,7 +81,7 @@ public class ValueCompatibilityAnswersServiceImpl implements ValueCompatibilityA
         validateChoices(choices, area);
         User user = getUserByToken(token);
         addUserForMatching(userForMatchingToken, user);
-        answersEntity = valueCompatibilityAnswersRepository.findTopByUser_IdAndPassedOrderByPassDateDesc(user.getId(), false)
+        answersEntity = valueCompatibilityAnswersRepository.findTopByUserIdAndPassedOrderByPassDateDesc(user.getId(), false)
                 .map((answers) -> update(answers, choices, area))
                 .orElseGet(() -> insert(choices, user));
         return answersEntity;
@@ -105,8 +106,8 @@ public class ValueCompatibilityAnswersServiceImpl implements ValueCompatibilityA
     //TODO Проверить и переделать
     private void canPassTestAgain(User user) {
         if(user.getId() != null) {
-//            Optional<List<ValueCompatibilityAnswersEntity>> answersOptional = valueCompatibilityAnswersRepository.findAllByUser_IdOrderByIdDesc(user.getId());
-            Optional<ValueCompatibilityAnswersEntity> answersEntityOptional = valueCompatibilityAnswersRepository.findTopByUser_IdOrderByPassDateDesc(user.getId());
+//            Optional<List<ValueCompatibilityAnswersEntity>> answersOptional = valueCompatibilityAnswersRepository.findAllByUserIdOrderByIdDesc(user.getId());
+            Optional<ValueCompatibilityAnswersEntity> answersEntityOptional = valueCompatibilityAnswersRepository.findTopByUserIdOrderByPassDateDesc(user.getId());
 
             if(answersEntityOptional.isPresent()){
                 ValueCompatibilityAnswersEntity answersEntity = answersEntityOptional.get();
@@ -161,7 +162,7 @@ public class ValueCompatibilityAnswersServiceImpl implements ValueCompatibilityA
     private ValueCompatibilityAnswersEntity insert(List<Choice> choices, User user) {
         canPassTestAgain(user);
         ValueCompatibilityAnswersEntity answersEntity = getInitValueCompatibilityAnswers();
-        answersEntity.setUser(user);
+        answersEntity.setUserId(user.getId());
         answersEntity.setUserAnswers(choices);
         answersEntity.setPassDate(LocalDateTime.now());
         answersEntity.setCreationDate(LocalDateTime.now());
@@ -183,20 +184,19 @@ public class ValueCompatibilityAnswersServiceImpl implements ValueCompatibilityA
         }
 
         // UPDATE CHOICES
-        Update updateAnswers = new Update().set("passDate", LocalDateTime.now()).push("userAnswers").each(choices);
-        mongoOperations.updateFirst(query, updateAnswers, ValueCompatibilityAnswersEntity.class);
-
-        answersEntity = valueCompatibilityAnswersRepository.findById(answersEntity.getId())
-                .orElseThrow(() -> new BadRequestException(env.getProperty("error.DataBaseError")));
+        Update updateAnswers = new Update()
+                .set("passDate", LocalDateTime.now())
+                .push("userAnswers").each(choices);
+        this.answersEntity = answersEntity;
+        this.answersEntity = mongoOperations.findAndModify(query, updateAnswers,
+                new FindAndModifyOptions().returnNew(true), ValueCompatibilityAnswersEntity.class);// вернет уже измененный документ (returnNew(true))
 
         // UPDATE PASSED
         if (isPassed(answersEntity)) { // если тест пройден, то установить поле "passed" в ValueCompatibilityAnswersEntity = true
-            mongoOperations.updateFirst(query, new Update().set("passed", true), ValueCompatibilityAnswersEntity.class);
+            answersEntity = mongoOperations.findAndModify(query, new Update().set("passed", true),
+                    new FindAndModifyOptions().returnNew(true), ValueCompatibilityAnswersEntity.class);
         }
-        answersEntity = valueCompatibilityAnswersRepository.findById(answersEntity.getId())
-                .orElseThrow(() -> new BadRequestException(env.getProperty("error.DataBaseError")));
-
-        return answersEntity;
+     return answersEntity;
     }
 
     @Override
@@ -213,11 +213,11 @@ public class ValueCompatibilityAnswersServiceImpl implements ValueCompatibilityA
         //TODO
         ValueCompatibilityAnswersEntity answersEntity;
         Optional<List<ValueCompatibilityAnswersEntity>> answersEntityOptional = valueCompatibilityAnswersRepository
-                .findAllByUser_IdOrderByIdDesc(user.getId());
+                .findAllByUserIdOrderByIdDesc(user.getId());
 //        Boolean userAnswersIsPresent = !answersEntityOptional.get().isEmpty();
         if(answersEntityOptional.isPresent() && !answersEntityOptional.get().isEmpty()) {
             answersEntity = valueCompatibilityAnswersRepository
-                    .findAllByUser_IdOrderByIdDesc(user.getId()).get().get(0);
+                    .findAllByUserIdOrderByIdDesc(user.getId()).get().get(0);
         } else answersEntity = getInitValueCompatibilityAnswers();
         return answersEntity;
     }
@@ -230,7 +230,7 @@ public class ValueCompatibilityAnswersServiceImpl implements ValueCompatibilityA
         //TODO может возникнуть проблема, если в _id в ValueCompatibilityAnswersEntity ObjectId когда-нибудь повторится.
         // Вроде не должно, так как ObjectId  ("OrderById") отсортирован по дате создания
         // правда с точностью 1 сек. Плюс - не надо индекс на PassDate/CreationDate в ValueCompatibilityAnswersEntity создавать
-        return valueCompatibilityAnswersRepository.findAllByUser_IdOrderByIdDesc(user.getId())
+        return valueCompatibilityAnswersRepository.findAllByUserIdOrderByIdDesc(user.getId())
                 .orElseThrow(() ->new BadRequestException(env.getProperty("error.noValueCompatibilityAnswersFind")
                         + " for user with name: " + userName));
     }
@@ -238,14 +238,14 @@ public class ValueCompatibilityAnswersServiceImpl implements ValueCompatibilityA
     @Override
     public ValueCompatibilityAnswersEntity getLastPassedTest() {
         User user = getPrincipal();
-        return valueCompatibilityAnswersRepository.findTopByUser_IdAndPassedOrderByPassDateDesc(user.getId(),true)
+        return valueCompatibilityAnswersRepository.findTopByUserIdAndPassedOrderByPassDateDesc(user.getId(),true)
                 .orElseThrow(() -> new BadRequestException(env.getProperty("error.noPassedValueCompatibilityAnswersFind")));
     }
 
     @Override
     public ValueCompatibilityAnswersEntity getLastPassedTest(User user) {
         if(user != null && user.getId() != null) {
-            return valueCompatibilityAnswersRepository.findTopByUser_IdAndPassedOrderByPassDateDesc(user.getId(), true)
+            return valueCompatibilityAnswersRepository.findTopByUserIdAndPassedOrderByPassDateDesc(user.getId(), true)
                     .orElseThrow(() -> new BadRequestException(env.getProperty("error.noPassedValueCompatibilityAnswersFind")));
         } else throw new BadRequestException(env.getProperty("error.UserOrUserIdCan`tBeNull"));
     }
@@ -254,7 +254,7 @@ public class ValueCompatibilityAnswersServiceImpl implements ValueCompatibilityA
     public Boolean ifTestPassed(User user) {
 
         Optional<ValueCompatibilityAnswersEntity> answersEntity = valueCompatibilityAnswersRepository
-                .findTopByUser_IdOrderByPassDateDesc(user.getId());
+                .findTopByUserIdOrderByPassDateDesc(user.getId());
         if(answersEntity.isPresent()) {
             return answersEntity.get().getPassed();
         } else return false;

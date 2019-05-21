@@ -12,7 +12,7 @@ import java.util.List;
 
 public interface TokenService {
 
-    TokenEntity createUserToken(User userEntity, TokenType tokenType);
+    TokenEntity createUserToken(ObjectId userId, TokenType tokenType);
 
     LocalDateTime getTokenExpirationDate(TokenType tokenType);
 

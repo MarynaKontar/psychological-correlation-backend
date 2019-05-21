@@ -59,10 +59,7 @@ public class ValueCompatibilityAnswersDtoConverter extends AbstractDtoConverter<
         dto.setGoal(goalDto);
         dto.setQuality(qualityDto);
         dto.setState(stateDto);
-        if(entity.getUser() != null){
-//            dto.setUserName(entity.getUser().getName());
-            dto.setUserId(entity.getUser().getId());
-        }
+        dto.setUserId(entity.getUserId());
         dto.setPassDate(entity.getPassDate());
         if(entity.getId() != null) {
             dto.setId(entity.getId());
@@ -84,7 +81,7 @@ public class ValueCompatibilityAnswersDtoConverter extends AbstractDtoConverter<
 //        Boolean present2 = userRepository.findById(dto.getUserId()).isPresent();
 //        Optional<User> user = userRepository.findById(dto.getUserId());
         if(dto.getId() != null && userRepository.existsById(dto.getUserId())) {
-            entity.setUser(userRepository.findById(dto.getUserId()).get());
+            entity.setUserId(userRepository.findById(dto.getUserId()).get().getId());
         }
         entity.setId(dto.getId());
     }

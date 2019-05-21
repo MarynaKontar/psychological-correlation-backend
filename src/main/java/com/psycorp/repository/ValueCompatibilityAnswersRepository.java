@@ -17,15 +17,15 @@ public interface ValueCompatibilityAnswersRepository extends MongoRepository<Val
     //должен быть такой же как  findAllByUserIdOrderByPassDateDesc, так как ObjectId  ("OrderById") отсортирован по дате создания
     //правда с точностью 1 сек. Но наверное findAllByUserIdOrderByPassDateDesc будет использовать сортировку
     // в памяти, а  findAllByUser_NameOrderByIdDesc нет
-    Optional<List<ValueCompatibilityAnswersEntity>> findAllByUser_IdOrderByIdDesc(ObjectId userId);
-    Optional<ValueCompatibilityAnswersEntity> findTopByUser_IdOrderByPassDateDesc(ObjectId userId);
+    Optional<List<ValueCompatibilityAnswersEntity>> findAllByUserIdOrderByIdDesc(ObjectId userId);
+    Optional<ValueCompatibilityAnswersEntity> findTopByUserIdOrderByPassDateDesc(ObjectId userId);
 
-    List<ValueCompatibilityAnswersEntity> findAllByUser_IdAndPassedOrderByPassDateDesc(ObjectId userId, Boolean passed);
+    List<ValueCompatibilityAnswersEntity> findAllByUserIdAndPassedOrderByPassDateDesc(ObjectId userId, Boolean passed);
 
     @Query("{$find: {'user.$id': ?0, 'passed': ?1}, $sort: {'passDate': -1}, $limit: 1}")
-    ValueCompatibilityAnswersEntity findAllByUser_IdAndPassedAndLastPassDate(ObjectId userId, Boolean passed);
+    ValueCompatibilityAnswersEntity findAllByUserIdAndPassedAndLastPassDate(ObjectId userId, Boolean passed);
 
-    Optional<ValueCompatibilityAnswersEntity> findTopByUser_IdAndPassedOrderByPassDateDesc(ObjectId userId, Boolean passed);
+    Optional<ValueCompatibilityAnswersEntity> findTopByUserIdAndPassedOrderByPassDateDesc(ObjectId userId, Boolean passed);
 
     void removeAllByUserId (ObjectId userId);
 }

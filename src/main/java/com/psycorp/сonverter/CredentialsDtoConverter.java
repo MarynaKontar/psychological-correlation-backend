@@ -2,11 +2,12 @@ package com.psycorp.сonverter;
 
 import com.psycorp.model.dto.CredentialsDto;
 import com.psycorp.model.entity.User;
+import com.psycorp.model.objects.Credentials;
 import com.psycorp.model.security.CredentialsEntity;
 import org.springframework.stereotype.Component;
 
 @Component
-public class CredentialsEntityConverter extends AbstractDtoConverter<CredentialsEntity, CredentialsDto> {
+public class CredentialsDtoConverter extends AbstractDtoConverter<Credentials, CredentialsDto> {
 
     @Override
     protected CredentialsDto createNewDto() {
@@ -14,12 +15,12 @@ public class CredentialsEntityConverter extends AbstractDtoConverter<Credentials
     }
 
     @Override
-    protected CredentialsEntity createNewEntity() {
-        return new CredentialsEntity();
+    protected Credentials createNewEntity() {
+        return new Credentials();
     }
 
     @Override
-    protected void convertFromEntity(CredentialsEntity entity, CredentialsDto dto) {
+    protected void convertFromEntity(Credentials entity, CredentialsDto dto) {
 
         dto.setId(entity.getId());
         dto.setName(entity.getUser().getName());
@@ -28,7 +29,7 @@ public class CredentialsEntityConverter extends AbstractDtoConverter<Credentials
     }
 
     @Override
-    protected void convertFromDto(CredentialsDto dto, CredentialsEntity entity) {
+    protected void convertFromDto(CredentialsDto dto, Credentials entity) {
         entity.setId(dto.getId());
         User user = new User();
         user.setName(dto.getName());

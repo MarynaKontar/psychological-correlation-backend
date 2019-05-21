@@ -5,7 +5,6 @@ import org.bson.types.ObjectId;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.LastModifiedDate;
-import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import javax.validation.Valid;
@@ -22,8 +21,7 @@ import java.util.List;
 public class ValueCompatibilityAnswersEntity extends AbstractEntity{
     @Id
     private ObjectId id;
-    @DBRef
-    private User user;
+    private ObjectId userId;
     @NotEmpty @Valid
     private List<Choice> userAnswers;
     @CreatedDate

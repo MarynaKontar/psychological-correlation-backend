@@ -6,12 +6,14 @@ import com.psycorp.model.entity.User;
 import com.psycorp.model.enums.ErrorEnum;
 import com.psycorp.model.enums.TokenType;
 import com.psycorp.model.enums.UserRole;
+import com.psycorp.model.objects.Credentials;
 import com.psycorp.model.security.CredentialsEntity;
 import com.psycorp.model.security.TokenEntity;
 import com.psycorp.repository.UserRepository;
 import com.psycorp.repository.security.CredentialsRepository;
 import com.psycorp.security.token.TokenPrincipal;
 import com.psycorp.service.CredentialsService;
+import com.psycorp.service.UserAccountService;
 import com.psycorp.service.UserService;
 import com.psycorp.service.security.AuthService;
 import com.psycorp.service.security.TokenService;
@@ -33,6 +35,7 @@ public class CredentialsServiceImpl implements CredentialsService{
 
     private final CredentialsRepository credentialsRepository;
     private final UserRepository userRepository;
+    private final UserAccountService userAccountService;
     private final TokenService tokenService;
     private final UserService userService;
     private final MongoOperations mongoOperations;
@@ -42,11 +45,12 @@ public class CredentialsServiceImpl implements CredentialsService{
 
     @Autowired
     public CredentialsServiceImpl(CredentialsRepository credentialsRepository, UserRepository userRepository,
-                                  TokenService tokenService, UserService userService,
+                                  UserAccountService userAccountService, TokenService tokenService, UserService userService,
                                   MongoOperations mongoOperations, AuthService authService,
                                   Environment env, PasswordEncoder passwordEncoder) {
         this.credentialsRepository = credentialsRepository;
         this.userRepository = userRepository;
+        this.userAccountService = userAccountService;
         this.tokenService = tokenService;
         this.userService = userService;
         this.mongoOperations = mongoOperations;
@@ -57,7 +61,7 @@ public class CredentialsServiceImpl implements CredentialsService{
 
     @Override
     @Transactional
-    public User save(CredentialsEntity credentialsEntity, String token){
+    public User save(Credentials credentials, String token){
         //TODO продумать, когда может приходить токен; пока его не использую
         TokenPrincipal tokenPrincipal = (TokenPrincipal) authService.getAuthPrincipal();
         User user;
@@ -71,26 +75,26 @@ public class CredentialsServiceImpl implements CredentialsService{
             }
 
             if(userRepository.findById(principalId).isPresent()){ // и для него есть пользователь, то берем этого пользователя
-                user = update(credentialsEntity, principalId);
+                user = update(credentials, principalId);
             } else {
                 throw new BadRequestException(env.getProperty("error.noUserFound") + " for user id: " + principalId);
             }
         } else {
             // если токен == null или у него id == null, то создаем нового пользователя
-            user = insert(credentialsEntity);
+            user = insert(credentials);
         }
         return user;
     }
 
     @Override
-    public User changePassword(CredentialsEntity credentialsEntity) {
+    public User changePassword(Credentials credentials) {
         User principal = userService.getPrincipalUser();
         ObjectId credentialsId = findByUserId(principal.getId()).getId();
 
         // UPDATE PASSWORD
-        if(credentialsEntity.getPassword() != null) {
+        if(credentials.getPassword() != null) {
             Update updateCredentials = new Update()
-                    .set("password", passwordEncoder.encode(credentialsEntity.getPassword()));
+                    .set("password", passwordEncoder.encode(credentials.getPassword()));
 
             Query queryCredentials = Query.query(Criteria.where(Fields.UNDERSCORE_ID).is(credentialsId));
             mongoOperations.findAndModify(queryCredentials, updateCredentials, CredentialsEntity.class);
@@ -98,17 +102,16 @@ public class CredentialsServiceImpl implements CredentialsService{
         return new User();
     }
 
-    private User update(CredentialsEntity credentialsEntity, ObjectId userId){
-        //TODO dbref в tokenEntity сделать и пересохранить тесты
+    private User update(Credentials credentials, ObjectId userId){
 
         ObjectId credentialsId = findByUserId(userId).getId();
 
         // UPDATE USER
         Update updateUser = new Update()
-                .set("name", credentialsEntity.getUser().getName())
-                .set("email", credentialsEntity.getUser().getEmail())
-                .set("role", (credentialsEntity.getPassword() != null)?
-                        UserRole.USER : credentialsEntity.getUser().getRole());
+                .set("name", credentials.getUser().getName())
+                .set("email", credentials.getUser().getEmail());
+//                .set("role", (credentials.getPassword() != null)?
+//                        UserRole.USER : credentials.getUser().getRole());
 
         Query queryUser = Query.query(Criteria.where(Fields.UNDERSCORE_ID).is(userId));
         User user = mongoOperations.findAndModify(queryUser, updateUser
@@ -117,9 +120,9 @@ public class CredentialsServiceImpl implements CredentialsService{
 
         // UPDATE CredentialsEntity
         Update updateCredentials = new Update()
-                .set("user", user)
-                .set("password", (credentialsEntity.getPassword() != null)?
-                        passwordEncoder.encode(credentialsEntity.getPassword()): credentialsEntity.getPassword());
+//                .set("userId", userId)
+                .set("password", (credentials.getPassword() != null)?
+                        passwordEncoder.encode(credentials.getPassword()): credentials.getPassword());
 
         Query queryCredentials = Query.query(Criteria.where(Fields.UNDERSCORE_ID).is(credentialsId));
         mongoOperations.findAndModify(queryCredentials, updateCredentials, CredentialsEntity.class);
@@ -127,21 +130,30 @@ public class CredentialsServiceImpl implements CredentialsService{
         return user;
     }
 
-    private User insert(CredentialsEntity credentialsEntity){
-        if(credentialsEntity.getPassword() != null) {
-            credentialsEntity.setPassword(passwordEncoder.encode(credentialsEntity.getPassword()));
-            credentialsEntity.getUser().setRole(UserRole.USER);
+    private User insert(Credentials credentials){
+        if(credentials.getPassword() != null) {
+            credentials.setPassword(passwordEncoder.encode(credentials.getPassword()));
+            credentials.getUser().setRole(UserRole.USER);
         }
 
-        User user = userRepository.insert(credentialsEntity.getUser());
-        credentialsEntity.setUser(user);
+        User user = userRepository.insert(credentials.getUser());
 
-        credentialsEntity = credentialsRepository.insert(credentialsEntity);
+        credentialsRepository.insert(createCredentialsEntity(credentials, user.getId()));
+
+        userAccountService.insert(user);
+
         return user;
     }
 
+    private CredentialsEntity createCredentialsEntity(Credentials credentials, ObjectId userId) {
+        CredentialsEntity credentialsEntity = new CredentialsEntity();
+        credentialsEntity.setUserId(userId);
+        credentialsEntity.setPassword(credentials.getPassword());
+        return credentialsEntity;
+    }
+
     private CredentialsEntity findByUserId(ObjectId userId) {
-        return credentialsRepository.findByUser_Id(userId).orElseThrow(() ->
+        return credentialsRepository.findByUserId(userId).orElseThrow(() ->
                 new AuthorizationException("", ErrorEnum.UNKNOWN_ERROR));
     }
 

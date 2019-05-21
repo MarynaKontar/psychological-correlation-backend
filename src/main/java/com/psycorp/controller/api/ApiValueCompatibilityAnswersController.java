@@ -87,7 +87,7 @@ public class ApiValueCompatibilityAnswersController {
 
         valueCompatibilityAnswersEntity = valueCompatibilityAnswersService.saveFirstPartOfTests(token, userForMatchingToken,
                 valueCompatibilityAnswersEntity, choices, Area.GOAL);
-        token = ACCESS_TOKEN_PREFIX + " " + tokenService.findByUserId(valueCompatibilityAnswersEntity.getUser().getId()).getToken();
+        token = ACCESS_TOKEN_PREFIX + " " + tokenService.findByUserId(valueCompatibilityAnswersEntity.getUserId()).getToken();
 
 //        //TODO if make separate transactional method in ValueCompatibilityAnswersService saveFirstPartOfTests(), than can't return new token (return only ValueCompatibilityAnswersEntity)
 //        valueCompatibilityAnswersEntity = valueCompatibilityAnswersService.saveChoices(token, userForMatchingToken,

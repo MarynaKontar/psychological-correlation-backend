@@ -8,6 +8,7 @@ import com.psycorp.service.UserService;
 import com.psycorp.service.ValueProfileService;
 import com.psycorp.util.UserMatchCommentUtil;
 import com.psycorp.util.ValueProfileCommentUtil;
+import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.PropertySource;
 import org.springframework.core.env.Environment;
@@ -66,9 +67,9 @@ public class ValueProfileServiceImpl implements ValueProfileService {
     }
 
     @Override
-    public ValueProfileMatching getValueProfileForMatching(User noPrincipalUser) {
-
-        noPrincipalUser = userService.find(noPrincipalUser);
+    public ValueProfileMatching getValueProfileForMatching(ObjectId noPrincipalUserId) {
+        User noPrincipalUser = userService.findById(noPrincipalUserId);
+        noPrincipalUserId = noPrincipalUser.getId();
         User principalUser = userService.getPrincipalUser();
 
         ValueProfile valueProfileForNoPrincipalUser = getValueProfile(noPrincipalUser, false);
