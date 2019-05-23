@@ -13,6 +13,7 @@ import com.psycorp.repository.UserRepository;
 import com.psycorp.repository.security.CredentialsRepository;
 import com.psycorp.repository.security.TokenRepository;
 import com.psycorp.security.token.TokenPrincipal;
+import com.psycorp.service.UserAccountService;
 import com.psycorp.service.security.AuthService;
 import com.psycorp.util.AuthUtil;
 import com.psycorp.service.UserService;
@@ -44,25 +45,36 @@ public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
     private final CredentialsRepository credentialsRepository;
+//    @Autowired
+//    private final UserAccountService userAccountService;
     private final ValueCompatibilityAnswersRepository valueCompatibilityAnswersRepository;
     private final UserMatchRepository userMatchRepository;
-    @Autowired
-    private AuthService authService;
+//    @Autowired
+    private final AuthService authService;
     private final TokenRepository tokenRepository;
     private final MongoOperations mongoOperations;
-    private final AuthUtil authUtil;
+//    private final AuthUtil authUtil;
     private final Environment env;
 
     @Autowired
-    public UserServiceImpl(UserRepository userRepository, CredentialsRepository credentialsRepository, ValueCompatibilityAnswersRepository valueCompatibilityAnswersRepository
-            , UserMatchRepository userMatchRepository, TokenRepository tokenRepository, MongoOperations mongoOperations, AuthUtil serviceUtil, Environment env) {
+    public UserServiceImpl(UserRepository userRepository,
+                           CredentialsRepository credentialsRepository,
+//                           UserAccountService userAccountService,
+                           ValueCompatibilityAnswersRepository valueCompatibilityAnswersRepository,
+                           UserMatchRepository userMatchRepository,
+                           AuthService authService, TokenRepository tokenRepository,
+                           MongoOperations mongoOperations,
+//                           AuthUtil serviceUtil,
+                           Environment env) {
         this.userRepository = userRepository;
         this.credentialsRepository = credentialsRepository;
+//        this.userAccountService = userAccountService;
         this.valueCompatibilityAnswersRepository = valueCompatibilityAnswersRepository;
         this.userMatchRepository = userMatchRepository;
+        this.authService = authService;
         this.tokenRepository = tokenRepository;
         this.mongoOperations = mongoOperations;
-        this.authUtil = serviceUtil;
+//        this.authUtil = serviceUtil;
         this.env = env;
     }
 
@@ -151,12 +163,6 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public List<User> getUsersForMatching() {
-        User principal = getPrincipalUser();
-        return principal.getUsersForMatchingId().stream().map(this::findById).collect(Collectors.toList());
-    }
-
-    @Override
     public List<User> findAll() {
         return userRepository.findAll();
     }
@@ -186,10 +192,7 @@ public class UserServiceImpl implements UserService {
         if(user.getAge() != null) { updateUser.set("age", user.getAge()); }
         if(user.getGender() != null) { updateUser.set("gender", user.getGender()); }
         if(user.getEmail() != null) { updateUser.set("email", user.getEmail()); }
-        //TODO наверное не надо позволять так менять UsersForMatching, делать это в отдельном методе
-        if(user.getUsersForMatchingId() !=null && !user.getUsersForMatchingId().isEmpty()) {
-            updateUser.set("usersForMatchingId", user.getUsersForMatchingId());
-        }
+
         Query queryUser = Query.query(Criteria.where(Fields.UNDERSCORE_ID).is(principal.getId()));
         user = mongoOperations.findAndModify(queryUser, updateUser,
                 new FindAndModifyOptions().returnNew(true), User.class);// вернет уже измененный документ (returnNew(true))

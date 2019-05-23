@@ -5,7 +5,9 @@ import com.psycorp.model.dto.UsernamePasswordDto;
 import com.psycorp.model.entity.User;
 import com.psycorp.model.objects.UserAccount;
 import com.psycorp.service.UserAccountService;
+import com.psycorp.service.UserService;
 import com.psycorp.service.security.AuthService;
+import com.psycorp.service.security.TokenService;
 import com.psycorp.сonverter.UserAccountDtoConverter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
@@ -22,21 +24,25 @@ import static com.psycorp.security.SecurityConstant.ACCESS_TOKEN_PREFIX;
 public class AuthenticationController {
 
     private final AuthService authService;
+    private final UserService userService;
+    private final TokenService tokenService;
     private final UserAccountDtoConverter userAccountDtoConverter;
     private final UserAccountService userAccountService;
 
     @Autowired
-    public AuthenticationController(AuthService authService, UserAccountDtoConverter userAccountDtoConverter,
+    public AuthenticationController(AuthService authService, UserService userService, TokenService tokenService, UserAccountDtoConverter userAccountDtoConverter,
                                     UserAccountService userAccountService) {
         this.authService = authService;
+        this.userService = userService;
+        this.tokenService = tokenService;
         this.userAccountDtoConverter = userAccountDtoConverter;
         this.userAccountService = userAccountService;
     }
 
     @PostMapping("/login")
     public ResponseEntity<UserAccountDto> login (@RequestBody @Valid UsernamePasswordDto usernamePassword) {
-        String token = authService.generateAccessToken(usernamePassword);
-        User user = authService.getUserByToken(token);
+        String token = tokenService.generateAccessToken(usernamePassword);
+        User user = tokenService.getUserByToken(token);
         UserAccount userAccount = userAccountService.getUserAccount(user);
 
         HttpHeaders headers = new HttpHeaders();
@@ -48,8 +54,14 @@ public class AuthenticationController {
     @PostMapping("/loginFriendAccount")
     public ResponseEntity<UserAccountDto> loginFriendAccount (@RequestHeader(value = "userForMatchingToken") String userForMatchingToken) {
         userForMatchingToken = userForMatchingToken.substring(ACCESS_TOKEN_PREFIX.length() + 1);
-        User user = authService.getUserByToken(userForMatchingToken);
+        User user = tokenService.getUserByToken(userForMatchingToken);
         UserAccount userAccount = userAccountService.getUserAccount(user);
+//        UserAccount userAccount = new UserAccount();
+        //todo gjменять String userForMatchingToken на userForMatchingId
+//        User user = userService.findById(userForMatchingId);
+//        UserAccount userAccount = userAccountService.getUserAccount(user);
+//        TokenEntity tokenEntity = tokenService.findByUserId(user.getId());
+//        userForMatchingToken = tokenEntity.getToken();
 
         HttpHeaders headers = new HttpHeaders();
         headers.set("AUTHORIZATION", ACCESS_TOKEN_PREFIX + " " + userForMatchingToken);

@@ -16,6 +16,7 @@ public class UserAccountEntity extends AbstractEntity {
     @Id
     private ObjectId id;
     private ObjectId userId;
-    private List<ObjectId> usersWhoInvitedYouId;
-    AccountType accountType;
+    private AccountType accountType;
+    private List<ObjectId> usersWhoInvitedYouId; // пользователи, которые пригласили тебя сравнить профили
+    private List<ObjectId> usersWhoYouInviteId; // пользователи, которых ты пригласил сравнить профили
 }

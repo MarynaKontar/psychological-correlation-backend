@@ -23,9 +23,12 @@ public class UserAccountDtoConverter extends AbstractDtoConverter<UserAccount, U
         UserDtoConverter userDtoConverter = new UserDtoConverter();
         SimpleUserDto simpleUserDto = userDtoConverter.transform(entity.getUser());
         dto.setUser(simpleUserDto);
+        dto.setAccountType(entity.getAccountType());
         dto.setIsValueCompatibilityTestPassed(entity.getIsValueCompatibilityTestPassed());
         dto.setInviteTokens(entity.getInviteTokens());
-
+        dto.setUsersForMatching(userDtoConverter.transform(entity.getUsersForMatching()));
+        dto.setUsersWhoInvitedYou(userDtoConverter.transform(entity.getUsersWhoInvitedYou()));
+        dto.setUsersWhoYouInvite(userDtoConverter.transform(entity.getUsersWhoYouInvite()));
     }
 
     @Override
@@ -33,6 +36,9 @@ public class UserAccountDtoConverter extends AbstractDtoConverter<UserAccount, U
         UserDtoConverter userDtoConverter = new UserDtoConverter();
         User user = userDtoConverter.transform(dto.getUser());
         entity.setUser(user);
+        entity.setAccountType(dto.getAccountType());
+        entity.setUsersWhoInvitedYou(userDtoConverter.transform(dto.getUsersWhoInvitedYou()));
+        entity.setUsersWhoYouInvite(userDtoConverter.transform(dto.getUsersWhoYouInvite()));
         //TODO когда акккаунт приходит измененным с фронта, то мы проверяем измененные поля и меняем их в бд,
         // но InviteTokens и IsValueCompatibilityTestPassed так не меняются, поєтому не конвертируем их.
         // Возможно name и email тоже не надо, так как для их изменения будет отдельная функция

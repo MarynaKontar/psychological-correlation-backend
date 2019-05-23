@@ -11,7 +11,7 @@ public interface ValueCompatibilityAnswersService {
 
     ValueCompatibilityAnswersEntity getLastPassedTest(User user);
 
-    Boolean ifTestPassed(User user);
+    Boolean ifTestPassed(ObjectId userId);
 
     ValueCompatibilityAnswersEntity getInitValueCompatibilityAnswers();
 

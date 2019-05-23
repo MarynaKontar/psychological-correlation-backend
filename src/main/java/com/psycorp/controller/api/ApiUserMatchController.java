@@ -6,6 +6,7 @@ import com.psycorp.model.dto.UserMatchDto;
 import com.psycorp.model.dto.ValueProfileMatchingDto;
 import com.psycorp.model.entity.User;
 import com.psycorp.model.enums.MatchMethod;
+import com.psycorp.service.UserAccountService;
 import com.psycorp.service.UserMatchService;
 import com.psycorp.service.UserService;
 import com.psycorp.service.ValueProfileService;
@@ -31,7 +32,7 @@ import java.util.List;
 @PropertySource(value = {"classpath:match/scalescommentrussian.properties"}, encoding = "utf-8")
 public class ApiUserMatchController {
 
-    private final UserService userService;
+    private final UserAccountService userAccountService;
     private final UserMatchService userMatchService;
     private final ValueProfileService valueProfileService;
     private final UserDtoConverter userDtoConverter;
@@ -41,11 +42,11 @@ public class ApiUserMatchController {
     private HttpHeaders httpHeaders;
 
     @Autowired
-    public ApiUserMatchController(UserService userService, UserMatchService userMatchService,
+    public ApiUserMatchController(UserAccountService userAccountService, UserMatchService userMatchService,
                                   ValueProfileService valueProfileService, UserDtoConverter userDtoConverter,
                                   UserMatchDtoConverter userMatchDtoConverter,
                                   ValueProfileMatchingDtoConverter valueProfileMatchingDtoConverter) {
-        this.userService = userService;
+        this.userAccountService = userAccountService;
         this.userMatchService = userMatchService;
         this.userDtoConverter = userDtoConverter;
         this.valueProfileService = valueProfileService;
@@ -57,7 +58,7 @@ public class ApiUserMatchController {
     @GetMapping("/getUsersForMatching")
     public ResponseEntity<List<SimpleUserDto>> getUsersForMatching() {
         return ResponseEntity.ok().headers(httpHeaders)
-                .body(userDtoConverter.transform(userService.getUsersForMatching()));
+                .body(userDtoConverter.transform(userAccountService.getUsersForMatching()));
     }
 
     @GetMapping("/getAll")

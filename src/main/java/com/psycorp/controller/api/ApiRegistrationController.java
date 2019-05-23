@@ -24,14 +24,13 @@ import javax.validation.constraints.NotNull;
 public class ApiRegistrationController {
 
     private final CredentialsService credentialsService;
-    private final UserAccountService userAccountService;
     private final UserAccountDtoConverter userAccountDtoConverter;
     private final CredentialsDtoConverter credentialsDtoConverter;
 
-    public ApiRegistrationController(CredentialsService credentialsService, UserAccountService userAccountService, UserAccountDtoConverter userAccountDtoConverter,
+    public ApiRegistrationController(CredentialsService credentialsService,
+                                     UserAccountDtoConverter userAccountDtoConverter,
                                      CredentialsDtoConverter credentialsDtoConverter) {
         this.credentialsService = credentialsService;
-        this.userAccountService = userAccountService;
         this.userAccountDtoConverter = userAccountDtoConverter;
         this.credentialsDtoConverter = credentialsDtoConverter;
     }
@@ -40,8 +39,7 @@ public class ApiRegistrationController {
     public ResponseEntity<UserAccountDto> register(@RequestBody @NotNull @Valid CredentialsDto credentialsDto,
                                                    @RequestHeader(value = "Authorization", required = false) String token) {
 
-        User user = credentialsService.save(credentialsDtoConverter.transform(credentialsDto), token);
-        UserAccount userAccount = userAccountService.getUserAccount(user);
+        UserAccount userAccount = credentialsService.save(credentialsDtoConverter.transform(credentialsDto), token);
         return new ResponseEntity<>(userAccountDtoConverter.transform(userAccount), HttpStatus.CREATED);
     }
 

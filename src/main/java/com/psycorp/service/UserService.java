@@ -17,7 +17,7 @@ public interface UserService {
     User findById (ObjectId userId);
     User getPrincipalUser();
 
-    List<User> getUsersForMatching();
+//    List<User> getUsersForMatching();
 
     //TODO deleteUser in production
     List<User> findAll();

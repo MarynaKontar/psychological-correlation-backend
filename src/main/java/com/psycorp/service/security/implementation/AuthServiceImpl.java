@@ -1,42 +1,36 @@
 package com.psycorp.service.security.implementation;
 
-import com.psycorp.model.dto.UsernamePasswordDto;
 import com.psycorp.model.entity.User;
 import com.psycorp.model.enums.TokenType;
-import com.psycorp.model.security.CredentialsEntity;
-import com.psycorp.model.security.TokenEntity;
-import com.psycorp.repository.security.CredentialsRepository;
-import com.psycorp.service.UserService;
 import com.psycorp.service.security.AuthService;
 import com.psycorp.service.security.TokenService;
-import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 
 @Service
 public class AuthServiceImpl implements AuthService {
 
-    private final CredentialsRepository credentialRepository;
-    @Autowired
-    private UserService userService;
-    @Autowired
-    private TokenService tokenService;
-    private final PasswordEncoder passwordEncoder;
+//    private final CredentialsRepository credentialRepository;
+//    @Autowired
+//    private UserService userService;
+//    @Autowired
+//    private TokenService tokenService;
+//    private final PasswordEncoder passwordEncoder;
 
-    @Autowired
-    public AuthServiceImpl(CredentialsRepository credentialRepository,
-                           PasswordEncoder passwordEncoder) {
-        this.credentialRepository = credentialRepository;
-        this.passwordEncoder = passwordEncoder;
-    }
+//    @Autowired
+//    public AuthServiceImpl(
+////            CredentialsRepository credentialRepository,
+////                           PasswordEncoder passwordEncoder
+//            TokenService tokenService) {
+////        this.credentialRepository = credentialRepository;
+////        this.passwordEncoder = passwordEncoder;
+//        this.tokenService = tokenService;
+//    }
 
     @Override
     public UserDetails getAuthPrincipal() {
@@ -50,43 +44,43 @@ public class AuthServiceImpl implements AuthService {
 //        return (UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
     }
 
-    @Override
-    public String generateAccessToken(UsernamePasswordDto usernamePassword) {
+//    @Override
+//    public String generateAccessToken(UsernamePasswordDto usernamePassword) {
+//
+//        User user = userService.findUserByNameOrEmail(usernamePassword.getName());
+//        CredentialsEntity credentialsEntity = credentialRepository.findByUserId(user.getId())
+//                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+//
+//        validateUserPassword (usernamePassword.getPassword(), credentialsEntity.getPassword());
+//        ObjectId userId = credentialsEntity.getUserId();
+//
+//       TokenEntity token =  tokenService.createUserToken(userId, TokenType.ACCESS_TOKEN);
+//        return token.getToken();
+//    }
+//
+//    @Override
+//    public String generateAccessTokenForAnonim(User user) {
+//       user = userService.find(user);
+//       TokenEntity token =  tokenService.createUserToken(user.getId(), TokenType.ACCESS_TOKEN);
+//       return token.getToken();
+//    }
 
-        User user = userService.findUserByNameOrEmail(usernamePassword.getName());
-        CredentialsEntity credentialsEntity = credentialRepository.findByUserId(user.getId())
-                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
-
-        validateUserPassword (usernamePassword.getPassword(), credentialsEntity.getPassword());
-        ObjectId userId = credentialsEntity.getUserId();
-
-       TokenEntity token =  tokenService.createUserToken(userId, TokenType.ACCESS_TOKEN);
-        return token.getToken();
-    }
-
-    @Override
-    public String generateAccessTokenForAnonim(User user) {
-       user = userService.find(user);
-       TokenEntity token =  tokenService.createUserToken(user.getId(), TokenType.ACCESS_TOKEN);
-       return token.getToken();
-    }
-
-    @Override
-    public User getUserByToken(String token){
-        return tokenService.getUserByToken(token);
-    }
-
-    @Override
-    public Boolean ifExistTokenByTypeAndToken(TokenType type, String token){
-        return tokenService.ifExistByTypeAndToken(type, token);
-    }
+//    @Override
+//    public User getUserByToken(String token){
+//        return tokenService.getUserByToken(token);
+//    }
+//
+//    @Override
+//    public Boolean ifExistTokenByTypeAndToken(TokenType type, String token){
+//        return tokenService.ifExistByTypeAndToken(type, token);
+//    }
 
 //    @Override
 //    public String generateDeviceToken() {
 //        return tokenService.createJwtToken();
 //    }
 
-    private void validateUserPassword (String incomingPassword, String storedPassword) {
-        if(!passwordEncoder.matches(incomingPassword, storedPassword)) throw new BadCredentialsException("Bad Credentials");
-    }
+//    private void validateUserPassword (String incomingPassword, String storedPassword) {
+//        if(!passwordEncoder.matches(incomingPassword, storedPassword)) throw new BadCredentialsException("Bad Credentials");
+//    }
 }

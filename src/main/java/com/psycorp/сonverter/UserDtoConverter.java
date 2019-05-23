@@ -33,7 +33,6 @@ public class UserDtoConverter extends AbstractDtoConverter<User, SimpleUserDto>{
         dto.setAge(entity.getAge());
         dto.setGender(entity.getGender());
         dto.setId(entity.getId());
-
     }
 
     @Override

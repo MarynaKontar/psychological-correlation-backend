@@ -7,6 +7,7 @@ import com.psycorp.model.enums.ErrorEnum;
 import com.psycorp.model.enums.TokenType;
 import com.psycorp.model.enums.UserRole;
 import com.psycorp.model.objects.Credentials;
+import com.psycorp.model.objects.UserAccount;
 import com.psycorp.model.security.CredentialsEntity;
 import com.psycorp.model.security.TokenEntity;
 import com.psycorp.repository.UserRepository;
@@ -61,7 +62,7 @@ public class CredentialsServiceImpl implements CredentialsService{
 
     @Override
     @Transactional
-    public User save(Credentials credentials, String token){
+    public UserAccount save(Credentials credentials, String token){
         //TODO продумать, когда может приходить токен; пока его не использую
         TokenPrincipal tokenPrincipal = (TokenPrincipal) authService.getAuthPrincipal();
         User user;
@@ -83,7 +84,8 @@ public class CredentialsServiceImpl implements CredentialsService{
             // если токен == null или у него id == null, то создаем нового пользователя
             user = insert(credentials);
         }
-        return user;
+
+        return userAccountService.getUserAccount(user);
     }
 
     @Override
@@ -110,8 +112,9 @@ public class CredentialsServiceImpl implements CredentialsService{
         Update updateUser = new Update()
                 .set("name", credentials.getUser().getName())
                 .set("email", credentials.getUser().getEmail());
-//                .set("role", (credentials.getPassword() != null)?
-//                        UserRole.USER : credentials.getUser().getRole());
+                if (credentials.getPassword() != null) {
+                    updateUser.set("role", UserRole.USER);
+                }
 
         Query queryUser = Query.query(Criteria.where(Fields.UNDERSCORE_ID).is(userId));
         User user = mongoOperations.findAndModify(queryUser, updateUser
@@ -120,12 +123,16 @@ public class CredentialsServiceImpl implements CredentialsService{
 
         // UPDATE CredentialsEntity
         Update updateCredentials = new Update()
-//                .set("userId", userId)
                 .set("password", (credentials.getPassword() != null)?
                         passwordEncoder.encode(credentials.getPassword()): credentials.getPassword());
 
         Query queryCredentials = Query.query(Criteria.where(Fields.UNDERSCORE_ID).is(credentialsId));
         mongoOperations.findAndModify(queryCredentials, updateCredentials, CredentialsEntity.class);
+
+        // CREATE USERACCOUNT
+        if (userAccountService.getUserAccountEntityByUserIdOrNull(user.getId()) == null) {
+            userAccountService.insert(user);
+        }
 
         return user;
     }

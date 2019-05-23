@@ -22,8 +22,10 @@ public interface ValueCompatibilityAnswersRepository extends MongoRepository<Val
 
     List<ValueCompatibilityAnswersEntity> findAllByUserIdAndPassedOrderByPassDateDesc(ObjectId userId, Boolean passed);
 
-    @Query("{$find: {'user.$id': ?0, 'passed': ?1}, $sort: {'passDate': -1}, $limit: 1}")
-    ValueCompatibilityAnswersEntity findAllByUserIdAndPassedAndLastPassDate(ObjectId userId, Boolean passed);
+//    @Query("{$find: {'userId': ?0, 'passed': ?1}, $sort: {'passDate': -1}, $limit: 1}")
+//    ValueCompatibilityAnswersEntity findLastByUserIdAndPassed(ObjectId userId, Boolean passed);
+//    ValueCompatibilityAnswersEntity findTopByUserIdAndPassedOrderByPassDateDesc(ObjectId userId, Boolean passed)
+
 
     Optional<ValueCompatibilityAnswersEntity> findTopByUserIdAndPassedOrderByPassDateDesc(ObjectId userId, Boolean passed);
 

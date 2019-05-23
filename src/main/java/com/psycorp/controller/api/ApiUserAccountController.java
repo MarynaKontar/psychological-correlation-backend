@@ -1,11 +1,9 @@
 package com.psycorp.controller.api;
 
 import com.psycorp.model.dto.UserAccountDto;
-import com.psycorp.model.objects.UserAccount;
 import com.psycorp.service.UserAccountService;
 import com.psycorp.сonverter.UserAccountDtoConverter;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -27,7 +25,7 @@ public class ApiUserAccountController {
 
     @GetMapping("/getAll")
     public ResponseEntity<List<UserAccountDto>> getAll() {
-     return ResponseEntity.ok().body(userAccountDtoConverter.transform(userAccountService.getAll()));
+     return ResponseEntity.ok().body(userAccountDtoConverter.transform(userAccountService.getAllRegisteredAndPassedTest()));
     }
 
     @PostMapping("/inviteForMatching")

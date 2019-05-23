@@ -24,12 +24,12 @@ public interface AuthService {
 
     UserDetails getAuthPrincipal();
 
-    String generateAccessToken(UsernamePasswordDto usernamePassword);
+//    String generateAccessToken(UsernamePasswordDto usernamePassword);
+//
+//    String generateAccessTokenForAnonim(User user);
 
-    String generateAccessTokenForAnonim(User user);
-
-    User getUserByToken(String token);
-
-    Boolean ifExistTokenByTypeAndToken(TokenType type, String token);
+//    User getUserByToken(String token);
+//
+//    Boolean ifExistTokenByTypeAndToken(TokenType type, String token);
 //    String generateDeviceToken();
 }

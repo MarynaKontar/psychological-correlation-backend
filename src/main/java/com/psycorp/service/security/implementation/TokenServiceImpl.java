@@ -2,10 +2,13 @@ package com.psycorp.service.security.implementation;
 
 import com.mongodb.client.result.UpdateResult;
 import com.psycorp.exception.AuthorizationException;
+import com.psycorp.model.dto.UsernamePasswordDto;
 import com.psycorp.model.entity.User;
 import com.psycorp.model.enums.ErrorEnum;
 import com.psycorp.model.enums.TokenType;
+import com.psycorp.model.security.CredentialsEntity;
 import com.psycorp.model.security.TokenEntity;
+import com.psycorp.repository.security.CredentialsRepository;
 import com.psycorp.repository.security.TokenRepository;
 import com.psycorp.service.UserService;
 import com.psycorp.service.security.TokenService;
@@ -18,6 +21,9 @@ import org.springframework.data.mongodb.core.aggregation.Fields;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -31,15 +37,20 @@ import static com.psycorp.security.SecurityConstant.ACCESS_TOKEN_PREFIX;
 public class TokenServiceImpl implements TokenService {
 
     private final TokenRepository tokenRepository;
-    @Autowired
-    private UserService userService;
+//    @Autowired
+    private final UserService userService;
+    private final CredentialsRepository credentialRepository;
     private final MongoOperations mongoOperations;
+    private final PasswordEncoder passwordEncoder;
     private final Environment env;
 
     @Autowired
-    public TokenServiceImpl(TokenRepository tokenRepository, MongoOperations mongoOperations, Environment env) {
+    public TokenServiceImpl(TokenRepository tokenRepository, UserService userService, CredentialsRepository credentialRepository, MongoOperations mongoOperations, PasswordEncoder passwordEncoder, Environment env) {
         this.tokenRepository = tokenRepository;
+        this.userService = userService;
+        this.credentialRepository = credentialRepository;
         this.mongoOperations = mongoOperations;
+        this.passwordEncoder = passwordEncoder;
         this.env = env;
     }
 
@@ -150,5 +161,29 @@ public class TokenServiceImpl implements TokenService {
 
     private TokenEntity getByTypeAndToken(TokenType type, String token){
         return tokenRepository.findByTypeAndToken(type, token).orElse(null);
+    }
+
+    @Override
+    public String generateAccessToken(UsernamePasswordDto usernamePassword) {
+
+        User user = userService.findUserByNameOrEmail(usernamePassword.getName());
+        CredentialsEntity credentialsEntity = credentialRepository.findByUserId(user.getId())
+                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+
+        validateUserPassword (usernamePassword.getPassword(), credentialsEntity.getPassword());
+        ObjectId userId = credentialsEntity.getUserId();
+
+        TokenEntity token =  createUserToken(userId, TokenType.ACCESS_TOKEN);
+        return token.getToken();
+    }
+
+    @Override
+    public String generateAccessTokenForAnonim(User user) {
+        user = userService.find(user);
+        TokenEntity token =  createUserToken(user.getId(), TokenType.ACCESS_TOKEN);
+        return token.getToken();
+    }
+    private void validateUserPassword (String incomingPassword, String storedPassword) {
+        if(!passwordEncoder.matches(incomingPassword, storedPassword)) throw new BadCredentialsException("Bad Credentials");
     }
 }

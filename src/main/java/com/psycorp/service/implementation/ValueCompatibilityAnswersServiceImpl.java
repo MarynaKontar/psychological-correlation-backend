@@ -65,7 +65,7 @@ public class ValueCompatibilityAnswersServiceImpl implements ValueCompatibilityA
         User principal;
        if (token == null) {
            principal = userService.createAnonimUser(); // если токен == null, то создаем анонимного пользователя
-           token = ACCESS_TOKEN_PREFIX + " " + authService.generateAccessTokenForAnonim(principal);
+           token = ACCESS_TOKEN_PREFIX + " " + tokenService.generateAccessTokenForAnonim(principal);
        } else {
            tokenService.changeInviteTokenToAccess(token);
        }
@@ -126,7 +126,7 @@ public class ValueCompatibilityAnswersServiceImpl implements ValueCompatibilityA
 
         // если пользователь заходит на сайт по ссылке с токеном, то ищем пользователя по этому токену
         if(token != null && !token.isEmpty()) {
-           return authService.getUserByToken(token.substring(ACCESS_TOKEN_PREFIX.length() + 1));
+           return tokenService.getUserByToken(token.substring(ACCESS_TOKEN_PREFIX.length() + 1));
         }
         return  getPrincipal();
     }
@@ -187,8 +187,7 @@ public class ValueCompatibilityAnswersServiceImpl implements ValueCompatibilityA
         Update updateAnswers = new Update()
                 .set("passDate", LocalDateTime.now())
                 .push("userAnswers").each(choices);
-        this.answersEntity = answersEntity;
-        this.answersEntity = mongoOperations.findAndModify(query, updateAnswers,
+        answersEntity = mongoOperations.findAndModify(query, updateAnswers,
                 new FindAndModifyOptions().returnNew(true), ValueCompatibilityAnswersEntity.class);// вернет уже измененный документ (returnNew(true))
 
         // UPDATE PASSED
@@ -251,10 +250,10 @@ public class ValueCompatibilityAnswersServiceImpl implements ValueCompatibilityA
     }
 
     @Override
-    public Boolean ifTestPassed(User user) {
+    public Boolean ifTestPassed(ObjectId userId) {
 
         Optional<ValueCompatibilityAnswersEntity> answersEntity = valueCompatibilityAnswersRepository
-                .findTopByUserIdOrderByPassDateDesc(user.getId());
+                .findTopByUserIdAndPassedOrderByPassDateDesc(userId, true);
         if(answersEntity.isPresent()) {
             return answersEntity.get().getPassed();
         } else return false;

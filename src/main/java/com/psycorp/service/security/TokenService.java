@@ -1,6 +1,7 @@
 package com.psycorp.service.security;
 
 
+import com.psycorp.model.dto.UsernamePasswordDto;
 import com.psycorp.model.entity.User;
 import com.psycorp.model.enums.TokenType;
 import com.psycorp.model.security.TokenEntity;
@@ -28,5 +29,8 @@ public interface TokenService {
 
     TokenEntity findByUserIdAndTokenType(ObjectId userId, TokenType tokenType);
 
+    String generateAccessToken(UsernamePasswordDto usernamePassword);
+
+    String generateAccessTokenForAnonim(User user);
 //    String createJwtToken();
 }
