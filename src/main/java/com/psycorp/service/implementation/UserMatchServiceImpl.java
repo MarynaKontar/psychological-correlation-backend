@@ -97,6 +97,7 @@ public class UserMatchServiceImpl implements UserMatchService {
         User user2;
         if (user != null) { // if get user from controller, than get it from db;
             user2 = userService.find(user);
+            //TODO может не быть еще аккаунта у user (тестируются на одном компьютере; нельзя определить OPEN или нет) и надо определить как проверять, могут ли сравниваться пользователи
             if (user2.getUsersForMatchingId() == null
                     || user2.getUsersForMatchingId().isEmpty()
                     || !user2.getUsersForMatchingId().contains(principal.getId())) {

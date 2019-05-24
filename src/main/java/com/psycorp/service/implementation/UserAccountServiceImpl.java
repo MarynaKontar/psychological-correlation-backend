@@ -146,7 +146,7 @@ public class UserAccountServiceImpl implements UserAccountService {
 
         List<UserAccount> userAccounts = userAccountRepository.findAll().stream()
              .filter(userAccountEntity -> valueCompatibilityAnswersService.ifTestPassed(userAccountEntity.getUserId()))
-             .filter(userAccountEntity -> userAccountEntity.getUserId() != userService.getPrincipalUser().getId()) // not include principal user
+             .filter(userAccountEntity -> !userAccountEntity.getUserId().equals(userService.getPrincipalUser().getId())) // not include principal user
              .map(this::getUserAccount)
         .collect(Collectors.toList());
 
