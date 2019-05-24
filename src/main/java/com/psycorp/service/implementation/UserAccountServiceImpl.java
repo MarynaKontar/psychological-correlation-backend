@@ -21,6 +21,7 @@ import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -145,6 +146,7 @@ public class UserAccountServiceImpl implements UserAccountService {
 
         List<UserAccount> userAccounts = userAccountRepository.findAll().stream()
              .filter(userAccountEntity -> valueCompatibilityAnswersService.ifTestPassed(userAccountEntity.getUserId()))
+             .filter(userAccountEntity -> userAccountEntity.getUserId() != userService.getPrincipalUser().getId()) // not include principal user
              .map(this::getUserAccount)
         .collect(Collectors.toList());
 
@@ -181,13 +183,10 @@ public class UserAccountServiceImpl implements UserAccountService {
 
     @Override
     public List<User> getUsersForMatching() {
-        return getUserAccountEntityByUserId(userService.getPrincipalUser().getId())
-                .getUsersWhoYouInviteId()
-                .stream()
-                .map(userId -> userService.findById(userId))
-                .collect(Collectors.toList());
-//        UserAccount userAccount = userAccountService.getUserAccount(getPrincipalUser());
-//        return userAccount.getUsersForMatching();
+       return userService.getPrincipalUser()
+               .getUsersForMatchingId().stream()
+               .map(userService::findById)
+               .collect(Collectors.toList());
     }
 
     @Override
@@ -197,6 +196,7 @@ public class UserAccountServiceImpl implements UserAccountService {
     }
 
     @Override
+    @Transactional
     public UserAccount inviteForMatching(UserAccount userAccount) {
         User principal = userService.getPrincipalUser();
         User user = userService.find(userAccount.getUser());

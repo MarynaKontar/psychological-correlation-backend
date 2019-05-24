@@ -3,6 +3,7 @@ package com.psycorp.service;
 import com.psycorp.model.dto.SomeDto;
 import com.psycorp.model.entity.User;
 import org.bson.types.ObjectId;
+import org.springframework.data.mongodb.core.query.Update;
 
 import java.util.List;
 
@@ -24,7 +25,7 @@ public interface UserService {
 
     User updateUser(User user);
 
-    User addNewUsersForMatching(User user, List<User> userForMatching);
+    User addNewUsersForMatching(User user, List<User> userForMatching, Update.Position position);
 
     User deleteUser(ObjectId userId);
 

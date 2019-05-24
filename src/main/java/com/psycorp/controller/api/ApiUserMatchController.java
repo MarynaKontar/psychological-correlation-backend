@@ -6,6 +6,7 @@ import com.psycorp.model.dto.UserMatchDto;
 import com.psycorp.model.dto.ValueProfileMatchingDto;
 import com.psycorp.model.entity.User;
 import com.psycorp.model.enums.MatchMethod;
+import com.psycorp.model.objects.UserMatch;
 import com.psycorp.service.UserAccountService;
 import com.psycorp.service.UserMatchService;
 import com.psycorp.service.UserService;
@@ -57,8 +58,10 @@ public class ApiUserMatchController {
 
     @GetMapping("/getUsersForMatching")
     public ResponseEntity<List<SimpleUserDto>> getUsersForMatching() {
+        List<User> users = userAccountService.getUsersForMatching();
+
         return ResponseEntity.ok().headers(httpHeaders)
-                .body(userDtoConverter.transform(userAccountService.getUsersForMatching()));
+                .body(userDtoConverter.transform(users));
     }
 
     @GetMapping("/getAll")
@@ -72,7 +75,6 @@ public class ApiUserMatchController {
             @RequestBody @NotNull @Valid ObjectId userId,
             @RequestHeader(value = "userForMatchingToken", required = false) String userForMatchingToken)
                             throws BadRequestException {
-//        User user = userDtoConverter.transform(userId); // если null, то вернет new User()
         return ResponseEntity.ok().headers(httpHeaders).body(valueProfileMatchingDtoConverter.transform(
                 valueProfileService.getValueProfileForMatching(userId)));
     }
@@ -91,9 +93,10 @@ public class ApiUserMatchController {
     public ResponseEntity<UserMatchDto> getUserMatchPercent(@RequestBody(required = false) SimpleUserDto userDto){
 
         User user = (userDto != null) ? userDtoConverter.transform(userDto) : null;
+        UserMatch userMatch = userMatchService.match(user, MatchMethod.PERCENT);
+        UserMatchDto userMatchDto = userMatchDtoConverter.transform(userMatch);
         return ResponseEntity.created(httpHeaders.getLocation())
-                .headers(httpHeaders).body(userMatchDtoConverter.transform(userMatchService
-                        .match(user, MatchMethod.PERCENT)));
+                .headers(httpHeaders).body(userMatchDto);
     }
 
     @ExceptionHandler(RuntimeException.class)

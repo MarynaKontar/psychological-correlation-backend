@@ -107,11 +107,11 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public User addNewUsersForMatching(User user, List<User> usersForMatching){
+    public User addNewUsersForMatching(User user, List<User> usersForMatching, Update.Position position){
         Update updateUser = new Update();
         Set<ObjectId> usersForMatchingId = usersForMatching.stream().map(User::getId).collect(Collectors.toSet());
         updateUser.push("usersForMatchingId")
-                .atPosition(Update.Position.FIRST)
+                .atPosition(position)
                 .each(usersForMatchingId);
         Query queryUser = Query.query(Criteria.where(Fields.UNDERSCORE_ID).is(user.getId()));
         user = mongoOperations.findAndModify(queryUser, updateUser,

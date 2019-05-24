@@ -90,8 +90,8 @@ public class ValueCompatibilityAnswersServiceImpl implements ValueCompatibilityA
     private void addUserForMatching(String userForMatchingToken, User user) {
         if (userForMatchingToken != null && !userForMatchingToken.isEmpty()) {
             User userForMatching = getUserByToken(userForMatchingToken);
-            userService.addNewUsersForMatching(user, Collections.singletonList(userForMatching));
-            userService.addNewUsersForMatching(userForMatching, Collections.singletonList(user));
+            userService.addNewUsersForMatching(user, Collections.singletonList(userForMatching), Update.Position.FIRST);
+            userService.addNewUsersForMatching(userForMatching, Collections.singletonList(user), Update.Position.FIRST);
         }
     }
 

@@ -14,7 +14,9 @@ import com.psycorp.util.UserMatchCommentUtil;
 import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
+import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.sql.Timestamp;
 import java.util.*;
@@ -88,16 +90,28 @@ public class UserMatchServiceImpl implements UserMatchService {
 
     // TODO какой-то глюк: principal.getUsersForMatchingId().get(0) дает user только с одним элементом в usersForMatchingId, поэтому приходится брать через репозиторий
     @Override
+    @Transactional
     public UserMatch match(User user, MatchMethod matchMethod){
         User principal = userService.getPrincipalUser();
 
         User user2;
-        if (user != null) { // if get user from controller, than get it;
+        if (user != null) { // if get user from controller, than get it from db;
             user2 = userService.find(user);
+            if (user2.getUsersForMatchingId() == null
+                    || user2.getUsersForMatchingId().isEmpty()
+                    || !user2.getUsersForMatchingId().contains(principal.getId())) {
+                user2 = userService.addNewUsersForMatching(user2, Collections.singletonList(principal), Update.Position.LAST);
+            }
+            if (principal.getUsersForMatchingId() == null
+                    || principal.getUsersForMatchingId().isEmpty()
+                    || !principal.getUsersForMatchingId().contains(user2.getId())) {
+               principal = userService.addNewUsersForMatching(principal, Collections.singletonList(user2), Update.Position.LAST);
+            }
         } else { //if not (user firstly tests and matching with user, that sent him token) - get first user from userForMatching list
             if(!principal.getUsersForMatchingId().isEmpty()) {
                     user2 = userService.findById(principal.getUsersForMatchingId().get(0));
-            } else throw new BadRequestException(env.getProperty("error.noUserFound"));
+            } else throw new BadRequestException(env.getProperty("error.noUserFound")
+                    + " for matching with id: " + principal.getUsersForMatchingId().get(0));
         }
 
         validIfUsersCanBeMatching(principal, user2);
@@ -106,18 +120,20 @@ public class UserMatchServiceImpl implements UserMatchService {
         ValueCompatibilityAnswersEntity valueCompatibilityAnswersEntity1 = getValueCompatibilityAnswers(principal).get(0);
         ValueCompatibilityAnswersEntity valueCompatibilityAnswersEntity2 = getValueCompatibilityAnswers(user2).get(0);
 
-        List<UserMatchEntity> userMatcheEntitiesPrincipal = userMatchRepository.findByUsersIdContaining(principal.getId());
+        List<UserMatchEntity> userMatchEntitiesPrincipal = userMatchRepository.findByUsersIdContaining(principal.getId());
         List<UserMatchEntity> userMatchEntitiesUser2 = userMatchRepository.findByUsersIdContaining(user2.getId());
 
         // check if there is record in userMatchEntity collection that is after of both valueCompatibilityAnswers; if not - insert it
-        UserMatchEntity userMatchEntity = userMatcheEntitiesPrincipal.stream()
+        User finalPrincipal = principal;
+        User finalUser = user2;
+        UserMatchEntity userMatchEntity = userMatchEntitiesPrincipal.stream()
                 .filter(userMatchPrincipal ->
                     userMatchEntitiesUser2.contains(userMatchPrincipal)
                     && userMatchPrincipal.getId().getDate().after(Timestamp.valueOf(valueCompatibilityAnswersEntity1.getPassDate()))
                     && userMatchPrincipal.getId().getDate().after(Timestamp.valueOf(valueCompatibilityAnswersEntity2.getPassDate())))
                 .sorted(Comparator.comparing(UserMatchEntity::getId).reversed()).limit(1).findFirst()
                 .orElseGet(() ->
-                        insert(valueCompatibilityAnswersEntity1, valueCompatibilityAnswersEntity2, principal, user2, matchMethod)
+                        insert(valueCompatibilityAnswersEntity1, valueCompatibilityAnswersEntity2, finalPrincipal, finalUser, matchMethod)
                 );
         return getUserMatch(userMatchEntity);
     }
