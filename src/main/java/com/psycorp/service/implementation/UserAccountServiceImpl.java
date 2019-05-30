@@ -14,6 +14,8 @@ import com.psycorp.service.ValueCompatibilityAnswersService;
 import com.psycorp.service.security.TokenService;
 import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.FindAndModifyOptions;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.aggregation.Fields;
@@ -142,6 +144,13 @@ public class UserAccountServiceImpl implements UserAccountService {
     }
 
     @Override
+    public Page<UserAccount> getAllPageable(Pageable pageable) {
+        Page<UserAccountEntity> page = userAccountRepository.findAll(pageable);
+        Page<UserAccount> page1 = page.map(this::getUserAccount);
+        return page1;
+    }
+
+    @Override
     public List<UserAccount> getAllRegisteredAndPassedTest() { // only thus who is registered (have userAccount) and pass test
 
         List<UserAccount> userAccounts = userAccountRepository.findAll().stream()
@@ -157,6 +166,7 @@ public class UserAccountServiceImpl implements UserAccountService {
 //                .collect(Collectors.toList());
         return userAccounts;
     }
+
 
     @Override
     public UserAccountEntity getUserAccountEntityByUserIdOrNull(ObjectId userId) {
