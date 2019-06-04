@@ -164,6 +164,7 @@ public class TokenServiceImpl implements TokenService {
     }
 
     @Override
+    @Transactional
     public String generateAccessToken(UsernamePasswordDto usernamePassword) {
 
         User user = userService.findUserByNameOrEmail(usernamePassword.getName());
@@ -172,7 +173,7 @@ public class TokenServiceImpl implements TokenService {
 
         validateUserPassword (usernamePassword.getPassword(), credentialsEntity.getPassword());
         ObjectId userId = credentialsEntity.getUserId();
-
+        tokenRepository.removeAllByUserId(userId);
         TokenEntity token =  createUserToken(userId, TokenType.ACCESS_TOKEN);
         return token.getToken();
     }

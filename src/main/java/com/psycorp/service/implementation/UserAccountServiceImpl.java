@@ -22,6 +22,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.FindAndModifyOptions;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
@@ -180,25 +181,25 @@ public class UserAccountServiceImpl implements UserAccountService {
                 .foreignField("userId")
                 .as("userAccountEntityInfo");
 
+        Fields fields = Fields.fields("_id", "userId", "accountType");
         Aggregation aggregation = Aggregation.newAggregation(
                 Aggregation.match(Criteria.where("userId").ne(userService.getPrincipalUser().getId())),
                 lookupOperation,
                 Aggregation.unwind("userAccountEntityInfo"),
                 Aggregation.match(Criteria.where("userAccountEntityInfo").ne(null)),
                 Aggregation.match(Criteria.where("userAccountEntityInfo.passed").is(true)),
+                Aggregation.group(fields).addToSet("userId").as("userIds"),
+                Aggregation.project(fields),
+                Aggregation.sort(Sort.Direction.DESC, "userId"),
+
                 Aggregation.skip(((pageable.getPageNumber())*pageable.getPageSize())),
                 Aggregation.limit(pageable.getPageSize())
                 );
 
-        AggregationResults<UserAccountInfo> aggregationResults = mongoOperations.aggregate(aggregation, "userAccountEntity", UserAccountInfo.class);
-        List<UserAccountInfo> results = aggregationResults.getMappedResults();
+        AggregationResults<UserAccountEntity> aggregationResults = mongoOperations.aggregate(aggregation, "userAccountEntity", UserAccountEntity.class);
+        List<UserAccountEntity> results = aggregationResults.getMappedResults();
         List<UserAccount> userAccounts = results.stream()
-                .map(userAccountInfo -> getUserAccount(new UserAccountEntity(
-                                                            userAccountInfo.getId(),
-                                                            userAccountInfo.getUserId(),
-                                                            userAccountInfo.getAccountType(),
-                                                            userAccountInfo.getUsersWhoInvitedYouId(),
-                                                            userAccountInfo.getUsersWhoYouInviteId())))
+                .map(userAccountEntity -> getUserAccount(userAccountEntity))
                 .collect(Collectors.toList());
 
         Page<UserAccount> page = new PageImpl<UserAccount>(userAccounts, pageable, getAllRegisteredAndPassedTest().size());
@@ -269,6 +270,8 @@ public class UserAccountServiceImpl implements UserAccountService {
         private AccountType accountType;
         private List<ObjectId> usersWhoInvitedYouId; // пользователи, которые пригласили тебя сравнить профили
         private List<ObjectId> usersWhoYouInviteId; // пользователи, которых ты пригласил сравнить профили
-        ValueCompatibilityAnswersEntity userAccountEntityInfo;
+        private ValueCompatibilityAnswersEntity userAccountEntityInfo;
+        private List<ObjectId> ids;
+        private Integer count;
     }
 }
