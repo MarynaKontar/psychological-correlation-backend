@@ -1,6 +1,7 @@
 package com.psycorp.model.entity;
 
 import com.psycorp.model.enums.AccountType;
+import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.bson.types.ObjectId;
@@ -11,7 +12,8 @@ import java.util.List;
 
 @Data
 @NoArgsConstructor
-@Document(collection = "userAccountEntity")
+@AllArgsConstructor
+//@Document(collection = "userAccountEntity")
 public class UserAccountEntity extends AbstractEntity {
     @Id
     private ObjectId id;

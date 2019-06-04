@@ -29,5 +29,6 @@ public interface ValueCompatibilityAnswersRepository extends MongoRepository<Val
 
     Optional<ValueCompatibilityAnswersEntity> findTopByUserIdAndPassedOrderByPassDateDesc(ObjectId userId, Boolean passed);
 
+    Boolean existsByUserIdAndPassed(ObjectId userId, Boolean passed);
     void removeAllByUserId (ObjectId userId);
 }

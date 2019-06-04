@@ -35,7 +35,7 @@ public class ApiUserAccountController {
     public ResponseEntity<Page<UserAccountDto>> getClientPage(@RequestParam("page") int page , @RequestParam("size")int size){
         Sort sort = Sort.by(new Sort.Order(Sort.Direction.DESC, "userId"));
         Pageable pageable = PageRequest.of(page - 1, size, sort);
-        Page<UserAccount> userAccountPage = userAccountService.getAllPageable(pageable);
+        Page<UserAccount> userAccountPage = userAccountService.getAllRegisteredAndPassedTestPageable(pageable);
         int totalElements = (int) userAccountPage.getTotalElements();
         return ResponseEntity.ok().body(new PageImpl<UserAccountDto>(userAccountPage
                 .stream()

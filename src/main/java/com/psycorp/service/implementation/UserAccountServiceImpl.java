@@ -1,8 +1,12 @@
 package com.psycorp.service.implementation;
 
+import com.mongodb.AggregationOptions;
 import com.psycorp.exception.BadRequestException;
+import com.psycorp.model.dto.SomeDto;
+import com.psycorp.model.entity.Choice;
 import com.psycorp.model.entity.User;
 import com.psycorp.model.entity.UserAccountEntity;
+import com.psycorp.model.entity.ValueCompatibilityAnswersEntity;
 import com.psycorp.model.enums.AccountType;
 import com.psycorp.model.enums.TokenType;
 import com.psycorp.model.objects.UserAccount;
@@ -12,19 +16,25 @@ import com.psycorp.service.UserAccountService;
 import com.psycorp.service.UserService;
 import com.psycorp.service.ValueCompatibilityAnswersService;
 import com.psycorp.service.security.TokenService;
+import lombok.Data;
 import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.FindAndModifyOptions;
 import org.springframework.data.mongodb.core.MongoOperations;
+import org.springframework.data.mongodb.core.aggregation.Aggregation;
+import org.springframework.data.mongodb.core.aggregation.AggregationResults;
 import org.springframework.data.mongodb.core.aggregation.Fields;
+import org.springframework.data.mongodb.core.aggregation.LookupOperation;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -158,15 +168,42 @@ public class UserAccountServiceImpl implements UserAccountService {
              .filter(userAccountEntity -> !userAccountEntity.getUserId().equals(userService.getPrincipalUser().getId())) // not include principal user
              .map(this::getUserAccount)
         .collect(Collectors.toList());
-
-        // what will be faster? many queries to valueCompatibilityAnswersEntity collection or to user collection
-//        List<UserAccount> userAccounts = userAccountRepository.findAll().stream()
-//                .map(this::getUserAccount)
-//                .filter(UserAccount::getIsValueCompatibilityTestPassed)
-//                .collect(Collectors.toList());
         return userAccounts;
     }
 
+    @Override
+    public Page<UserAccount> getAllRegisteredAndPassedTestPageable(Pageable pageable) { // only thus who is registered (have userAccount) and pass test
+
+        LookupOperation lookupOperation = LookupOperation.newLookup()
+                .from("valueCompatibilityAnswersEntity")
+                .localField("userId")
+                .foreignField("userId")
+                .as("userAccountEntityInfo");
+
+        Aggregation aggregation = Aggregation.newAggregation(
+                Aggregation.match(Criteria.where("userId").ne(userService.getPrincipalUser().getId())),
+                lookupOperation,
+                Aggregation.unwind("userAccountEntityInfo"),
+                Aggregation.match(Criteria.where("userAccountEntityInfo").ne(null)),
+                Aggregation.match(Criteria.where("userAccountEntityInfo.passed").is(true)),
+                Aggregation.skip(((pageable.getPageNumber())*pageable.getPageSize())),
+                Aggregation.limit(pageable.getPageSize())
+                );
+
+        AggregationResults<UserAccountInfo> aggregationResults = mongoOperations.aggregate(aggregation, "userAccountEntity", UserAccountInfo.class);
+        List<UserAccountInfo> results = aggregationResults.getMappedResults();
+        List<UserAccount> userAccounts = results.stream()
+                .map(userAccountInfo -> getUserAccount(new UserAccountEntity(
+                                                            userAccountInfo.getId(),
+                                                            userAccountInfo.getUserId(),
+                                                            userAccountInfo.getAccountType(),
+                                                            userAccountInfo.getUsersWhoInvitedYouId(),
+                                                            userAccountInfo.getUsersWhoYouInviteId())))
+                .collect(Collectors.toList());
+
+        Page<UserAccount> page = new PageImpl<UserAccount>(userAccounts, pageable, getAllRegisteredAndPassedTest().size());
+        return page;
+    }
 
     @Override
     public UserAccountEntity getUserAccountEntityByUserIdOrNull(ObjectId userId) {
@@ -216,14 +253,22 @@ public class UserAccountServiceImpl implements UserAccountService {
         Update update = new Update().push("usersWhoInvitedYou").atPosition(Update.Position.FIRST).value(user.getId());
         userAccountEntityPrincipal = mongoOperations.findAndModify(query, update,
                 new FindAndModifyOptions().returnNew(true), UserAccountEntity.class);
-//        mongoOperations.updateFirst(query, update, UserAccountEntity.class);
 
-        //TODO написать метод для UserAccountEntity -> UserAccount
         userAccount = getUserAccount(user);
         return userAccount;
     }
     @Autowired
     public void setUserService(UserService userService) {
         this.userService = userService;
+    }
+
+    @Data
+    private class UserAccountInfo {
+        private ObjectId id;
+        private ObjectId userId;
+        private AccountType accountType;
+        private List<ObjectId> usersWhoInvitedYouId; // пользователи, которые пригласили тебя сравнить профили
+        private List<ObjectId> usersWhoYouInviteId; // пользователи, которых ты пригласил сравнить профили
+        ValueCompatibilityAnswersEntity userAccountEntityInfo;
     }
 }

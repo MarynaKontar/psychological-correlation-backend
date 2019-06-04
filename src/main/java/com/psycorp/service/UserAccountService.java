@@ -15,6 +15,8 @@ public interface UserAccountService {
 
     List<UserAccount> getAllRegisteredAndPassedTest();
 
+    Page<UserAccount> getAllRegisteredAndPassedTestPageable(Pageable pageable);
+
     UserAccountEntity getUserAccountEntityByUserIdOrNull(ObjectId userId);
 
     UserAccountEntity insert(User user);

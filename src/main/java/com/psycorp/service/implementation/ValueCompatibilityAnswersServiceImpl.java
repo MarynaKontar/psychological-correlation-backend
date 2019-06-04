@@ -252,11 +252,13 @@ public class ValueCompatibilityAnswersServiceImpl implements ValueCompatibilityA
     @Override
     public Boolean ifTestPassed(ObjectId userId) {
 
-        Optional<ValueCompatibilityAnswersEntity> answersEntity = valueCompatibilityAnswersRepository
-                .findTopByUserIdAndPassedOrderByPassDateDesc(userId, true);
-        if(answersEntity.isPresent()) {
-            return answersEntity.get().getPassed();
-        } else return false;
+//        Optional<ValueCompatibilityAnswersEntity> answersEntity = valueCompatibilityAnswersRepository
+//                .findTopByUserIdAndPassedOrderByPassDateDesc(userId, true);
+//        if(answersEntity.isPresent()) {
+//            return answersEntity.get().getPassed();
+//        } else return false;
+    Boolean ifTestPassed = valueCompatibilityAnswersRepository.existsByUserIdAndPassed(userId, true);
+        return ifTestPassed;
     }
 
     @Override
