@@ -26,6 +26,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.time.Period;
 import java.util.*;
 
 import static com.psycorp.security.SecurityConstant.ACCESS_TOKEN_PREFIX;
@@ -65,7 +66,7 @@ public class ValueCompatibilityAnswersServiceImpl implements ValueCompatibilityA
         User principal;
        if (token == null) {
            principal = userService.createAnonimUser(); // если токен == null, то создаем анонимного пользователя
-           token = ACCESS_TOKEN_PREFIX + " " + tokenService.generateAccessTokenForAnonim(principal);
+           token = ACCESS_TOKEN_PREFIX + " " + tokenService.generateAccessTokenForAnonim(principal).getToken();
        } else {
            tokenService.changeInviteTokenToAccess(token);
        }

@@ -17,7 +17,7 @@ public class TokenEntity {
     private ObjectId id;
     private TokenType type;
     @Future
-    @Indexed(expireAfterSeconds = 3600 * 24 * 7) // token удалится из базы данных через неделю после даты, указанной в expirationDate
+    @Indexed(expireAfterSeconds = 0) // token удалится из базы данных (через неделю expireAfterSeconds = 3600 * 24 * 7) после даты, указанной в expirationDate
     private LocalDateTime expirationDate;
     private String token;
 

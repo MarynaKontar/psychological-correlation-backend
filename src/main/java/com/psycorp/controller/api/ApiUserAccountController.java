@@ -32,7 +32,7 @@ public class ApiUserAccountController {
     }
 
     @GetMapping("/getAllUsers")
-    public ResponseEntity<Page<UserAccountDto>> getClientPage(@RequestParam("page") int page , @RequestParam("size")int size){
+    public ResponseEntity<Page<UserAccountDto>> getAllRegisteredAndPassedTestPageable(@RequestParam("page") int page , @RequestParam("size")int size){
         Sort sort = Sort.by(new Sort.Order(Sort.Direction.DESC, "userId"));
         Pageable pageable = PageRequest.of(page - 1, size, sort);
         Page<UserAccount> userAccountPage = userAccountService.getAllRegisteredAndPassedTestPageable(pageable);

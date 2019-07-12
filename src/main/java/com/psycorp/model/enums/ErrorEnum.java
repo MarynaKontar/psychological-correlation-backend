@@ -16,7 +16,8 @@ public enum ErrorEnum {
     NOT_AUTHORIZED("exception.auth.not_authorized_exception"),
     VALIDATION_INVALID_REQUEST("exception.bad_request"),
     USER_ALREADY_EXISTS("exception.user.already_exists"),
-    NOT_ENOUGH_PERMISSIONS("exception.permission");
+    NOT_ENOUGH_PERMISSIONS("exception.permission"),
+    PASSWORD_WRONG("password is wrong");
 
     private String message;
     ErrorEnum(String message) {

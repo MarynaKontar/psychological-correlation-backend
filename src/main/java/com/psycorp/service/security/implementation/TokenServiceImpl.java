@@ -2,6 +2,7 @@ package com.psycorp.service.security.implementation;
 
 import com.mongodb.client.result.UpdateResult;
 import com.psycorp.exception.AuthorizationException;
+import com.psycorp.exception.BadRequestException;
 import com.psycorp.model.dto.UsernamePasswordDto;
 import com.psycorp.model.entity.User;
 import com.psycorp.model.enums.ErrorEnum;
@@ -140,7 +141,7 @@ public class TokenServiceImpl implements TokenService {
                     .set("expirationDate", getTokenExpirationDate(TokenType.ACCESS_TOKEN));
             Query query = Query.query(Criteria.where(Fields.UNDERSCORE_ID).is(tokenEntity.getId()));
             UpdateResult updateResult = mongoOperations.updateFirst(query, update, TokenEntity.class);
-        }
+        } else throw new BadRequestException("tokenEntity isn't exist with token: " + tokenEntity.getToken());
     }
 
     @Override
@@ -179,11 +180,37 @@ public class TokenServiceImpl implements TokenService {
     }
 
     @Override
-    public String generateAccessTokenForAnonim(User user) {
+    public TokenEntity generateAccessTokenForAnonim(User user) {
         user = userService.find(user);
         TokenEntity token =  createUserToken(user.getId(), TokenType.ACCESS_TOKEN);
-        return token.getToken();
+        return token;
     }
+
+    @Override
+    public String getTokenForRegisteredUser(String token, ObjectId userId) {
+        //user register before pass test and don't have token yet
+        if (token == null) {
+            return ACCESS_TOKEN_PREFIX + " " +
+                    createUserToken(userId, TokenType.ACCESS_TOKEN).getToken();
+            //TODO проверять по токену или userId?
+        } else { //user has token (passed test(access token) or took invite from friend (invite token) but didn't pass test yet or tested on the same computer)
+            token = token.substring(ACCESS_TOKEN_PREFIX.length() + 1); //delete "Bearer "
+            TokenEntity accessTokenEntity = findByUserIdAndTokenType(userId, TokenType.ACCESS_TOKEN);
+            TokenEntity inviteTokenEntity = findByUserIdAndTokenType(userId, TokenType.INVITE_TOKEN);
+            if ( accessTokenEntity == null && inviteTokenEntity == null) { //token had expired (token came from frontend, but it doesn't in db(expired and deleted))
+                return ACCESS_TOKEN_PREFIX + " " +
+                    createUserToken(userId, TokenType.ACCESS_TOKEN).getToken();
+            } else if (accessTokenEntity != null && accessTokenEntity.getToken().equals(token)) {// user passed test -> has access token and this token equals to token (that came from frontend)
+                return ACCESS_TOKEN_PREFIX + " " + accessTokenEntity.getToken();
+            } else if (inviteTokenEntity != null && inviteTokenEntity.getToken().equals(token)) {// user has only invite token (took it from friend and didn't pass test)
+                changeInviteTokenToAccess(ACCESS_TOKEN_PREFIX + " " + inviteTokenEntity.getToken());
+                return ACCESS_TOKEN_PREFIX + " " + inviteTokenEntity.getToken();
+            } else {
+                throw new BadRequestException("token isn't valid: " + token);
+            }
+        }
+    }
+
     private void validateUserPassword (String incomingPassword, String storedPassword) {
         if(!passwordEncoder.matches(incomingPassword, storedPassword)) throw new BadCredentialsException("Bad Credentials");
     }

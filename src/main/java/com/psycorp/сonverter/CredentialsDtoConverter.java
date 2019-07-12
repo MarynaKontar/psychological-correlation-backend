@@ -25,6 +25,8 @@ public class CredentialsDtoConverter extends AbstractDtoConverter<Credentials, C
         dto.setId(entity.getId());
         dto.setName(entity.getUser().getName());
         dto.setEmail(entity.getUser().getEmail());
+        dto.setGender(entity.getUser().getGender());
+        dto.setAge(entity.getUser().getAge());
         dto.setPassword(entity.getPassword());
     }
 
@@ -34,6 +36,8 @@ public class CredentialsDtoConverter extends AbstractDtoConverter<Credentials, C
         User user = new User();
         user.setName(dto.getName());
         user.setEmail(dto.getEmail());
+        user.setGender(dto.getGender());
+        user.setAge(dto.getAge());
         entity.setUser(user);
         entity.setPassword(dto.getPassword());
     }

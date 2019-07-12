@@ -31,6 +31,8 @@ public interface TokenService {
 
     String generateAccessToken(UsernamePasswordDto usernamePassword);
 
-    String generateAccessTokenForAnonim(User user);
+    TokenEntity generateAccessTokenForAnonim(User user);
+
+    String getTokenForRegisteredUser(String token, ObjectId userId);
 //    String createJwtToken();
 }

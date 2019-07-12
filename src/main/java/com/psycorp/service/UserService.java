@@ -31,5 +31,7 @@ public interface UserService {
 
     User addNameAgeAndGender(User user);
 
+    void checkIfUsernameOrEmailExist(String nameOrEmail);
+
     List<SomeDto> getVCAnswersWithUserInfo();
 }

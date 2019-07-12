@@ -7,5 +7,5 @@ import com.psycorp.model.objects.UserAccount;
 public interface CredentialsService {
     UserAccount save(Credentials credentials, String token);
 
-    User changePassword(Credentials credentials);
+    User changePassword(String oldPassword, String newPassword);
 }

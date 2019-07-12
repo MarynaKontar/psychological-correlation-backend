@@ -21,7 +21,6 @@ import com.psycorp.service.security.TokenService;
 import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
-import org.springframework.data.mongodb.core.FindAndModifyOptions;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.aggregation.Fields;
 import org.springframework.data.mongodb.core.query.Criteria;
@@ -89,14 +88,19 @@ public class CredentialsServiceImpl implements CredentialsService{
     }
 
     @Override
-    public User changePassword(Credentials credentials) {
+    public User changePassword(String oldPassword, String newPassword) {
         User principal = userService.getPrincipalUser();
-        ObjectId credentialsId = findByUserId(principal.getId()).getId();
+        CredentialsEntity credentialsEntity = findByUserId(principal.getId());
+        if (passwordEncoder.matches(credentialsEntity.getPassword(), oldPassword)) {
+            throw new AuthorizationException("You entered the wrong password. ", ErrorEnum.PASSWORD_WRONG);
+        }
+
+        ObjectId credentialsId = credentialsEntity.getId();
 
         // UPDATE PASSWORD
-        if(credentials.getPassword() != null) {
+        if(newPassword != null) {
             Update updateCredentials = new Update()
-                    .set("password", passwordEncoder.encode(credentials.getPassword()));
+                    .set("password", passwordEncoder.encode(newPassword));
 
             Query queryCredentials = Query.query(Criteria.where(Fields.UNDERSCORE_ID).is(credentialsId));
             mongoOperations.findAndModify(queryCredentials, updateCredentials, CredentialsEntity.class);
@@ -106,20 +110,26 @@ public class CredentialsServiceImpl implements CredentialsService{
 
     private User update(Credentials credentials, ObjectId userId){
 
+        User principal = userService.findById(userId);
         ObjectId credentialsId = findByUserId(userId).getId();
 
+        // CHECK NAME AND EMAIL ON UNIQUE
+        if (credentials.getUser().getName() != null &&
+                principal.getName() != null &&
+                !principal.getName().equals(credentials.getUser().getName())) {
+            userService.checkIfUsernameOrEmailExist(credentials.getUser().getName());
+        }
+        if (credentials.getUser().getEmail() != null &&
+                principal.getEmail() != null &&
+                !principal.getEmail().equals(credentials.getUser().getEmail())) {
+            userService.checkIfUsernameOrEmailExist(credentials.getUser().getEmail());
+        }
+
         // UPDATE USER
-        Update updateUser = new Update()
-                .set("name", credentials.getUser().getName())
-                .set("email", credentials.getUser().getEmail());
-                if (credentials.getPassword() != null) {
-                    updateUser.set("role", UserRole.USER);
-                }
-
-        Query queryUser = Query.query(Criteria.where(Fields.UNDERSCORE_ID).is(userId));
-        User user = mongoOperations.findAndModify(queryUser, updateUser
-                , new FindAndModifyOptions().returnNew(true), User.class);
-
+        if (credentials.getPassword() != null) {
+            credentials.getUser().setRole(UserRole.USER);
+        }
+        User user = userService.updateUser(credentials.getUser());
 
         // UPDATE CredentialsEntity
         Update updateCredentials = new Update()
@@ -138,6 +148,15 @@ public class CredentialsServiceImpl implements CredentialsService{
     }
 
     private User insert(Credentials credentials){
+
+        // CHECK NAME AND EMAIL ON UNIQUE
+        if (credentials.getUser().getName() != null) {
+            userService.checkIfUsernameOrEmailExist(credentials.getUser().getName());
+        }
+        if (credentials.getUser().getEmail() != null) {
+            userService.checkIfUsernameOrEmailExist(credentials.getUser().getEmail());
+        }
+
         if(credentials.getPassword() != null) {
             credentials.setPassword(passwordEncoder.encode(credentials.getPassword()));
             credentials.getUser().setRole(UserRole.USER);
@@ -161,7 +180,7 @@ public class CredentialsServiceImpl implements CredentialsService{
 
     private CredentialsEntity findByUserId(ObjectId userId) {
         return credentialsRepository.findByUserId(userId).orElseThrow(() ->
-                new AuthorizationException("", ErrorEnum.UNKNOWN_ERROR));
+                new AuthorizationException("not found credentials for userId: " + userId, ErrorEnum.NOT_AUTHORIZED));
     }
 
 }

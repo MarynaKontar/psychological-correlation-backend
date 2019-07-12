@@ -167,6 +167,15 @@ public class UserServiceImpl implements UserService {
         return userRepository.findAll();
     }
 
+    @Override
+    public void checkIfUsernameOrEmailExist(String nameOrEmail) {
+        if(nameOrEmail == null) throw new BadRequestException(env.getProperty("error.UserNameOrEmailCan`tBeNull"));
+
+        if(userRepository.findUserByNameOrEmail(nameOrEmail, nameOrEmail).isPresent()) {
+            throw new BadRequestException(env.getProperty("error.UserWithTheseNameOrEmailAlreadyExists") + ": "
+                    + nameOrEmail);
+        }
+    }
 
     @Override
     public List<SomeDto> getVCAnswersWithUserInfo() {
@@ -188,6 +197,7 @@ public class UserServiceImpl implements UserService {
     public User updateUser(User user) {
         User principal = getPrincipalUser();
         Update updateUser = new Update();
+        if (user.getRole() != null) { updateUser.set("role", UserRole.USER); }
         if(user.getName() != null) { updateUser.set("name", user.getName()); }
         if(user.getAge() != null) { updateUser.set("age", user.getAge()); }
         if(user.getGender() != null) { updateUser.set("gender", user.getGender()); }
@@ -214,6 +224,4 @@ public class UserServiceImpl implements UserService {
         userRepository.delete(user);
         return user;
     }
-
-
 }

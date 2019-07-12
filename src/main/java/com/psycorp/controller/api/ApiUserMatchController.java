@@ -66,7 +66,6 @@ public class ApiUserMatchController {
 
     @GetMapping("/getAll")
     public ResponseEntity<List<UserMatchDto>> getAllMatching() {
-//        Map<AccountType,
         return ResponseEntity.ok().headers(httpHeaders).body(userMatchDtoConverter.transform(userMatchService.getAll()));
     }
 

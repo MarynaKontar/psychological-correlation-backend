@@ -64,11 +64,11 @@ public class UserMatchCommentUtil {
         Double resultNumber = result.getNumber();
         String levelPrefix;
 
-        if (resultNumber < Integer.valueOf(env.getProperty("low.value"))) { // <20
+        if (resultNumber < Integer.valueOf(env.getProperty("low.value"))) { // <40
             levelPrefix = env.getProperty("low.level");
-        } else if(resultNumber < Integer.valueOf(env.getProperty("sufficient.value"))) { // <40
+        } else if(resultNumber < Integer.valueOf(env.getProperty("sufficient.value"))) { // <60
             levelPrefix = env.getProperty("sufficient.level");
-        } else if(resultNumber < Integer.valueOf(env.getProperty("good.value"))) { // <60
+        } else if(resultNumber < Integer.valueOf(env.getProperty("good.value"))) { // <80
             levelPrefix = env.getProperty("good.level");
         } else levelPrefix = env.getProperty("excellent.level");
 

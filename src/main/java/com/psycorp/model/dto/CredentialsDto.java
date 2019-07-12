@@ -1,5 +1,6 @@
 package com.psycorp.model.dto;
 
+import com.psycorp.model.enums.Gender;
 import lombok.Data;
 import org.bson.types.ObjectId;
 
@@ -17,4 +18,9 @@ public class CredentialsDto extends AbstractDto{
     private String password;
     @NotEmpty @Email
     private String email;
+
+    // add this fields because they need for "full registration" (name, email, age, gender, password).
+    // Don't use SimpleUserDto because need @NotEmpty name and email
+    private Gender gender;
+    private Integer age;
 }
