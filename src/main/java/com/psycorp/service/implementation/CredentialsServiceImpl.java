@@ -91,7 +91,7 @@ public class CredentialsServiceImpl implements CredentialsService{
     public User changePassword(String oldPassword, String newPassword) {
         User principal = userService.getPrincipalUser();
         CredentialsEntity credentialsEntity = findByUserId(principal.getId());
-        if (passwordEncoder.matches(credentialsEntity.getPassword(), oldPassword)) {
+        if (!passwordEncoder.matches(oldPassword, credentialsEntity.getPassword())) {
             throw new AuthorizationException("You entered the wrong password. ", ErrorEnum.PASSWORD_WRONG);
         }
 
