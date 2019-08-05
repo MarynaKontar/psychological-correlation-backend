@@ -8,7 +8,7 @@ spring:
   data:
     mongodb:
       host: ${DB_HOST:localhost}
-      port: ${DB_PORT:27018}
+      port: ${DB_PORT:27017}
       database: psymatch
       username: mongodb_admin
       password: MiVpp1g
