@@ -31,8 +31,14 @@ public class ApiUserAccountController {
      return ResponseEntity.ok().body(userAccountDtoConverter.transform(userAccountService.getAllRegisteredAndPassedTest()));
     }
 
-    @GetMapping("/getAllUsers")
-    public ResponseEntity<Page<UserAccountDto>> getAllRegisteredAndPassedTestPageable(@RequestParam("page") int page , @RequestParam("size")int size){
+    @GetMapping("/getAllRegisteredAndPassedTestUsersForMatching")
+    public ResponseEntity<List<UserAccountDto>> getAllRegisteredAndPassedTestPageable(){
+        List<UserAccount> userAccounts = userAccountService.getAllUserForMatchingPassedTest();
+        return ResponseEntity.ok().body(this.userAccountDtoConverter.transform(userAccounts));
+    }
+
+    @GetMapping("/getAllRegisteredAndPassedTestUsers")
+    public ResponseEntity<Page<UserAccountDto>> getAllUsersForMatchingPassedTestPageable(@RequestParam("page") int page , @RequestParam("size")int size){
         Sort sort = Sort.by(new Sort.Order(Sort.Direction.DESC, "userId"));
         Pageable pageable = PageRequest.of(page - 1, size, sort);
         Page<UserAccount> userAccountPage = userAccountService.getAllRegisteredAndPassedTestPageable(pageable);

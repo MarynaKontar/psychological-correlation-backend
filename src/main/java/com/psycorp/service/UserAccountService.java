@@ -15,6 +15,10 @@ public interface UserAccountService {
 
     List<UserAccount> getAllRegisteredAndPassedTest();
 
+    Page<UserAccount> getAllRegisteredAndPassedTestUserForMatchingPageable(Pageable pageable);
+
+    List<UserAccount> getAllUserForMatchingPassedTest();
+
     Page<UserAccount> getAllRegisteredAndPassedTestPageable(Pageable pageable);
 
     UserAccountEntity getUserAccountEntityByUserIdOrNull(ObjectId userId);

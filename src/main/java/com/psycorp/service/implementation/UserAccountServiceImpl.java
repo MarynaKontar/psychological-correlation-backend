@@ -1,9 +1,6 @@
 package com.psycorp.service.implementation;
 
-import com.mongodb.AggregationOptions;
 import com.psycorp.exception.BadRequestException;
-import com.psycorp.model.dto.SomeDto;
-import com.psycorp.model.entity.Choice;
 import com.psycorp.model.entity.User;
 import com.psycorp.model.entity.UserAccountEntity;
 import com.psycorp.model.entity.ValueCompatibilityAnswersEntity;
@@ -35,7 +32,6 @@ import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -173,7 +169,71 @@ public class UserAccountServiceImpl implements UserAccountService {
     }
 
     @Override
-    public Page<UserAccount> getAllRegisteredAndPassedTestPageable(Pageable pageable) { // only thus who is registered (have userAccount) and pass test
+    public Page<UserAccount> getAllRegisteredAndPassedTestUserForMatchingPageable(Pageable pageable) { // only thus who is usersForMatching in user collection and passed test
+
+        LookupOperation lookupOperation = LookupOperation.newLookup()
+                .from("valueCompatibilityAnswersEntity")
+                .localField("userId")
+                .foreignField("userId")
+                .as("userAccountEntityInfo");
+
+        Fields fields = Fields.fields("_id", "userId", "accountType");
+        Aggregation aggregation = Aggregation.newAggregation(
+                Aggregation.match(Criteria.where("userId").in(userService.getPrincipalUser().getUsersForMatchingId())),
+                lookupOperation,
+                Aggregation.unwind("userAccountEntityInfo"),
+                Aggregation.match(Criteria.where("userAccountEntityInfo").ne(null)),
+                Aggregation.match(Criteria.where("userAccountEntityInfo.passed").is(true)),
+                Aggregation.group(fields).addToSet("userId").as("userIds"),
+                Aggregation.project(fields),
+                Aggregation.sort(Sort.Direction.DESC, "userId"),
+                //count, not use private List<UserAccountEntity>
+                Aggregation.skip(((pageable.getPageNumber())*pageable.getPageSize())),
+                Aggregation.limit(pageable.getPageSize())
+        );
+
+        AggregationResults<UserAccountEntity> aggregationResults = mongoOperations.aggregate(aggregation, "userAccountEntity", UserAccountEntity.class);
+        List<UserAccountEntity> results = aggregationResults.getMappedResults();
+        List<UserAccount> userAccounts = results.stream()
+                .map(userAccountEntity -> getUserAccount(userAccountEntity))
+                .collect(Collectors.toList());
+
+        Page<UserAccount> page = new PageImpl<UserAccount>(userAccounts, pageable, getAllUserForMatchingPassedTest().size());
+        return page;
+    }
+
+    @Override
+    public List<UserAccount> getAllUserForMatchingPassedTest() {
+
+        LookupOperation lookupOperation = LookupOperation.newLookup()
+                .from("valueCompatibilityAnswersEntity")
+                .localField("userId")
+                .foreignField("userId")
+                .as("userAccountEntityInfo");
+
+        Fields fields = Fields.fields("_id", "userId", "accountType");
+        Aggregation aggregation = Aggregation.newAggregation(
+                Aggregation.match(Criteria.where("userId").in(userService.getPrincipalUser().getUsersForMatchingId())),
+                lookupOperation,
+                Aggregation.unwind("userAccountEntityInfo"),
+                Aggregation.match(Criteria.where("userAccountEntityInfo").ne(null)),
+                Aggregation.match(Criteria.where("userAccountEntityInfo.passed").is(true)),
+                Aggregation.group(fields).addToSet("userId").as("userIds"),
+                Aggregation.project(fields),
+                Aggregation.sort(Sort.Direction.DESC, "userId")
+        );
+
+        AggregationResults<UserAccountEntity> aggregationResults = mongoOperations.aggregate(aggregation, "userAccountEntity", UserAccountEntity.class);
+        List<UserAccountEntity> results = aggregationResults.getMappedResults();
+        List<UserAccount> userAccounts = results.stream()
+                .map(userAccountEntity -> getUserAccount(userAccountEntity))
+                .collect(Collectors.toList());
+
+        return userAccounts;
+    }
+
+    @Override
+    public Page<UserAccount> getAllRegisteredAndPassedTestPageable(Pageable pageable) { // only thus who is registered (have userAccount) and passed test
 
         LookupOperation lookupOperation = LookupOperation.newLookup()
                 .from("valueCompatibilityAnswersEntity")
