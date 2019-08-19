@@ -2,7 +2,9 @@ package com.psycorp.security.token;
 
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 
-
+/**
+ * @author Vitaliy Proskura
+ */
 public class AuthorisationToken extends UsernamePasswordAuthenticationToken {
 
 
@@ -17,7 +19,4 @@ public class AuthorisationToken extends UsernamePasswordAuthenticationToken {
     public String getToken() {
         return (String) getPrincipal();
     }
-
-
-
 }

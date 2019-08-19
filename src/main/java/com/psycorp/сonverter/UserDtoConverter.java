@@ -3,14 +3,13 @@ package com.psycorp.сonverter;
 import com.psycorp.model.dto.SimpleUserDto;
 import com.psycorp.model.entity.User;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Component;
 
+/**
+ * Dto converter for {@link User}.
+ */
 @Component
 public class UserDtoConverter extends AbstractDtoConverter<User, SimpleUserDto>{
-
-
-//    private final Environment env;
 
     @Autowired
     public UserDtoConverter() { }
@@ -27,7 +26,6 @@ public class UserDtoConverter extends AbstractDtoConverter<User, SimpleUserDto>{
 
     @Override
     protected void convertFromEntity(User entity, SimpleUserDto dto) {
-//        if(entity == null || dto == null) throw new BadRequestException(env.getProperty("error.UserCan`tBeNull"));
         dto.setName(entity.getName());
         dto.setEmail(entity.getEmail());
         dto.setAge(entity.getAge());

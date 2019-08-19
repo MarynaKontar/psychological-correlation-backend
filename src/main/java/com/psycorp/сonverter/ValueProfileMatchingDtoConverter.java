@@ -6,6 +6,9 @@ import com.psycorp.model.objects.ValueProfileMatching;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+/**
+ * Dto converter for {@link ValueProfileMatching}.
+ */
 @Component
 public class ValueProfileMatchingDtoConverter extends AbstractDtoConverter<ValueProfileMatching, ValueProfileMatchingDto> {
 
@@ -22,18 +25,18 @@ public class ValueProfileMatchingDtoConverter extends AbstractDtoConverter<Value
     }
 
     @Override
-    protected ValueProfileMatching createNewEntity() {
-        return new ValueProfileMatching();
-    }
-
-    @Override
     protected void convertFromEntity(ValueProfileMatching entity, ValueProfileMatchingDto dto) {
             dto.setValueProfiles(valueProfileDtoConverter.transform(entity.getValueProfileList()));
             dto.setValuesDifferencesComments(entity.getValuesDifferencesCommentList());
     }
 
     @Override
+    protected ValueProfileMatching createNewEntity() {
+        throw new BadRequestException("Never creates new ValueProfileMatching in ValueProfileMatchingDtoConverter");
+    }
+
+    @Override
     protected void convertFromDto(ValueProfileMatchingDto dto, ValueProfileMatching entity) {
-        throw new BadRequestException("There is never convert from ValueProfileMatchingDto to ValueProfileMatching");
+        throw new BadRequestException("Never convert from ValueProfileMatchingDto to ValueProfileMatching");
     }
 }

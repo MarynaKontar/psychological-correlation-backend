@@ -5,6 +5,11 @@ import com.psycorp.model.enums.Area;
 import com.psycorp.model.enums.Scale;
 import org.springframework.core.env.Environment;
 
+/**
+ * Dto converter for {@link Scale}.
+ * Scale cant't extends from AbstractEntity (Scale is enum)
+ * so ScaleDtoConverter can't extends AbstractDtoConverter like another dto converters.
+ */
 class ScaleDtoConverter {
 
     private final Environment env;

@@ -15,3 +15,14 @@ spring:
       authentication-database: admin
 #при пуше на git, убрать комментари с username,password, authentication-database
 #и сменить порт на 27017
+
+
+#logging:
+#  file: logs/dev_psymatch_backend.log
+##  pattern:
+##    console: "%d %-5level %logger : %msg%n"
+##    file: "%d %-5level [%thread] %logger : %msg%n"
+#  level:
+##    org.springframework.web: INFO
+#    com.psycorp.controller: TRACE
+##    org.hibernate: DEBUG

@@ -3,14 +3,18 @@ package com.psycorp.security.token;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.psycorp.model.enums.UserRole;
 import lombok.Data;
+import lombok.ToString;
 import org.bson.types.ObjectId;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import java.util.Collection;
 import java.util.Collections;
 
-
+/**
+ * @author Vitaliy Proskura
+ */
 @Data
+@ToString(exclude = {"password"})
 public class TokenPrincipal implements UserDetails {
     private ObjectId id;
     private String username;

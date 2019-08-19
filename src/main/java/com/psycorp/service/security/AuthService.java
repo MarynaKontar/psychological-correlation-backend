@@ -1,35 +1,18 @@
 package com.psycorp.service.security;
 
-import com.psycorp.model.dto.UsernamePasswordDto;
-import com.psycorp.model.entity.User;
-import com.psycorp.model.enums.TokenType;
-import com.psycorp.model.security.TokenEntity;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContext;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 
+/**
+ * Service interface for authentication.
+ * @author Vitaliy Proskura
+ * @author  Maryna Kontar
+ */
 public interface AuthService {
-
-//    default UserDetails getAuthPrincipal() {
-//        SecurityContext securityContext = SecurityContextHolder.getContext();
-//        Authentication authentication = securityContext.getAuthentication();
-//        String principal = (String) authentication.getPrincipal();
-//
-//
-//
-//        return userDetails;
-////        return (UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-//    }
-
+    /**
+     * Get authenticated principal user.
+     * If user isn't registered yet ("anonymousUser") than return null.
+     * @return authenticated principal user or null if user isn't registered yet.
+     */
     UserDetails getAuthPrincipal();
 
-//    String generateAccessToken(UsernamePasswordDto usernamePassword);
-//
-//    String generateAccessTokenForAnonim(User user);
-
-//    User getUserByToken(String token);
-//
-//    Boolean ifExistTokenByTypeAndToken(TokenType type, String token);
-//    String generateDeviceToken();
 }

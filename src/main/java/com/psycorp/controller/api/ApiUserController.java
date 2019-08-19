@@ -1,10 +1,12 @@
 package com.psycorp.controller.api;
 
+import com.psycorp.exception.BadRequestException;
 import com.psycorp.model.dto.SimpleUserDto;
 import com.psycorp.model.entity.User;
 import com.psycorp.service.UserService;
 import com.psycorp.сonverter.UserDtoConverter;
-import org.bson.types.ObjectId;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.PropertySource;
 import org.springframework.http.HttpHeaders;
@@ -15,69 +17,60 @@ import org.springframework.web.bind.annotation.*;
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
-import java.util.List;
 
+/**
+ * Rest controller for user.
+ * url : "/user"
+ * @author Maryna Kontar
+ */
 @RestController
 @RequestMapping("/user")
 @PropertySource("classpath:errormessages.properties")
 public class ApiUserController {
+    private static final Logger LOGGER = LoggerFactory.getLogger(ApiUserController.class);
 
     private final UserService userService;
     private final UserDtoConverter userDtoConverter;
 
     @Autowired
-    public ApiUserController(UserService userService, UserDtoConverter userDtoConverter) {
+    public ApiUserController(UserService userService,
+                             UserDtoConverter userDtoConverter) {
         this.userService = userService;
         this.userDtoConverter = userDtoConverter;
     }
 
-
-    @PostMapping()
-    public ResponseEntity<SimpleUserDto> save(@RequestBody @NotNull @Valid SimpleUserDto userDto) {
-        User user = userService.updateUser(userDtoConverter.transform(userDto));
-        return new ResponseEntity<>(userDtoConverter.transform(user), HttpStatus.CREATED);
-    }
-
-    @PostMapping("/anonimRegistration")
-    public ResponseEntity<SimpleUserDto> anonimRegistration(@RequestBody @NotNull @Valid SimpleUserDto userDto) {
+    /**
+     * Endpoint for url ":/incompleteRegistration".
+     * Incomplete user registration without password.
+     * Available only for anonim registered (have token) or registered users.
+     * Notice, that it`s not full registration, it`s only save name, age and gender of user to db.
+     * An account is not created and the stored information does not contain a password,
+     * the user role remains anonymous, if user isn't registered.
+     * If in userDto will be an email, it will not be saved.
+     * @param userDto dto that contain incomplete user information (name, age and gender).
+     * @return ResponseEntity<UserAccountDto> with HttpStatus Ok and an incomplete registered user
+     * in response body, if registration is success.
+     * @throws BadRequestException if registration is failed.
+     */
+    @PostMapping("/incompleteRegistration")
+    public ResponseEntity<SimpleUserDto> incompleteRegistration(@RequestBody @NotNull @Valid SimpleUserDto userDto) {
+        LOGGER.trace("incompleteRegistration: {}", userDto);
         User user = userService.addNameAgeAndGender(userDtoConverter.transform(userDto));
         return ResponseEntity.ok().body(userDtoConverter.transform(user));
     }
 
-    @GetMapping("/{userId}")
-    public ResponseEntity<SimpleUserDto> get(@PathVariable ObjectId userId){
-        return ResponseEntity.ok().body(userDtoConverter.transform(userService.findById(userId)));
-    }
-
-    @GetMapping
-    public ResponseEntity<List<SimpleUserDto>> getAll(){
-        return ResponseEntity.ok().body(userDtoConverter.transform(userService.findAll()));
-    }
-
-    //Убрать: выдаст любому залогиненному пользователю инфор. о любом другом пользователе по его name or email. Возможно понадобится, если будем разрешать видеть часть информации пользователя, с которым сравниваем профиль
-    @GetMapping("/NameOrEmail")
-    public ResponseEntity<SimpleUserDto> getByNameOrEmail(@RequestParam String nameOrEmail){
-        return ResponseEntity.ok().body(userDtoConverter.transform(userService.findUserByNameOrEmail(nameOrEmail)));
-    }
-
-    @PutMapping
-    public ResponseEntity<SimpleUserDto> update(@RequestBody @NotNull SimpleUserDto userDto) {
-
-        User user = userService.updateUser(userDtoConverter.transform(userDto));
-        return ResponseEntity.ok().body(userDtoConverter.transform(user));
-    }
-
-    @DeleteMapping("/{userId}")
-    public ResponseEntity<SimpleUserDto> delete(@PathVariable ObjectId userId){
-
-        return ResponseEntity.ok().body(userDtoConverter.transform(userService.deleteUser(userId)));
-    }
-
+    /**
+     * RuntimeException handler.
+     * @param ex RuntimeException for handling.
+     * @param request HttpServletRequest which caused the RuntimeException.
+     * @return ResponseEntity with HttpStatus BAD_REQUEST and exception message in header.
+     */
     @ExceptionHandler(RuntimeException.class)
     public ResponseEntity<HttpHeaders> handleException(RuntimeException ex, HttpServletRequest request) {
+        LOGGER.trace("IP: {}:{}:{} : EXCEPTION: {}", request.getRemoteHost(), request.getRemotePort(), request.getRemoteUser(), ex.getMessage());
         HttpHeaders httpHeaders = new HttpHeaders();
-        httpHeaders.add("messageError", "Something wrong: " + ex.getMessage()
-                + "; path: " + request.getServletPath());
-        return ResponseEntity.badRequest().headers(httpHeaders).build();
+        httpHeaders.add("messageError", ex.getMessage());
+        httpHeaders.add("path", request.getServletPath());
+        return new ResponseEntity<>(httpHeaders, httpHeaders, HttpStatus.BAD_REQUEST);
     }
 }

@@ -44,7 +44,7 @@ public class ValueProfileServiceImpl implements ValueProfileService {
     }
 
     /**
-     * Return ValueProfile with comments for individual value profile
+     * Returns ValueProfile with comments for individual value profile
      * @param noPrincipalUser
      * @return
      */
@@ -69,7 +69,6 @@ public class ValueProfileServiceImpl implements ValueProfileService {
     @Override
     public ValueProfileMatching getValueProfileForMatching(ObjectId noPrincipalUserId) {
         User noPrincipalUser = userService.findById(noPrincipalUserId);
-        noPrincipalUserId = noPrincipalUser.getId();
         User principalUser = userService.getPrincipalUser();
 
         ValueProfile valueProfileForNoPrincipalUser = getValueProfile(noPrincipalUser, false);
@@ -94,7 +93,6 @@ public class ValueProfileServiceImpl implements ValueProfileService {
         // if user didn't choose some scale at all, than we have to put this scale (testing) to answer with 0 value
         List<Scale> scales = getScales();
         scales.forEach(scale -> valueProfile.putIfAbsent(scale, new Result(0d)));
-
 
         //sort by scale in descending order
         Map<Scale, Result> sortedValueProfile = valueProfile.entrySet().stream()

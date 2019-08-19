@@ -3,7 +3,6 @@ package com.psycorp.repository;
 import com.psycorp.model.entity.ValueCompatibilityAnswersEntity;
 import org.bson.types.ObjectId;
 import org.springframework.data.mongodb.repository.MongoRepository;
-import org.springframework.data.mongodb.repository.Query;
 import org.springframework.data.rest.core.annotation.RepositoryRestResource;
 import org.springframework.stereotype.Repository;
 
@@ -19,16 +18,10 @@ public interface ValueCompatibilityAnswersRepository extends MongoRepository<Val
     // в памяти, а  findAllByUser_NameOrderByIdDesc нет
     Optional<List<ValueCompatibilityAnswersEntity>> findAllByUserIdOrderByIdDesc(ObjectId userId);
     Optional<ValueCompatibilityAnswersEntity> findTopByUserIdOrderByPassDateDesc(ObjectId userId);
-
     List<ValueCompatibilityAnswersEntity> findAllByUserIdAndPassedOrderByPassDateDesc(ObjectId userId, Boolean passed);
-
-//    @Query("{$find: {'userId': ?0, 'passed': ?1}, $sort: {'passDate': -1}, $limit: 1}")
-//    ValueCompatibilityAnswersEntity findLastByUserIdAndPassed(ObjectId userId, Boolean passed);
-//    ValueCompatibilityAnswersEntity findTopByUserIdAndPassedOrderByPassDateDesc(ObjectId userId, Boolean passed)
-
-
     Optional<ValueCompatibilityAnswersEntity> findTopByUserIdAndPassedOrderByPassDateDesc(ObjectId userId, Boolean passed);
 
     Boolean existsByUserIdAndPassed(ObjectId userId, Boolean passed);
+
     void removeAllByUserId (ObjectId userId);
 }

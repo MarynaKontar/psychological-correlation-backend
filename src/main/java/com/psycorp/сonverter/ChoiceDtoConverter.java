@@ -7,6 +7,9 @@ import com.psycorp.model.entity.Choice;
 import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Component;
 
+/**
+ * Dto converter for {@link Choice}.
+ */
 @Component
 public class ChoiceDtoConverter extends AbstractDtoConverter<Choice, ChoiceDto>{
 
@@ -41,6 +44,10 @@ public class ChoiceDtoConverter extends AbstractDtoConverter<Choice, ChoiceDto>{
         scaleDtoConverter.convertFromEntity(entity.getSecondScale(), entity.getArea(), secondScaleDto);
         scaleDtoConverter.convertFromEntity(entity.getChosenScale(), entity.getArea(), chosenScaleDto);
 
+        String areaQuestion = entity.getArea().toString()
+                .toLowerCase() + ".question";//"goal.question"
+
+        dto.setQuestion(env.getProperty(areaQuestion));
         dto.setArea(areaDto);
         dto.setFirstScale(firstScaleDto);
         dto.setSecondScale(secondScaleDto);

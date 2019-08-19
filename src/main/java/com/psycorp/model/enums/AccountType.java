@@ -1,7 +1,8 @@
 package com.psycorp.model.enums;
 
 /**
- * Type of comparison between users
+ * Types of test result's comparison between users.
+ * @author Maryna Kontar
  */
 public enum AccountType {
 //    /* if user invite another user or was invited */

@@ -3,9 +3,11 @@ package com.psycorp.сonverter;
 import com.psycorp.model.dto.CredentialsDto;
 import com.psycorp.model.entity.User;
 import com.psycorp.model.objects.Credentials;
-import com.psycorp.model.security.CredentialsEntity;
 import org.springframework.stereotype.Component;
 
+/**
+ * Dto converter for {@link Credentials}.
+ */
 @Component
 public class CredentialsDtoConverter extends AbstractDtoConverter<Credentials, CredentialsDto> {
 

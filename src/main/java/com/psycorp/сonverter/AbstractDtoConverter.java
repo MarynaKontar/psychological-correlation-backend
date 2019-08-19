@@ -1,10 +1,9 @@
 package com.psycorp.сonverter;
 
 import com.psycorp.model.dto.AbstractDto;
-import com.psycorp.model.entity.AbstractEntity;
 
+import com.psycorp.model.entity.AbstractEntity;
 import org.apache.commons.collections.CollectionUtils;
-import org.springframework.context.annotation.PropertySource;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -12,7 +11,11 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
-//@PropertySource(value = {"classpath:match/areacommentrussian.properties"}, encoding = "utf-8")
+/**
+ * Abstract converter for all dtos (Data Transfer Object).
+ * @param <Entity>
+ * @param <Dto>
+ */
 public abstract class AbstractDtoConverter<Entity extends AbstractEntity, Dto extends AbstractDto> {
 
     public Dto transform(Entity entity) {
@@ -51,9 +54,6 @@ public abstract class AbstractDtoConverter<Entity extends AbstractEntity, Dto ex
 
     private Entity createEntity(Dto dto) {
         Entity entity = createNewEntity();
-//        if (dto.getId() != null) {
-//            entity = (Entity) em.find(entity.getClass(), dto.getId());
-//        }
         return entity;
     }
 

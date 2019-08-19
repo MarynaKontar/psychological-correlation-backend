@@ -8,6 +8,11 @@ import org.bson.types.ObjectId;
 import java.time.LocalDateTime;
 import java.util.List;
 
+/**
+ * DTO (Data Transfer Object) data level
+ * !!!!!! DELETE It was need for test mongoDb lookUp functionality
+ * @author Maryna Kontar
+ */
 @Data
 public class SomeDto {
     private ObjectId id;

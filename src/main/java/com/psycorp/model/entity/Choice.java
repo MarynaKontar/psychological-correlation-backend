@@ -4,23 +4,31 @@ import com.psycorp.model.enums.Area;
 import com.psycorp.model.enums.Scale;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
 
 /**
- * Сравнение пары шкал в одном из трех полей. Если chosenScale=null тест еще не пройден
+ * Entity data level for saving data in database.
+ * Comparison of a pair of {@link Scale} for given {@link Area}.
+ * If chosenScale = null, the test not yet passed.
+ * Embedded class for {@link ValueCompatibilityAnswersEntity}
+ * <p>
+ * Such architecture is suitable for pairwise comparison.
+ * For other types of testing (Psychological Compatibility,
+ * Sexual Compatibility, Family Compatibility, Group Compatibility)
+ * may not be suitable.
+ *
+ * @author Maryna Kontar
+ * @author Vitaliy Proskura
  */
-
 @Data
+@EqualsAndHashCode(callSuper = true)
 @NoArgsConstructor
 @AllArgsConstructor
 public class Choice extends AbstractEntity {
-    //TODO такая архитектура подходит для попарного сравнения. Для других видов тестирования (Психологическая совместимость,
-    // Сексуальная совместимость, Семейная совместимость (ролевых ожиданий),
-    // Совместимость руководитель-подчиненный, Групповая совместимость.)
-    //может не подойти
 
     @NotEmpty @NotNull
     private Area area;

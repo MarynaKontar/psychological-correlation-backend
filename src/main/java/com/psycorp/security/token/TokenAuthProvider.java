@@ -20,6 +20,10 @@ import java.time.LocalDateTime;
 
 import static com.psycorp.security.SecurityConstant.ACCESS_TOKEN_PREFIX;
 
+/**
+ * @author Vitaliy Proskura
+ * @author Maryna Kontar
+ */
 @Component
 public class TokenAuthProvider implements AuthenticationProvider {
 

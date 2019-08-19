@@ -1,6 +1,8 @@
 package com.psycorp.model.entity;
 
+import com.psycorp.model.enums.Area;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import org.bson.types.ObjectId;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
@@ -13,10 +15,14 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 /**
- * Набор попарных сравнений по трем полям, по шесть шкал в каждом поле для данного пользователя
+ * Entity data level for saving data in database.
+ * Stores results of value compatibility test for
+ * given user with userId in database.
+ * @author Maryna Kontar
+ * @author Vitaliy Proskura
  */
-
 @Data
+@EqualsAndHashCode(callSuper = true)
 @Document
 public class ValueCompatibilityAnswersEntity extends AbstractEntity{
     @Id

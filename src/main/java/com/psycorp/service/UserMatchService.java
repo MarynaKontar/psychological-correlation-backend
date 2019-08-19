@@ -1,17 +1,9 @@
 package com.psycorp.service;
 
-import com.psycorp.model.entity.UserMatchEntity;
-import com.psycorp.model.enums.MatchMethod;
-import com.psycorp.model.objects.UserMatch;
-
-import java.util.List;
-
+/**
+ * Service interface for {@link com.psycorp.model.entity.UserMatchEntity} and {@link com.psycorp.model.objects.UserMatch}.
+ * @author  Maryna Kontar
+ */
 public interface UserMatchService extends Match{
-
-    UserMatchEntity insert(UserMatchEntity userMatchEntity);
-
-    List<UserMatchEntity> findByMatchMethod(MatchMethod matchMethod);
-
-    List<UserMatch> getAll();
 
 }

@@ -5,6 +5,11 @@ import com.psycorp.model.dto.AreaDto;
 import com.psycorp.model.enums.Area;
 import org.springframework.core.env.Environment;
 
+/**
+ * Dto converter for {@link Area}.
+ * Area cant't extends from AbstractEntity (Area is enum)
+ * so AreaDtoConverter can't extends AbstractDtoConverter like another dto converters.
+ */
 class AreaDtoConverter  {
 
     private final Environment env;
@@ -19,11 +24,8 @@ class AreaDtoConverter  {
 
     protected void convertFromEntity(Area entity, AreaDto dto) {
         String areaName = entity.toString().toLowerCase() + ".area.name";//"goal.area.name"
-        String areaQuestion = entity.toString()
-                .toLowerCase() + ".question";//"goal.question"
         dto.setArea(entity);
         dto.setAreaName(env.getProperty(areaName));
-        dto.setAreaQuestion(env.getProperty(areaQuestion));
     }
 
     protected Area convertFromDto(AreaDto dto) {

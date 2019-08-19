@@ -1,9 +1,13 @@
 package com.psycorp.сonverter;
 
+import com.psycorp.exception.BadRequestException;
 import com.psycorp.model.dto.MatchingDto;
 import com.psycorp.model.objects.Matching;
 import org.springframework.stereotype.Component;
 
+/**
+ * Dto converter for {@link Matching}.
+ */
 @Component
 public class MatchingDtoConverter extends AbstractDtoConverter<Matching, MatchingDto>{
 
@@ -21,16 +25,12 @@ public class MatchingDtoConverter extends AbstractDtoConverter<Matching, Matchin
         dto.setUserMatchComment(entity.getUserMatchComment());
     }
 
-
-    // не используемые методы. Можно или кидать исключение или не наследоваться от AbstractDtoConverter, а просто прописать здесь методы для transform collection как в AbstractDtoConverter
     @Override
     protected Matching createNewEntity() {
-        return new Matching();
+        throw new BadRequestException("Never creates new Matching in MatchingDtoConverter");
     }
     @Override
     protected void convertFromDto(MatchingDto dto, Matching entity) {
-        entity.setMatchMethod(dto.getMatchMethod());
-        entity.setResult(dto.getResult());
-        entity.setArea(dto.getArea());
+        throw new BadRequestException("Never converts from MatchingDto to Matching");
     }
 }

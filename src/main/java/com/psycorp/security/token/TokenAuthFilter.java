@@ -19,13 +19,16 @@ import java.io.IOException;
 
 import static com.psycorp.security.SecurityConstant.ACCESS_TOKEN_PREFIX;
 
+/**
+ * @author Vitaliy Proskura
+ */
 @Component
 public class TokenAuthFilter extends AbstractAuthenticationProcessingFilter {
     private static final Logger LOGGER = LoggerFactory.getLogger(TokenAuthFilter.class);
 
 
     public TokenAuthFilter(@Autowired AuthenticationManager authenticationManager) {
-        super("/**");
+        super("/**"); // authentication is required for all incoming url
         setAuthenticationManager(authenticationManager);
     }
 

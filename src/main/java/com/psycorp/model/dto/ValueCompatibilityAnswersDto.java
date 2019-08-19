@@ -1,5 +1,6 @@
 package com.psycorp.model.dto;
 
+import com.psycorp.model.entity.ValueCompatibilityAnswersEntity;
 import lombok.Data;
 import org.bson.types.ObjectId;
 
@@ -8,6 +9,11 @@ import javax.validation.constraints.Size;
 import java.time.LocalDateTime;
 import java.util.List;
 
+/**
+ * DTO (Data Transfer Object) data level
+ * for hiding implementation details of {@link ValueCompatibilityAnswersEntity}.
+ * @author Maryna Kontar
+ */
 @Data
 public class ValueCompatibilityAnswersDto extends AbstractDto {
 

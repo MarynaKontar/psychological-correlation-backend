@@ -6,10 +6,10 @@ import com.psycorp.model.enums.Area;
 import com.psycorp.model.enums.MatchMethod;
 import com.psycorp.model.objects.Matching;
 import com.psycorp.model.objects.UserMatch;
-import com.psycorp.repository.ValueCompatibilityAnswersRepository;
 import com.psycorp.repository.UserMatchRepository;
 import com.psycorp.service.UserMatchService;
 import com.psycorp.service.UserService;
+import com.psycorp.service.ValueCompatibilityAnswersService;
 import com.psycorp.util.UserMatchCommentUtil;
 import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,70 +22,28 @@ import java.sql.Timestamp;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static java.util.Comparator.comparing;
-
+/**
+ * Service implementation for UserMatchService.
+ * @author  Maryna Kontar
+ */
 @Service
-//@PropertySource("classpath:errormessages.properties")
 public class UserMatchServiceImpl implements UserMatchService {
 
     private final UserMatchRepository userMatchRepository;
     private final UserService userService;
-    private final ValueCompatibilityAnswersRepository valueCompatibilityAnswersRepository;
+    private final ValueCompatibilityAnswersService valueCompatibilityAnswersService;
 
     private final Environment env;
 
     @Autowired
-    public UserMatchServiceImpl(UserMatchRepository userMatchRepository, UserService userService,
-                                ValueCompatibilityAnswersRepository valueCompatibilityAnswersRepository, Environment env) {
+    public UserMatchServiceImpl(UserMatchRepository userMatchRepository,
+                                UserService userService,
+                                ValueCompatibilityAnswersService valueCompatibilityAnswersService,
+                                Environment env) {
         this.userMatchRepository = userMatchRepository;
         this.userService = userService;
-        this.valueCompatibilityAnswersRepository = valueCompatibilityAnswersRepository;
+        this.valueCompatibilityAnswersService = valueCompatibilityAnswersService;
         this.env = env;
-    }
-
-    @Override
-    public UserMatchEntity insert(UserMatchEntity userMatchEntity) {
-        return userMatchRepository.insert(userMatchEntity);
-    }
-
-    @Override
-    public List<UserMatchEntity> findByMatchMethod(MatchMethod matchMethod) {
-        return userMatchRepository.findByMatchMethod(matchMethod);
-    }
-
-    @Override
-    public List<UserMatch> getAll(){
-        List<UserMatchEntity> matchEntities = userMatchRepository.findAll();
-        List<UserMatch> matches = new ArrayList<>();
-        matchEntities.forEach(matchEntity -> matches.add(getUserMatch(matchEntity)));
-        return matches;
-    }
-
-    @Override
-    public UserMatch match(User user1, User user2, MatchMethod matchMethod){
-
-        User fullUser1 = userService.find(user1);
-        User fullUser2 = userService.find(user2);
-        validIfUsersCanBeMatching(fullUser1, fullUser2);
-
-        ValueCompatibilityAnswersEntity valueCompatibilityAnswersEntity1 = getValueCompatibilityAnswers(fullUser1).get(0);
-        ValueCompatibilityAnswersEntity valueCompatibilityAnswersEntity2 = getValueCompatibilityAnswers(fullUser2).get(0);
-
-        List<UserMatchEntity> userMatchEntitiesUser1 = userMatchRepository.findByUsersIdContaining(fullUser1.getId());
-        List<UserMatchEntity> userMatchEntitiesUser2 = userMatchRepository.findByUsersIdContaining(fullUser2.getId());
-
-        // check if there is record in userMatchEntity collection that is made after of both valueCompatibilityAnswers and get it; if not - insert it
-        UserMatchEntity userMatchEntity = userMatchEntitiesUser1.stream()
-                .filter(userMatchPrincipal ->
-                        userMatchEntitiesUser2.contains(userMatchPrincipal)
-                                && userMatchPrincipal.getId().getDate().after(Timestamp.valueOf(valueCompatibilityAnswersEntity1.getPassDate()))
-                                && userMatchPrincipal.getId().getDate().after(Timestamp.valueOf(valueCompatibilityAnswersEntity2.getPassDate())))
-                .sorted(Comparator.comparing(UserMatchEntity::getId).reversed()).limit(1).findFirst()
-                .orElseGet(() ->
-                        insert(valueCompatibilityAnswersEntity1, valueCompatibilityAnswersEntity2, fullUser1, fullUser2, matchMethod)
-                );
-
-        return getUserMatch(userMatchEntity);
     }
 
     // TODO какой-то глюк: principal.getUsersForMatchingId().get(0) дает user только с одним элементом в usersForMatchingId, поэтому приходится брать через репозиторий
@@ -118,8 +76,8 @@ public class UserMatchServiceImpl implements UserMatchService {
         validIfUsersCanBeMatching(principal, user2);
 
         //последний сохраненный ValueCompatibilityAnswersEntity
-        ValueCompatibilityAnswersEntity valueCompatibilityAnswersEntity1 = getValueCompatibilityAnswers(principal).get(0);
-        ValueCompatibilityAnswersEntity valueCompatibilityAnswersEntity2 = getValueCompatibilityAnswers(user2).get(0);
+        ValueCompatibilityAnswersEntity valueCompatibilityAnswersEntity1 = valueCompatibilityAnswersService.getLastPassedTest(principal);
+        ValueCompatibilityAnswersEntity valueCompatibilityAnswersEntity2 = valueCompatibilityAnswersService.getLastPassedTest(user2);
 
         List<UserMatchEntity> userMatchEntitiesPrincipal = userMatchRepository.findByUsersIdContaining(principal.getId());
         List<UserMatchEntity> userMatchEntitiesUser2 = userMatchRepository.findByUsersIdContaining(user2.getId());
@@ -137,26 +95,6 @@ public class UserMatchServiceImpl implements UserMatchService {
                         insert(valueCompatibilityAnswersEntity1, valueCompatibilityAnswersEntity2, finalPrincipal, finalUser, matchMethod)
                 );
         return getUserMatch(userMatchEntity);
-    }
-
-    private UserMatch getUserMatch(UserMatchEntity userMatchEntity) {
-        List<Matching> matches = new ArrayList<>();
-        userMatchEntity.getMatches().forEach(matchEntity -> matches.add(new Matching(matchEntity.getMatchMethod(),
-                matchEntity.getArea(), matchEntity.getResult(), UserMatchCommentUtil.getAspectComment(matchEntity, env))));
-
-        UserMatch userMatch = new UserMatch();
-        userMatch.setId(userMatchEntity.getId());
-        userMatch.setMatches(matches);
-
-        userMatch.setUsers(getUsers(userMatchEntity.getUsersId()));
-        return userMatch;
-    }
-
-    private Set<User> getUsers(Set<ObjectId> usersId) {
-        return usersId
-                .stream()
-                .map(userService::findById)
-                .collect(Collectors.toSet());
     }
 
     private void validIfUsersCanBeMatching(User user1, User user2) {
@@ -202,6 +140,26 @@ public class UserMatchServiceImpl implements UserMatchService {
 
         userMatchEntity = userMatchRepository.insert(userMatchEntity);
         return userMatchEntity;
+    }
+
+    private UserMatch getUserMatch(UserMatchEntity userMatchEntity) {
+        List<Matching> matches = new ArrayList<>();
+        userMatchEntity.getMatches().forEach(matchEntity -> matches.add(new Matching(matchEntity.getMatchMethod(),
+                matchEntity.getArea(), matchEntity.getResult(), UserMatchCommentUtil.getAspectComment(matchEntity, env))));
+
+        UserMatch userMatch = new UserMatch();
+        userMatch.setId(userMatchEntity.getId());
+        userMatch.setMatches(matches);
+
+        userMatch.setUsers(getUsers(userMatchEntity.getUsersId()));
+        return userMatch;
+    }
+
+    private Set<User> getUsers(Set<ObjectId> usersId) {
+        return usersId
+                .stream()
+                .map(userService::findById)
+                .collect(Collectors.toSet());
     }
 
     private List<MatchEntity> matchMap(List<Choice> choices1, List<Choice> choices2, MatchMethod matchMethod) {
@@ -257,7 +215,7 @@ public class UserMatchServiceImpl implements UserMatchService {
     }
 
     /**
-     * Count the number of choices for area, where chosenScale is secondScale for both choices1 and choices2
+     * Counts the number of choices for area, where chosenScale is secondScale for both choices1 and choices2
      * @param choices1
      * @param choices2
      * @param area
@@ -278,7 +236,8 @@ public class UserMatchServiceImpl implements UserMatchService {
                                 && choice.getChosenScale() == choice.getSecondScale()
                                 && choices2.contains(choice)) )
                 .count();
-        }
+    }
+
 
     /**
      * Count the number of choices for area, where chosenScale is secondScale
@@ -368,16 +327,6 @@ public class UserMatchServiceImpl implements UserMatchService {
     private Boolean ifChoicesContainChoiceConsideringScaleShuffle(List<Choice> choices, Choice choice) {
         return  choices.contains(choice) ||
                 choices.contains(new Choice(choice.getArea(), choice.getSecondScale(), choice.getFirstScale(), choice.getChosenScale()));
-    }
-
-    private List<ValueCompatibilityAnswersEntity> getValueCompatibilityAnswers(User user){
-//        Optional<List<ValueCompatibilityAnswersEntity>> valueCompatibilityAnswers = valueCompatibilityAnswersRepository
-//                .findAllByUserIdOrderByIdDesc(user.getId());
-//        if(!valueCompatibilityAnswers.isPresent()) {
-//            throw new BadRequestException(env.getProperty("error.noTestWasPassed"));
-//        } else return valueCompatibilityAnswers.get();
-        return valueCompatibilityAnswersRepository.findAllByUserIdOrderByIdDesc(user.getId())
-                .orElseThrow(() -> new BadRequestException(env.getProperty("error.noTestWasPassed")));
     }
 
 }

@@ -13,7 +13,7 @@ public interface TokenRepository extends MongoRepository<TokenEntity, ObjectId> 
     Optional<TokenEntity> findByUserId(ObjectId userId);
     Optional<TokenEntity> findByToken(String token);
     Optional<TokenEntity> findByUserIdAndType(ObjectId userId, TokenType tokenType);
-
     Optional<TokenEntity> findByTypeAndToken(TokenType type, String token);
+
     void removeAllByUserId(ObjectId userId);
 }

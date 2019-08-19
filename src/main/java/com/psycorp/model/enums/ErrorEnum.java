@@ -5,6 +5,10 @@ import lombok.Getter;
 //!!!!!!!!!!! ФАЙЛЫ ДАЛ ВИТАЛИК. ЕЩЕ НЕ РАЗБИРАЛАСЬ
 
 
+/**
+ * @author Maryna Kontar
+ * @author Vitaliy Proskura
+ */
 @Getter
 public enum ErrorEnum {
     LOGIN_USER_NOT_FOUND("exception.user.accountNotFoundException"),

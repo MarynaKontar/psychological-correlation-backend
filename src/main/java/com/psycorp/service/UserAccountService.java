@@ -9,13 +9,11 @@ import org.springframework.data.domain.Pageable;
 
 import java.util.List;
 
+/**
+ * Service interface for {@link UserAccountEntity} and {@link UserAccount}.
+ * @author  Maryna Kontar
+ */
 public interface UserAccountService {
-
-    Page<UserAccount> getAllPageable(Pageable pageable);
-
-    List<UserAccount> getAllRegisteredAndPassedTest();
-
-    Page<UserAccount> getAllRegisteredAndPassedTestUserForMatchingPageable(Pageable pageable);
 
     List<UserAccount> getAllUserForMatchingPassedTest();
 
@@ -25,11 +23,9 @@ public interface UserAccountService {
 
     UserAccountEntity insert(User user);
 
-    UserAccountEntity getUserAccountEntityByUserId(ObjectId userId);
-
     UserAccount getUserAccount(User user);
 
-    List<User> getUsersForMatching();
+    List<User> getUsersForMatching(String userForMatchingToken);
 
     UserAccount update(UserAccount userAccount);
 

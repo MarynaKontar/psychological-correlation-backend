@@ -1,14 +1,14 @@
 package com.psycorp.сonverter;
 
+import com.psycorp.exception.BadRequestException;
 import com.psycorp.model.dto.UserMatchDto;
-import com.psycorp.model.entity.User;
 import com.psycorp.model.objects.UserMatch;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import java.util.HashSet;
-import java.util.Set;
-
+/**
+ * Dto converter for {@link UserMatch}.
+ */
 @Component
 public class UserMatchDtoConverter extends AbstractDtoConverter<UserMatch, UserMatchDto> {
 
@@ -27,24 +27,19 @@ public class UserMatchDtoConverter extends AbstractDtoConverter<UserMatch, UserM
     }
 
     @Override
-    protected UserMatch createNewEntity() {
-        return new UserMatch();
-    }
-
-    @Override
     protected void convertFromEntity(UserMatch entity, UserMatchDto dto) {
-//        UserDtoConverter userDtoConverter = new UserDtoConverter(env);
         dto.setMatches(matchingDtoConverter.transform(entity.getMatches()));
         dto.setUsers(userDtoConverter.transform(entity.getUsers()));
         dto.setId(entity.getId());
     }
 
-    //TODO переделать
+    @Override
+    protected UserMatch createNewEntity() {
+        throw new BadRequestException("Never creates new UserMatch in UserMatchDtoConverter");
+    }
+
     @Override
     protected void convertFromDto(UserMatchDto dto, UserMatch entity) {
-            Set<User> users = new HashSet<>(userDtoConverter.transform(dto.getUsers()));
-            entity.setUsers(users);
-            entity.setMatches(matchingDtoConverter.transform(dto.getMatches()));
-
+        throw new BadRequestException("Never converts from UserMatchDto to UserMatch");
     }
 }

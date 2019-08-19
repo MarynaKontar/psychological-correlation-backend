@@ -14,18 +14,27 @@ import org.springframework.util.Assert;
 import java.util.Arrays;
 
 /**
- * Util class for getting comment on user match for some Area or Scale
+ * Util class for getting comment on users matching for some Area or Scale.
  */
 public class UserMatchCommentUtil {
 
+    /**
+     * Get aspect {@link com.psycorp.model.enums.Area} comment depending on result value of matchEntity.
+     * @param matchEntity must not be {@literal null}.
+     * @param env must not be {@literal null}.
+     * @return user match comment.
+     * @throws BadRequestException if scale or matchEntity are {@literal null}.
+     * @throws NullPointerException if env is {@literal null}.
+     * @throws IllegalArgumentException if matchEntity.getResult().getNumber() > 100.
+     */
     public static UserMatchComment getAspectComment(MatchEntity matchEntity, Environment env){
+        if (matchEntity == null) {throw new BadRequestException("MatchEntity can't be null.");}
         Assert.isTrue(matchEntity.getResult().getNumber() <= 100, "Value is a percent of chosen scale and can't be > 100.");
         String area = matchEntity.getArea().toString().toLowerCase();
         String levelPrefix = getAspectLevelPrefix(matchEntity.getResult(), env);
 
         UserMatchComment userMatchComment = new UserMatchComment();
         userMatchComment.setAspect(env.getProperty(area));
-//        userMatchComment.setResult(matchEntity.getResult().getNumber());
         userMatchComment.setLevel(AspectLevel.valueOf(levelPrefix.toUpperCase()));
         userMatchComment.setLevelName(env.getProperty(levelPrefix));
         userMatchComment.setAspectDescription(env.getProperty(area + ".aspectDescription"));
@@ -36,8 +45,18 @@ public class UserMatchCommentUtil {
         return userMatchComment;
     }
 
+    /**
+     * Get {@link ValuesDifferencesComment} for scale depending on the difference of value1 and value2.
+     * @param scale must not be {@literal null}.
+     * @param value1 must not be {@literal null}.
+     * @param value2 must not be {@literal null}.
+     * @param env must not be {@literal null}.
+     * @return value differences comment.
+     * @throws BadRequestException if scale or values are {@literal null}.
+     * @throws NullPointerException if env is {@literal null}.
+     */
     public static ValuesDifferencesComment getScaleComment(Scale scale, Integer value1, Integer value2, Environment env){
-
+        if (value1 == null || value2 == null || scale == null) {throw new BadRequestException("Scale and values can't be null.");}
         Integer result = Math.abs(value1 - value2);
         String levelPrefix = getScaleLevelPrefix(result, env);
 
@@ -56,11 +75,20 @@ public class UserMatchCommentUtil {
         return valuesDifferencesComment;
     }
 
+    /**
+     * Get aspect (Area) level prefix for result.
+     * if resultNumber from 0 to low.value, then level = low,
+     * from low.value to sufficient.value - then level = sufficient,
+     * from sufficient.value to good.value - then level = good,
+     * more then good.value - then level = excellent
+     * @param result must not be {@literal null}.
+     * @param env must not be {@literal null}.
+     * @return aspect level prefix value.
+     * @throws BadRequestException if result is {@literal null}.
+     * @throws NullPointerException if env is {@literal null}.
+     */
     private static String getAspectLevelPrefix(Result result, Environment env) {
-        // если % (resultNumber) от 0 до low.value, то уровень (level) = low,
-        // если от low.value до sufficient.value - то level = sufficient,
-        // если от sufficient.value до good.value - то level = good,
-        // если больше good.value - то level = excellent
+        if (result == null) {throw new BadRequestException("Result can't be null.");}
         Double resultNumber = result.getNumber();
         String levelPrefix;
 
@@ -75,12 +103,20 @@ public class UserMatchCommentUtil {
         return levelPrefix;
     }
 
+    /**
+     * Get {@link Scale} level prefix for result.
+     * if result=[0, minor_differences.value), then level = full_match,
+     * if result=[minor_differences.value, moderate_differences.value) - then level = minor_differences,
+     * if result=[moderate_differences.value, strong_differences)  - then level = moderate_differences,
+     * if result=[strong_differences, total.number.of.questions) - then level = strong_differences
+     * @param result must not be {@literal null}.
+     * @param env must not be {@literal null}.
+     * @return scale level prefix value.
+     * @throws BadRequestException if result is {@literal null}.
+     * @throws NullPointerException if env is {@literal null}.
+     */
     private static String getScaleLevelPrefix(Integer result, Environment env) {
-        // если result=[0, minor_differences.value), то уровень (level) = full_match,
-        // если result=[minor_differences.value, moderate_differences.value) - то level = minor_differences,
-        // если result=[moderate_differences.value, strong_differences)  - то level = moderate_differences,
-        // если result=[strong_differences, total.number.of.questions) - то level = strong_differences
-
+        if (result == null) {throw new BadRequestException("result can't be null.");}
         String levelPrefix;
 
         if (result < Integer.valueOf(env.getProperty("minor_differences.value")) && result >= 0) { // <1 (=0)

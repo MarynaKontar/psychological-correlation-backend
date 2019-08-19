@@ -7,6 +7,12 @@ import lombok.NoArgsConstructor;
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
 
+/**
+ * DTO (Data Transfer Object) data level.
+ * Embedded class for {@link ValueProfileDto}.
+ * @author Vitaliy Proskura
+ * @author Maryna Kontar
+ */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor

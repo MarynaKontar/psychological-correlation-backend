@@ -16,6 +16,12 @@ import javax.servlet.http.HttpServletRequest;
 import java.security.Principal;
 import java.util.List;
 
+/**
+ * DELETE!!!!!!
+ * Rest controller for testing different functionality.
+ * url : "/"
+ * @author Maryna Kontar
+ */
 @RestController
 @RequestMapping
 public class ApiTestController {
@@ -30,8 +36,11 @@ public class ApiTestController {
     private HttpHeaders httpHeaders;
 
     @Autowired
-    public ApiTestController(ValueCompatibilityAnswersService valueCompatibilityAnswersService, UserService userService,
-                             UserMatchService userMatchService, UserDtoConverter userDtoConverter, ValueCompatibilityAnswersDtoConverter valueCompatibilityAnswersDtoConverter,
+    public ApiTestController(ValueCompatibilityAnswersService valueCompatibilityAnswersService,
+                             UserService userService,
+                             UserMatchService userMatchService,
+                             UserDtoConverter userDtoConverter,
+                             ValueCompatibilityAnswersDtoConverter valueCompatibilityAnswersDtoConverter,
                              UserMatchDtoConverter userMatchDtoConverter) {
         this.valueCompatibilityAnswersService = valueCompatibilityAnswersService;
         this.userService = userService;
@@ -42,11 +51,17 @@ public class ApiTestController {
     }
 
 
-    @GetMapping("/getVCAnswersWithUserInfo")
-    public ResponseEntity<List<SomeDto>> getSuitableUsers() {
-       return ResponseEntity.ok(userService.getVCAnswersWithUserInfo());
-    }
+//    @GetMapping("/getVCAnswersWithUserInfo")
+//    public ResponseEntity<List<SomeDto>> getSuitableUsers() {
+//       return ResponseEntity.ok(userService.getVCAnswersWithUserInfo());
+//    }
 
+    /**
+     * RuntimeException handler.
+     * @param ex RuntimeException for handling.
+     * @param request HttpServletRequest which caused the RuntimeException.
+     * @return ResponseEntity with HttpStatus BAD_REQUEST and exception message in header.
+     */
     @ExceptionHandler(RuntimeException.class)
     public ResponseEntity<HttpHeaders> handleException(RuntimeException ex, HttpServletRequest request) {
         HttpHeaders httpHeaders = new HttpHeaders();

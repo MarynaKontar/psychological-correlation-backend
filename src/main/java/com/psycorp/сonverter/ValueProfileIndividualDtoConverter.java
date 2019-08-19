@@ -6,6 +6,9 @@ import com.psycorp.model.objects.ValueProfileIndividual;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+/**
+ * Dto converter for {@link ValueProfileIndividual}.
+ */
 @Component
 public class ValueProfileIndividualDtoConverter extends AbstractDtoConverter<ValueProfileIndividual, ValueProfileIndividualDto>{
 
@@ -22,11 +25,6 @@ public class ValueProfileIndividualDtoConverter extends AbstractDtoConverter<Val
     }
 
     @Override
-    protected ValueProfileIndividual createNewEntity() {
-        return new ValueProfileIndividual();
-    }
-
-    @Override
     protected void convertFromEntity(ValueProfileIndividual entity, ValueProfileIndividualDto dto) {
 
         dto.setValueProfile(valueProfileDtoConverter.transform(entity.getValueProfile()));
@@ -34,7 +32,12 @@ public class ValueProfileIndividualDtoConverter extends AbstractDtoConverter<Val
     }
 
     @Override
+    protected ValueProfileIndividual createNewEntity() {
+        throw new BadRequestException("Never creates new ValueProfileIndividual in ValueProfileIndividualDtoConverter");
+    }
+
+    @Override
     protected void convertFromDto(ValueProfileIndividualDto dto, ValueProfileIndividual entity) {
-        throw new BadRequestException("There is never convert from ValueProfileIndividualDto to ValueProfileIndividual");
+        throw new BadRequestException("Never convert from ValueProfileIndividualDto to ValueProfileIndividual");
     }
 }

@@ -6,6 +6,9 @@ import com.psycorp.model.entity.User;
 import com.psycorp.model.objects.UserAccount;
 import org.springframework.stereotype.Component;
 
+/**
+ * Dto converter for {@link UserAccount}.
+ */
 @Component
 public class UserAccountDtoConverter extends AbstractDtoConverter<UserAccount, UserAccountDto> {
     @Override
@@ -39,12 +42,6 @@ public class UserAccountDtoConverter extends AbstractDtoConverter<UserAccount, U
         entity.setAccountType(dto.getAccountType());
         entity.setUsersWhoInvitedYou(userDtoConverter.transform(dto.getUsersWhoInvitedYou()));
         entity.setUsersWhoYouInvite(userDtoConverter.transform(dto.getUsersWhoYouInvite()));
-        //TODO когда акккаунт приходит измененным с фронта, то мы проверяем измененные поля и меняем их в бд,
-        // но InviteTokens и IsValueCompatibilityTestPassed так не меняются, поєтому не конвертируем их.
-        // Возможно name и email тоже не надо, так как для их изменения будет отдельная функция
-
-//        entity.setInviteTokens(dto.getInviteTokens());
-//        entity.setIsValueCompatibilityTestPassed(dto.getIsValueCompatibilityTestPassed());
     }
 }
 

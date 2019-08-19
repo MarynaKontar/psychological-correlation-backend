@@ -11,6 +11,9 @@ import org.springframework.stereotype.Component;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Dto converter for {@link ValueProfile}.
+ */
 @Component
 public class ValueProfileDtoConverter extends AbstractDtoConverter<ValueProfile, ValueProfileDto>{
 
@@ -21,58 +24,27 @@ public class ValueProfileDtoConverter extends AbstractDtoConverter<ValueProfile,
         this.env = env;
     }
 
-//    public ValueProfileDto convertToValueProfileDto(ValueProfile valueProfile) {
-//        List<ValueProfileElementDto> valueProfileElements = new ArrayList<>();
-//
-////        valueProfile.getScaleResult().forEach((scale, comment) ->
-////                {
-//////                    comment.setResult(comment.getResult() * 100);
-////                    valueProfileElements.add(
-////                            new ValueProfileElementDto(env.getProperty(scale.name()), comment.getResult(), comment)
-////                    );
-////                }
-////        );
-//
-//        valueProfile.getScaleResult().forEach((scale, result) ->
-//                {
-////                    comment.setResult(comment.getResult() * 100);
-//                    valueProfileElements.add(
-//                            new ValueProfileElementDto(env.getProperty(scale.name()), result.getNumber(),
-//                                    ValueProfileCommentUtil.getComment(env, scale, result.getNumber()))
-//                    );
-//                }
-//        );
-//        ValueProfileDto valueProfile = new ValueProfileDto();
-//        valueProfile.setValueProfileElements(valueProfileElements);
-//        valueProfile.setIsPrincipalUser(valueProfile.getIsPrincipalUser());
-//        return valueProfile;
-//    }
-
     @Override
     protected ValueProfileDto createNewDto() {
         return new ValueProfileDto();
     }
 
     @Override
-    protected ValueProfile createNewEntity() {
-        return new ValueProfile();
-    }
-
-    @Override
     protected void convertFromEntity(ValueProfile entity, ValueProfileDto dto) {
         List<ValueProfileElementDto> valueProfileElementDtos = new ArrayList<>();
         entity.getScaleResult().forEach((scale, result) -> valueProfileElementDtos.add(
-                new ValueProfileElementDto(env.getProperty(scale.name()), result.getNumber()
-//                        ,ValueProfileCommentUtil.getComment(env, scale, result.getNumber())
-                ))
-
-        );
+                new ValueProfileElementDto(env.getProperty(scale.name()), result.getNumber())));
         dto.setValueProfileElements(valueProfileElementDtos);
         dto.setIsPrincipalUser(entity.getIsPrincipalUser());
     }
 
     @Override
+    protected ValueProfile createNewEntity() {
+        throw new BadRequestException("Never creates new ValueProfile in ValueProfileDtoConverter");
+    }
+
+    @Override
     protected void convertFromDto(ValueProfileDto dto, ValueProfile entity) {
-        throw new BadRequestException("There is never convert from ValueProfileDto to ValueProfile");
+        throw new BadRequestException("Never convert from ValueProfileDto to ValueProfile");
     }
 }

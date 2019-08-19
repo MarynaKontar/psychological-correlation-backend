@@ -13,6 +13,9 @@ import org.springframework.stereotype.Component;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Dto converter for {@link ValueCompatibilityAnswersEntity}.
+ */
 @Component
 public class ValueCompatibilityAnswersDtoConverter extends AbstractDtoConverter<ValueCompatibilityAnswersEntity, ValueCompatibilityAnswersDto>{
 
@@ -44,7 +47,6 @@ public class ValueCompatibilityAnswersDtoConverter extends AbstractDtoConverter<
         List<Choice> choices = entity.getUserAnswers();
 
         List<Choice> goal =  new ArrayList<>(choices);
-//        goal.stream().filter(choice -> choice.getArea() == Area.GOAL);
         goal.removeIf(choice -> choice.getArea()!= Area.GOAL);
         List<ChoiceDto> goalDto = choiceDtoConverter.transform(goal);
 
@@ -77,9 +79,6 @@ public class ValueCompatibilityAnswersDtoConverter extends AbstractDtoConverter<
 
         entity.setUserAnswers(choices);
 
-//        Boolean present1 = userRepository.existsById(dto.getUserId());
-//        Boolean present2 = userRepository.findById(dto.getUserId()).isPresent();
-//        Optional<User> user = userRepository.findById(dto.getUserId());
         if(dto.getId() != null && userRepository.existsById(dto.getUserId())) {
             entity.setUserId(userRepository.findById(dto.getUserId()).get().getId());
         }

@@ -6,33 +6,32 @@ import com.psycorp.model.entity.User;
 import com.psycorp.model.enums.TokenType;
 import com.psycorp.model.security.TokenEntity;
 import org.bson.types.ObjectId;
-import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
 import java.util.List;
 
+/**
+ * Service interface for {@link TokenEntity}.
+ * @author Vitaliy Proskura
+ * @author  Maryna Kontar
+ */
 public interface TokenService {
-
-    TokenEntity createUserToken(ObjectId userId, TokenType tokenType);
-
-    LocalDateTime getTokenExpirationDate(TokenType tokenType);
-
-    List<String> generateInviteTokenList(Integer n);
-
-    User getUserByToken(String token);
-
-    void changeInviteTokenToAccess(String token);
-
-    Boolean ifExistByTypeAndToken(TokenType type, String token);
-
-    TokenEntity findByUserId(ObjectId userId);
-
-    TokenEntity findByUserIdAndTokenType(ObjectId userId, TokenType tokenType);
 
     String generateAccessToken(UsernamePasswordDto usernamePassword);
 
     TokenEntity generateAccessTokenForAnonim(User user);
 
+    User getUserByToken(String token);
+
+    void changeInviteTokenToAccess(String token);
+
+    TokenEntity findByUserId(ObjectId userId);
+
+    TokenEntity findByUserIdAndTokenType(ObjectId userId, TokenType tokenType);
+
     String getTokenForRegisteredUser(String token, ObjectId userId);
 //    String createJwtToken();
+
+    List<String> generateInviteTokenList(Integer n);
+
+    String generateRefreshToken(User user);
 }

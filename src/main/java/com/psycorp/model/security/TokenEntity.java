@@ -10,19 +10,23 @@ import org.springframework.data.mongodb.core.mapping.Document;
 import javax.validation.constraints.Future;
 import java.time.LocalDateTime;
 
+/**
+ * Entity data level for saving data in database.
+ * Stores token data for given user with userId in database.
+ * @author Maryna Kontar
+ * @author Vitaliy Proskura
+ */
 @Data
 @Document
 public class TokenEntity {
     @Id
     private ObjectId id;
-    private TokenType type;
-    @Future
-    @Indexed(expireAfterSeconds = 0) // token удалится из базы данных (через неделю expireAfterSeconds = 3600 * 24 * 7) после даты, указанной в expirationDate
-    private LocalDateTime expirationDate;
-    private String token;
-
     private ObjectId userId;
+    private TokenType type;
+    private String token;
+    @Future
+    @Indexed(expireAfterSeconds = 0) // token will be deleted from database (after week expireAfterSeconds = 3600 * 24 * 7) after date in expirationDate
+    private LocalDateTime expirationDate;
 
-    //id of some user that invited this user
-    private ObjectId whoInvitedUser;
+
 }

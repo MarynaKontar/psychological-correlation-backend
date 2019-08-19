@@ -11,16 +11,12 @@ import java.util.*;
 
 /**
  * Class for entities creation when test application
+ * !!!!!!! Delete in production.
  */
 
 
 public class Entity {
 
-    /**
-     *
-     * @param user
-     * @return ValueCompatibilityAnswersEntity for user
-     */
     public static ValueCompatibilityAnswersEntity createRandomUserAnswers(User user){
         ValueCompatibilityAnswersEntity valueCompatibilityAnswersEntity = new ValueCompatibilityAnswersEntity();
         valueCompatibilityAnswersEntity.setUserId(user.getId());
@@ -90,7 +86,6 @@ public class Entity {
 
     private static Scale chooseRandomScale(Choice choice){
         Boolean random = new Random().nextBoolean();
-
         return random ? choice.getFirstScale() : choice.getSecondScale();
 //        return choice.getFirstScale();
     }

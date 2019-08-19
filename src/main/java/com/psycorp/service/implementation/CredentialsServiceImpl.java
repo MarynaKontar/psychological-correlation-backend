@@ -30,6 +30,13 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+
+/**
+ * Service implementation for CredentialsService.
+ * @author Vitaliy Proskura
+ * @author  Maryna Kontar
+ */
+
 @Service
 public class CredentialsServiceImpl implements CredentialsService{
 
@@ -44,10 +51,15 @@ public class CredentialsServiceImpl implements CredentialsService{
     private final PasswordEncoder passwordEncoder;
 
     @Autowired
-    public CredentialsServiceImpl(CredentialsRepository credentialsRepository, UserRepository userRepository,
-                                  UserAccountService userAccountService, TokenService tokenService, UserService userService,
-                                  MongoOperations mongoOperations, AuthService authService,
-                                  Environment env, PasswordEncoder passwordEncoder) {
+    public CredentialsServiceImpl(CredentialsRepository credentialsRepository,
+                                  UserRepository userRepository,
+                                  UserAccountService userAccountService,
+                                  TokenService tokenService,
+                                  UserService userService,
+                                  MongoOperations mongoOperations,
+                                  AuthService authService,
+                                  Environment env,
+                                  PasswordEncoder passwordEncoder) {
         this.credentialsRepository = credentialsRepository;
         this.userRepository = userRepository;
         this.userAccountService = userAccountService;
@@ -59,36 +71,53 @@ public class CredentialsServiceImpl implements CredentialsService{
         this.passwordEncoder = passwordEncoder;
     }
 
+    /**
+     * Saves credentials.
+     * User, user account data and credentials are saved to the database.
+     * Token type are changed to ACCESS if token exist.
+     * @param credentials must not be {@literal null}.
+     * @return user account for saved user.
+     * @throws BadRequestException if user name or email already exists in database.
+     */
     @Override
     @Transactional
-    public UserAccount save(Credentials credentials, String token){
-        //TODO продумать, когда может приходить токен; пока его не использую
+    public UserAccount save(Credentials credentials){
         TokenPrincipal tokenPrincipal = (TokenPrincipal) authService.getAuthPrincipal();
         User user;
-        if(tokenPrincipal != null && tokenPrincipal.getId() != null) { //если есть пользователь
+        if(tokenPrincipal != null && tokenPrincipal.getId() != null) { //if there is already user
             ObjectId principalId = tokenPrincipal.getId();
 
-            //если регистрируется пользователь по INVITE_TOKEN, то меняем его на ACCESS_TOKEN
+            //if user is registered by INVITE_TOKEN, change it to ACCESS_TOKEN
             TokenEntity tokenEntity = tokenService.findByUserId(principalId);
             if(tokenEntity.getToken() != null && tokenEntity.getType() == TokenType.INVITE_TOKEN) {
                 tokenService.changeInviteTokenToAccess(tokenEntity.getToken());
             }
 
-            if(userRepository.findById(principalId).isPresent()){ // и для него есть пользователь, то берем этого пользователя
+            // and if there is user for token, than update this user
+            if(userRepository.findById(principalId).isPresent()){
                 user = update(credentials, principalId);
             } else {
                 throw new BadRequestException(env.getProperty("error.noUserFound") + " for user id: " + principalId);
             }
-        } else {
-            // если токен == null или у него id == null, то создаем нового пользователя
+        } else {// if token == null or tokenId == null, create new user
             user = insert(credentials);
         }
 
         return userAccountService.getUserAccount(user);
     }
 
+    /**
+     * Changes old password from the storage to newPassword.
+     * Encoded oldPassword is verified with the encoded password obtained from storage
+     * and if they are matched password form the storage is replaced with newPassword.
+     * The stored password itself is never decoded.
+     * @param oldPassword raw password to check if it is equal to the password obtained from storage.
+     * @param newPassword new raw password, which will be saved instead of the old one from the storage.
+     * @throws {@link org.springframework.security.authentication.BadCredentialsException}
+     * if encoded oldPassword doesn't match to password obtained from storage.
+     */
     @Override
-    public User changePassword(String oldPassword, String newPassword) {
+    public void changePassword(String oldPassword, String newPassword) {
         User principal = userService.getPrincipalUser();
         CredentialsEntity credentialsEntity = findByUserId(principal.getId());
         if (!passwordEncoder.matches(oldPassword, credentialsEntity.getPassword())) {
@@ -105,7 +134,6 @@ public class CredentialsServiceImpl implements CredentialsService{
             Query queryCredentials = Query.query(Criteria.where(Fields.UNDERSCORE_ID).is(credentialsId));
             mongoOperations.findAndModify(queryCredentials, updateCredentials, CredentialsEntity.class);
         }
-        return new User();
     }
 
     private User update(Credentials credentials, ObjectId userId){
@@ -147,6 +175,12 @@ public class CredentialsServiceImpl implements CredentialsService{
         return user;
     }
 
+    /**
+     * Inserts new user, user account entity and credential entity to database.
+     * @param credentials must not be {@literal null}.
+     * @return inserted user.
+     * @throws BadRequestException if user name or email already exists in database.
+     */
     private User insert(Credentials credentials){
 
         // CHECK NAME AND EMAIL ON UNIQUE
@@ -180,7 +214,7 @@ public class CredentialsServiceImpl implements CredentialsService{
 
     private CredentialsEntity findByUserId(ObjectId userId) {
         return credentialsRepository.findByUserId(userId).orElseThrow(() ->
-                new AuthorizationException("not found credentials for userId: " + userId, ErrorEnum.NOT_AUTHORIZED));
+                new AuthorizationException("Not found credentials for userId: " + userId, ErrorEnum.NOT_AUTHORIZED));
     }
 
 }
