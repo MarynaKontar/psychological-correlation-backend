@@ -15,6 +15,7 @@ import java.util.List;
 
 /**
  * Dto converter for {@link ValueCompatibilityAnswersEntity}.
+ * @author Maryna Kontar
  */
 @Component
 public class ValueCompatibilityAnswersDtoConverter extends AbstractDtoConverter<ValueCompatibilityAnswersEntity, ValueCompatibilityAnswersDto>{

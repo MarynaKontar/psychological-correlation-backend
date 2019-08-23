@@ -11,11 +11,12 @@ import java.util.List;
 
 /**
  * Util class for getting comment on user value profile for some Scale.
+ * @author Maryna Kontar
  */
 public class ValueProfileCommentUtil {
 
     /**
-     * Get {@link ValueProfileComment} depending on scale and value.
+     * Gets {@link ValueProfileComment} depending on scale and value.
      * @param env must not be {@literal null}.
      * @param scale must not be {@literal null}.
      * @param value percent of chosen scale in value profile, must not be {@literal null}.
@@ -48,7 +49,7 @@ public class ValueProfileCommentUtil {
     }
 
     /**
-     * Get significance (значимость) prefix depending on value.
+     * Gets significance (значимость) prefix depending on value.
      * If value from 0 to low.value, then significance = low,
      * from low.value to average.value - then significance = average,
      * if more then average.value - then significance = high.

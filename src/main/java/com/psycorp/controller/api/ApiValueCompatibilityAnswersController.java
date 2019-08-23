@@ -71,7 +71,7 @@ public class ApiValueCompatibilityAnswersController {
 
     /**
      * Endpoint for url ":/test/initTest".
-     * Get tests questions and answer variants for all {@link Area} and
+     * Gets tests questions and answer variants for all {@link Area} and
      * {@link com.psycorp.model.enums.Scale} for value compatibility test.
      * Order of pairs of scales is random for each area.
      * @return ValueCompatibilityAnswersDto with shuffled scales for each area and empty chosen scales.
@@ -111,20 +111,19 @@ public class ApiValueCompatibilityAnswersController {
     @PostMapping("/goal")
     public ResponseEntity<ValueCompatibilityAnswersDto> saveGoal(
             @RequestBody @NotNull @Valid ValueCompatibilityAnswersDto valueCompatibilityAnswersDto,
-            @RequestHeader(value = "Authorization", required = false) String token, // или пользователь уже проходил тестирование, или ему выслали ссылку с токеном
-            @RequestHeader(value = "userForMatchingToken", required = false) String userForMatchingToken){ // два пользователя тестируются на одном компьютере
+            @RequestHeader(value = "Authorization", required = false) String token, // or the user has already passed the test, or someone sent him a link with a token
+            @RequestHeader(value = "userForMatchingToken", required = false) String userForMatchingToken){ // two users are tested on one computer
 
-        LOGGER.trace("saveGoal: {}",valueCompatibilityAnswersDto);
-        ValueCompatibilityAnswersEntity valueCompatibilityAnswersEntity = valueCompatibilityAnswersDtoConverter.transform(valueCompatibilityAnswersDto);
+        LOGGER.trace("saveGoal");
         List<Choice> choices = choiceDtoConverter.transform(valueCompatibilityAnswersDto.getGoal());
 
-        valueCompatibilityAnswersEntity = valueCompatibilityAnswersService.saveFirstPartOfTests(token, userForMatchingToken,
-                valueCompatibilityAnswersEntity, choices, Area.GOAL);
+        ValueCompatibilityAnswersEntity valueCompatibilityAnswersEntity = valueCompatibilityAnswersService
+                .saveFirstPartOfTests(token, userForMatchingToken, choices, Area.GOAL);
 
         token = ACCESS_TOKEN_PREFIX + " " + tokenService.findByUserId(valueCompatibilityAnswersEntity.getUserId()).getToken();
         return ResponseEntity.status(HttpStatus.CREATED)
                 .headers(httpHeaders)
-                .header(HttpHeaders.AUTHORIZATION, token) // или сгенеренный токен или пришедший в хедере (уже с 'Bearer ')
+                .header(HttpHeaders.AUTHORIZATION, token) // or a generated token or come in a header (already with 'Bearer')
                 .body(valueCompatibilityAnswersDtoConverter.transform(valueCompatibilityAnswersEntity));
     }
 
@@ -139,11 +138,10 @@ public class ApiValueCompatibilityAnswersController {
     @PostMapping("/quality")
     public ResponseEntity<ValueCompatibilityAnswersDto> saveQuality(
             @RequestBody @NotNull @Valid ValueCompatibilityAnswersDto valueCompatibilityAnswersDto) {
-        LOGGER.trace("saveQuality: {}", valueCompatibilityAnswersDto);
-        ValueCompatibilityAnswersEntity valueCompatibilityAnswersEntity = valueCompatibilityAnswersDtoConverter.transform(valueCompatibilityAnswersDto);
+        LOGGER.trace("saveQuality");
         List<Choice> choices = choiceDtoConverter.transform(valueCompatibilityAnswersDto.getQuality());
-        valueCompatibilityAnswersEntity = valueCompatibilityAnswersService
-                .saveChoices(null, null, valueCompatibilityAnswersEntity, choices, Area.QUALITY);
+        ValueCompatibilityAnswersEntity valueCompatibilityAnswersEntity = valueCompatibilityAnswersService
+                .saveChoices(null, choices, Area.QUALITY);
         return ResponseEntity.ok()
                 .headers(httpHeaders)
                 .body(valueCompatibilityAnswersDtoConverter.transform(valueCompatibilityAnswersEntity));
@@ -160,11 +158,10 @@ public class ApiValueCompatibilityAnswersController {
     @PostMapping("/state")
     public ResponseEntity<ValueCompatibilityAnswersDto> saveState(
             @RequestBody @NotNull @Valid ValueCompatibilityAnswersDto valueCompatibilityAnswersDto) {
-        LOGGER.trace("saveState: {}", valueCompatibilityAnswersDto);
-        ValueCompatibilityAnswersEntity valueCompatibilityAnswersEntity = valueCompatibilityAnswersDtoConverter.transform(valueCompatibilityAnswersDto);
+        LOGGER.trace("saveState");
         List<Choice> choices = choiceDtoConverter.transform(valueCompatibilityAnswersDto.getState());
-        valueCompatibilityAnswersEntity = valueCompatibilityAnswersService
-                .saveChoices(null, null, valueCompatibilityAnswersEntity, choices, Area.STATE);
+        ValueCompatibilityAnswersEntity valueCompatibilityAnswersEntity = valueCompatibilityAnswersService
+                .saveChoices(null, choices, Area.STATE);
         return ResponseEntity.ok()
                 .headers(httpHeaders)
                 .body(valueCompatibilityAnswersDtoConverter.transform(valueCompatibilityAnswersEntity));

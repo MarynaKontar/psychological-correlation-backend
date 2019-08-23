@@ -8,6 +8,7 @@ import org.springframework.stereotype.Component;
 
 /**
  * Dto converter for {@link ValueProfileIndividual}.
+ * @author Maryna Kontar
  */
 @Component
 public class ValueProfileIndividualDtoConverter extends AbstractDtoConverter<ValueProfileIndividual, ValueProfileIndividualDto>{

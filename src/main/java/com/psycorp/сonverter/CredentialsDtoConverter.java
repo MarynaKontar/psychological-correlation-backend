@@ -7,6 +7,8 @@ import org.springframework.stereotype.Component;
 
 /**
  * Dto converter for {@link Credentials}.
+ * @author Vitaliy Proskura
+ * @author Maryna Kontar
  */
 @Component
 public class CredentialsDtoConverter extends AbstractDtoConverter<Credentials, CredentialsDto> {

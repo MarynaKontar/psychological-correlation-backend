@@ -18,10 +18,16 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 
 import java.util.Collections;
 
+/**
+ * Security configuration.
+ * @author Vitaliy Proskura
+ * @author Maryna Kontar
+ */
 @Configuration
-@EnableWebSecurity //отключает конфигурирование из коробки
-//Мы наследуем наш класс конфигурации от WebSecurityConfigurerAdapter, чтобы не нужно было конфигурировать все
-//а только конфигурировать (переписывать) те настройки, которые нам нужны
+@EnableWebSecurity
+// disable configuration out of the box
+// We inherit our configuration class from WebSecurityConfigurerAdapter so that we don’t need to configure everything,
+// but only configure (overwrite) the settings that we need
 public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
     private final TokenAuthProvider tokenAuthProvider;
@@ -30,26 +36,20 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     public SecurityConfig(TokenAuthProvider tokenAuthProvider) {
         this.tokenAuthProvider = tokenAuthProvider;
     }
-//    JwtAuthProvider jwtAuthProvider;
-
 
     @Override
     protected void configure(HttpSecurity http) throws Exception {
         http
-                //добавляем наш кастомный фильтр перед всеми спринговыми секьюрными фильтрами
+                //add our custom filter before all spring secure filters
                 .addFilterBefore(tokenAuthFilter(), UsernamePasswordAuthenticationFilter.class)
-//                .addFilterBefore(jwtAuthFilter(), UsernamePasswordAuthenticationFilter.class)
                 .csrf().disable()
                 .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 .and()
                 .authorizeRequests()
-//                .antMatchers(HttpMethod.OPTIONS, "/api/**").permitAll()
                 .antMatchers(HttpMethod.POST, "/auth/login").permitAll()
-//                .antMatchers(HttpMethod.POST, "/auth/loginFriendAccount").permitAll()
                 .antMatchers(HttpMethod.POST,"/registration").permitAll()
                 .antMatchers(HttpMethod.POST,"/test/goal").permitAll()
                 .antMatchers(HttpMethod.GET,"/test/initTest").permitAll()
-                .antMatchers(HttpMethod.GET, "/getAllRegisteredAndPassedTestUsers").permitAll()
                 .anyRequest().authenticated();
     }
 
@@ -58,13 +58,8 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
         return new ProviderManager(Collections.singletonList(tokenAuthProvider));
     }
 
-//    @Bean
-//    public AuthenticationManager authenticationManager() {
-//        return new ProviderManager(Arrays.asList(tokenAuthProvider, jwtAuthProvider));
-//    }
-
-    //Создаем фильтр как отдельный бин, чтобы он присуствовал с Спринг контексте.
-    // Чтобы в дальнейшем можно было с ним работать и кастомизировать
+    // Create filter as separate bean so that it is present in the Spring context.
+    // So that in the future you can work with him and customize
     @Bean
     public TokenAuthFilter tokenAuthFilter () throws Exception {
         TokenAuthFilter tokenAuthFilter = new TokenAuthFilter(authenticationManager());
@@ -72,14 +67,6 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
         tokenAuthFilter.setAuthenticationSuccessHandler((request, response, authentication) -> {});
         return tokenAuthFilter;
     }
-
-//    @Bean
-//    public JwtAuthFilter jwtAuthFilter () {
-//        JwtAuthFilter jwtAuthFilter = new JwtAuthFilter(authenticationManager());
-//        jwtAuthFilter.setAuthenticationSuccessHandler((request, response, authentication) -> {});
-//        return jwtAuthFilter;
-//    }
-
 
     @Bean
     public PasswordEncoder passwordEncoder() {

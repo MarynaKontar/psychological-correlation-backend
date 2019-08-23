@@ -12,14 +12,14 @@ import org.springframework.stereotype.Service;
 /**
  * Service implementation for authentication.
  * @author Vitaliy Proskura
- * @author  Maryna Kontar
+ * @author Maryna Kontar
  */
 @Service
 public class AuthServiceImpl implements AuthService {
     private static final Logger LOGGER = LoggerFactory.getLogger(AuthServiceImpl.class);
 
     /**
-     * Get authenticated principal user.
+     * Gets authenticated principal user.
      * If user isn't registered yet ("anonymousUser") than return null.
      * @return authenticated principal user or null if user isn't registered yet.
      */

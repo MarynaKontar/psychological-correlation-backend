@@ -1,5 +1,6 @@
 package com.psycorp.service.implementation;
 
+import com.psycorp.exception.AuthorizationException;
 import com.psycorp.exception.BadRequestException;
 import com.psycorp.model.entity.*;
 import com.psycorp.model.enums.Area;
@@ -21,13 +22,14 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.time.Period;
 import java.util.*;
 
 import static com.psycorp.security.SecurityConstant.ACCESS_TOKEN_PREFIX;
 
 /**
  * Service implementation for ValueCompatibilityAnswersService.
- * @author  Maryna Kontar
+ * @author Maryna Kontar
  */
 @Service
 public class ValueCompatibilityAnswersServiceImpl implements ValueCompatibilityAnswersService {
@@ -38,7 +40,7 @@ public class ValueCompatibilityAnswersServiceImpl implements ValueCompatibilityA
     private final MongoOperations mongoOperations;
     private final Environment env;
 
-    //TODO return in public methods ValueCompatibilityAnswers (create in /objects)
+    //TODO Create ValueCompatibilityAnswers (in layer objects)  and return it there in public methods
     @Autowired
     public ValueCompatibilityAnswersServiceImpl(ValueCompatibilityAnswersRepository valueCompatibilityAnswersRepository,
                                                 UserService userService,
@@ -51,6 +53,10 @@ public class ValueCompatibilityAnswersServiceImpl implements ValueCompatibilityA
         this.env = env;
     }
 
+    /**
+     * Gets initial values for value compatibility test.
+     * @return {@link ValueCompatibilityAnswersEntity} with initial values.
+     */
     @Override
     public ValueCompatibilityAnswersEntity getInitValueCompatibilityAnswers(){
         ValueCompatibilityAnswersEntity answersEntity = new ValueCompatibilityAnswersEntity();
@@ -58,41 +64,60 @@ public class ValueCompatibilityAnswersServiceImpl implements ValueCompatibilityA
         return answersEntity;
     }
 
+    /**
+     * Saves choices for given area for user that matches token or to principal user if token is {@literal null}.
+     * @param token user token ()
+     * @param userForMatchingToken token to add for matching.
+     * @param choices must not be {@literal null}.
+     * @param area must not be {@literal null}.
+     * @return saved {@link ValueCompatibilityAnswersEntity}.
+     */
     @Override
     @Transactional
     public ValueCompatibilityAnswersEntity saveFirstPartOfTests(String token,
                                                                 String userForMatchingToken,
-                                                                ValueCompatibilityAnswersEntity answersEntity,
                                                                 List<Choice> choices, Area area) {
 
+        // or the user has already passed the test, or someone sent him a link with a token
         User principal;
-       if (token == null) {
-           principal = userService.createAnonimUser(); // если токен == null, то создаем анонимного пользователя
+       if (token == null) { //if user doesn't pass test yet, than create anonim user
+           principal = userService.createAnonimUser();
            token = ACCESS_TOKEN_PREFIX + " " + tokenService.generateAccessTokenForAnonim(principal).getToken();
        } else {
+           principal = getUserByToken(token);
            tokenService.changeInviteTokenToAccess(token);
        }
-
-       return saveChoices(token, userForMatchingToken, answersEntity, choices, area);
+       addUserForMatching(userForMatchingToken, principal);
+       return saveChoices(token, choices, area);
     }
 
+    /**
+     * Saves choices for given area to last not passed {@link ValueCompatibilityAnswersEntity}
+     * (or to new one, if all tests are passed)
+     * for user taken by token (if the user visits the app using the link with the token)
+     * or for principal user, if token is {@literal null}.
+     * @param choices must not be {@literal null}.
+     * @param area must not be {@literal null}.
+     * @return saved {@link ValueCompatibilityAnswersEntity}.
+     */
     @Override
     @Transactional
-    public ValueCompatibilityAnswersEntity saveChoices(String token,
-                                                       String userForMatchingToken,
-                                                       ValueCompatibilityAnswersEntity answersEntity,
-                                                       List<Choice> choices,
-                                                       Area area){
+    public ValueCompatibilityAnswersEntity saveChoices(String token, List<Choice> choices, Area area){
         validateChoices(choices, area);
-        User user = getUserByToken(token);
-        addUserForMatching(userForMatchingToken, user);
-        answersEntity = valueCompatibilityAnswersRepository
+        User user = (token != null && !token.isEmpty())? getUserByToken(token) : userService.getPrincipalUser();
+        return valueCompatibilityAnswersRepository
                 .findTopByUserIdAndPassedOrderByPassDateDesc(user.getId(), false)
                 .map((answers) -> update(answers, choices, area))
                 .orElseGet(() -> insert(choices, user));
-        return answersEntity;
     }
 
+    /**
+     * Gets last passed test for user.
+     * @param user must not be {@literal null}.
+     * @return last passed {@link ValueCompatibilityAnswersEntity} for given user.
+     * @throws BadRequestException if user is {@literal null}
+     * or if no passed {@link ValueCompatibilityAnswersEntity} is found.
+     */
     @Override
     public ValueCompatibilityAnswersEntity getLastPassedTest(User user) {
         if(user != null && user.getId() != null) {
@@ -101,33 +126,53 @@ public class ValueCompatibilityAnswersServiceImpl implements ValueCompatibilityA
         } else throw new BadRequestException(env.getProperty("error.UserOrUserIdCan`tBeNull"));
     }
 
+    /**
+     * Returns whether a value compatibility test passed for user with userId.
+     * @param userId must not be {@literal null}.
+     * @return {@literal true} if a value compatibility test passed
+     * for user with userId, {@literal false} otherwise.
+     * @throws IllegalArgumentException if {@code userId} is {@literal null}.
+     */
     @Override
     public Boolean ifTestPassed(ObjectId userId) {
-        Boolean ifTestPassed = valueCompatibilityAnswersRepository.existsByUserIdAndPassed(userId, true);
-        return ifTestPassed;
+        return valueCompatibilityAnswersRepository.existsByUserIdAndPassed(userId, true);
     }
 
+    /**
+     * Gets user by token value.
+     * @param token must not be {@literal null}.
+     * @return {@link User} for given token.
+     * @throws AuthorizationException if token is expired or not exists.
+     * @throws BadRequestException if user not found.
+     */
     private User getUserByToken(String token) {
-        // if the user visits the app using the link with the token, then we are looking for the user by this token
-        if(token != null && !token.isEmpty()) {
-           return tokenService.getUserByToken(token.substring(ACCESS_TOKEN_PREFIX.length() + 1));
-        }
-        return  userService.getPrincipalUser();
+        return tokenService.getUserByToken(token.substring(ACCESS_TOKEN_PREFIX.length() + 1));
     }
 
-    private void addUserForMatching(String userForMatchingToken, User user) {
+    /**
+     * Adds user for matching retrieved by userForMatchingToken to principal and vise versa.
+     * @param userForMatchingToken
+     * @param principal must not be {@literal null}.
+     */
+    private void addUserForMatching(String userForMatchingToken, User principal) {
         if (userForMatchingToken != null && !userForMatchingToken.isEmpty()) {
             User userForMatching = getUserByToken(userForMatchingToken);
-            userService.addNewUsersForMatching(user, Collections.singletonList(userForMatching), Update.Position.FIRST);
-            userService.addNewUsersForMatching(userForMatching, Collections.singletonList(user), Update.Position.FIRST);
+            userService.addNewUsersForMatching(principal, Collections.singletonList(userForMatching), Update.Position.FIRST);
+            userService.addNewUsersForMatching(userForMatching, Collections.singletonList(principal), Update.Position.FIRST);
         }
     }
 
+    /**
+     * Updates choices for given area in answersEntity.
+     * If some choices with given area already exists in answersEntity they will be deleted and updated by {@code choices}
+     * @param answersEntity must not be {@literal null}.
+     * @param choices must not be {@literal null}.
+     * @param area must not be {@literal null}.
+     * @return updated {@link ValueCompatibilityAnswersEntity}.
+     */
     private ValueCompatibilityAnswersEntity update(ValueCompatibilityAnswersEntity answersEntity,
                                                    List<Choice> choices,
                                                    Area area) {
-
-        // засетить юзера, если был аноним, а стал нормальным principal
 
         Query query = Query.query(Criteria.where(Fields.UNDERSCORE_ID).is(answersEntity.getId()));
 
@@ -145,13 +190,19 @@ public class ValueCompatibilityAnswersServiceImpl implements ValueCompatibilityA
                 new FindAndModifyOptions().returnNew(true), ValueCompatibilityAnswersEntity.class);// вернет уже измененный документ (returnNew(true))
 
         // UPDATE PASSED
-        if (isPassed(answersEntity)) { // если тест пройден, то установить поле "passed" в ValueCompatibilityAnswersEntity = true
+        if (isPassed(answersEntity)) { // if test is passed, than make field "passed" in ValueCompatibilityAnswersEntity = true
             answersEntity = mongoOperations.findAndModify(query, new Update().set("passed", true),
                     new FindAndModifyOptions().returnNew(true), ValueCompatibilityAnswersEntity.class);
         }
         return answersEntity;
     }
 
+    /**
+     * Inserts choices to new {@link ValueCompatibilityAnswersEntity} for given user.
+     * @param choices must not be {@literal null}.
+     * @param user must not be {@literal null}.
+     * @return new created {@link ValueCompatibilityAnswersEntity} with choices.
+     */
     private ValueCompatibilityAnswersEntity insert(List<Choice> choices, User user) {
         canPassTestAgain(user);
         ValueCompatibilityAnswersEntity answersEntity = getInitValueCompatibilityAnswers();
@@ -163,26 +214,28 @@ public class ValueCompatibilityAnswersServiceImpl implements ValueCompatibilityA
         return valueCompatibilityAnswersRepository.insert(answersEntity);
     }
 
-    //TODO Проверить и переделать
+    /**
+     * Determines if value compatibility test can be passed for user.
+     * @param user must not be {@literal null}.
+     * @throws BadRequestException if value compatibility test cann't be passed.
+     */
     private void canPassTestAgain(User user) {
-        if(user.getId() != null) {
-//            Optional<List<ValueCompatibilityAnswersEntity>> answersOptional = valueCompatibilityAnswersRepository.findAllByUserIdOrderByIdDesc(user.getId());
-            Optional<ValueCompatibilityAnswersEntity> answersEntityOptional =
-                    valueCompatibilityAnswersRepository.findTopByUserIdOrderByPassDateDesc(user.getId());
+        Optional<ValueCompatibilityAnswersEntity> answersEntityOptional =
+                valueCompatibilityAnswersRepository.findTopByUserIdOrderByPassDateDesc(user.getId());
 
-            if(answersEntityOptional.isPresent()){
-                ValueCompatibilityAnswersEntity answersEntity = answersEntityOptional.get();
-            }
-
-//            if (userAnswersOptional.isPresent() && userAnswersOptional.get().isEmpty()) {
-//                ValueCompatibilityAnswersEntity answersEntity = userAnswersOptional.get().get(0);
-
+        if(answersEntityOptional.isPresent()){
+            ValueCompatibilityAnswersEntity answersEntity = answersEntityOptional.get();
             //TODO вернуть в рабочий вид
-//           if(Period.between(answersEntity.getPassDate().toLocalDate(), LocalDateTime.now().toLocalDate()).getDays()
-//                   <= Period.ofMonths(6).getDays()) throw new BadRequestException(env.getProperty("error.YouCan'tPassNewTest"));
+//            if(Period.between(answersEntity.getPassDate().toLocalDate(), LocalDateTime.now().toLocalDate()).getDays()
+//                    <= Period.ofMonths(6).getDays()) throw new BadRequestException(env.getProperty("error.YouCan'tPassNewTest"));
         }
     }
 
+    /**
+     * Returns whether a value compatibility test can be marked as passed.
+     * @param answersEntity must not be {@literal null}.
+     * @return {@literal true} if a value compatibility test can be marked as passed, {@literal false} otherwise.
+     */
     private Boolean isPassed(ValueCompatibilityAnswersEntity answersEntity) {
         Integer numberOfQuestions = Integer.valueOf(env.getProperty("total.number.of.questions"));
         List<Choice> choices = answersEntity.getUserAnswers();
@@ -197,6 +250,14 @@ public class ValueCompatibilityAnswersServiceImpl implements ValueCompatibilityA
         return true;
     }
 
+    /**
+     * Validates if the choices size matches a specific value
+     * and if all choice areas are area
+     * and if all chosenScales in choices are not {@literal null}.
+     * @param choices must not be {@literal null}.
+     * @param area must not be {@literal null}.
+     * @throws BadRequestException if choices are not valid.
+     */
     private void validateChoices(List<Choice> choices, Area area) {
         Integer numberOfQuestions = Integer.valueOf(env.getProperty("total.number.of.questions"));
         if (choices.size() != numberOfQuestions) throw new BadRequestException(env.getProperty("error.ItMustBe15TestsForArea") + " " + area);
@@ -207,6 +268,13 @@ public class ValueCompatibilityAnswersServiceImpl implements ValueCompatibilityA
             throw new BadRequestException(env.getProperty("error.ChosenScaleCan'tBeNull") + " for area: " + area);
     }
 
+    /**
+     * Returns initialize list of {@link Choice} with three {@link Area}: GOAL, QUALITY and STATE
+     * for six {@link Scale}.
+     * All firstScales and secondScales are filled, all chosenScales are empty.
+     * Pairs of scales and choices for given area are shuffled.
+     * @return shuffled initialize list of {@link Choice}.
+     */
     private List<Choice> choiceList(){
 
         //GOAL
@@ -290,6 +358,13 @@ public class ValueCompatibilityAnswersServiceImpl implements ValueCompatibilityA
         return choices;
     }
 
+    /**
+     * Gets choice for given area with shuffled firstScale and secondScale.
+     * @param area must not be {@literal null}.
+     * @param scaleOne must not be {@literal null}.
+     * @param scaleTwo must not be {@literal null}.
+     * @return {@link Choice} with shuffled firstScale and secondScale for given area.
+     */
     private Choice getChoice(Area area, Scale scaleOne, Scale scaleTwo) {
         Choice choice = new Choice();
         choice.setArea(area);

@@ -13,6 +13,7 @@ import java.util.List;
 
 /**
  * Dto converter for {@link ValueProfile}.
+ * @author Maryna Kontar
  */
 @Component
 public class ValueProfileDtoConverter extends AbstractDtoConverter<ValueProfile, ValueProfileDto>{

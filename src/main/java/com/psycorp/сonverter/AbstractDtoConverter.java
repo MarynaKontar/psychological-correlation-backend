@@ -15,6 +15,8 @@ import java.util.stream.Collectors;
  * Abstract converter for all dtos (Data Transfer Object).
  * @param <Entity>
  * @param <Dto>
+ * @author Vitaliy Proskura
+ * @author Maryna Kontar
  */
 public abstract class AbstractDtoConverter<Entity extends AbstractEntity, Dto extends AbstractDto> {
 

@@ -8,6 +8,7 @@ import org.springframework.stereotype.Component;
 
 /**
  * Dto converter for {@link UserAccount}.
+ * @author Maryna Kontar
  */
 @Component
 public class UserAccountDtoConverter extends AbstractDtoConverter<UserAccount, UserAccountDto> {

@@ -9,6 +9,10 @@ import org.springframework.stereotype.Repository;
 
 import java.util.List;
 
+/**
+ * Extension of {@link MongoRepository} for {@link UserMatchEntity}.
+ * @author Maryna Kontar
+ */
 @Repository
 public interface UserMatchRepository extends MongoRepository<UserMatchEntity, ObjectId>{
 

@@ -9,6 +9,7 @@ import org.springframework.core.env.Environment;
  * Dto converter for {@link Area}.
  * Area cant't extends from AbstractEntity (Area is enum)
  * so AreaDtoConverter can't extends AbstractDtoConverter like another dto converters.
+ * @author Maryna Kontar
  */
 class AreaDtoConverter  {
 

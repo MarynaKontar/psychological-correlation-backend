@@ -21,6 +21,10 @@ import static java.util.Map.Entry.comparingByKey;
 import static java.util.stream.Collectors.counting;
 import static java.util.stream.Collectors.groupingBy;
 
+/**
+ * Service implementation for ValueProfileService.
+ * @author Maryna Kontar
+ */
 @Service
 @PropertySource(value = {"classpath:testing/scalesquestionsukrainian.properties"}, encoding = "utf-8", ignoreResourceNotFound = true)
 @PropertySource(value = {"classpath:testing/scalesquestionsrussian.properties"}, encoding = "utf-8")
@@ -44,9 +48,10 @@ public class ValueProfileServiceImpl implements ValueProfileService {
     }
 
     /**
-     * Returns ValueProfile with comments for individual value profile
-     * @param noPrincipalUser
-     * @return
+     * Returns {@link ValueProfileIndividual} with comments for noPrincipalUser
+     * if it isn't {@literal null} or for principal user if it is.
+     * @param noPrincipalUser equals {@literal null} for principal user.
+     * @return {@link ValueProfileIndividual}.
      */
     @Override
     public ValueProfileIndividual getValueProfileIndividual(User noPrincipalUser) {
@@ -66,6 +71,11 @@ public class ValueProfileServiceImpl implements ValueProfileService {
         return convertToValueProfileIndividual(valueProfile);
     }
 
+    /**
+     * Returns {@link ValueProfileMatching} with comments for  user with noPrincipalUserId and principal user.
+     * @param noPrincipalUserId must not be {@literal null}.
+     * @return {@link ValueProfileMatching}.
+     */
     @Override
     public ValueProfileMatching getValueProfileForMatching(ObjectId noPrincipalUserId) {
         User noPrincipalUser = userService.findById(noPrincipalUserId);
@@ -78,6 +88,13 @@ public class ValueProfileServiceImpl implements ValueProfileService {
                 valueProfileForNoPrincipalUser, valueProfileForPrincipalUser);
     }
 
+
+    /**
+     * Gets value profile for user.
+     * @param user must not be {@literal null}.
+     * @param isPrincipalUser is {@literal true} for principal user and {@literal false} for no principal user.
+     * @return {@link ValueProfile}.
+     */
     private ValueProfile getValueProfile(User user, Boolean isPrincipalUser){
         ValueCompatibilityAnswersEntity answersEntity = valueCompatibilityAnswersService.getLastPassedTest(user);
 
@@ -103,6 +120,10 @@ public class ValueProfileServiceImpl implements ValueProfileService {
         return new ValueProfile(user, sortedValueProfile, isPrincipalUser);
     }
 
+    /**
+     * Creates list of {@link Scale} with all scale values.
+     * @return list of {@link Scale}.
+     */
     private List<Scale> getScales() {
         List<Scale> scales = new ArrayList<>();
         scales.add(Scale.ONE);
@@ -114,6 +135,11 @@ public class ValueProfileServiceImpl implements ValueProfileService {
         return scales;
     }
 
+    /**
+     * Converts {@link ValueProfile} to {@link ValueProfileIndividual}.
+     * @param valueProfile must not be {@literal null}.
+     * @return {@link ValueProfileIndividual}.
+     */
     private ValueProfileIndividual convertToValueProfileIndividual(ValueProfile valueProfile) {
         ValueProfileIndividual valueProfileIndividual = new ValueProfileIndividual();
         valueProfileIndividual.setValueProfile(valueProfile);
@@ -127,6 +153,14 @@ public class ValueProfileServiceImpl implements ValueProfileService {
         return valueProfileIndividual;
     }
 
+    /**
+     * Converts {@link ValueProfile} for principal and not principal user to {@link ValueProfileMatching}.
+     * @param noPrincipalUser must not be {@literal null}.
+     * @param principalUser must not be {@literal null}.
+     * @param valueProfileForNoPrincipalUser must not be {@literal null}.
+     * @param valueProfileForPrincipalUser must not be {@literal null}.
+     * @return {@link ValueProfileMatching}.
+     */
     private ValueProfileMatching convertToValueProfileMatching(User noPrincipalUser, User principalUser,
                                                                ValueProfile valueProfileForNoPrincipalUser,
                                                                ValueProfile valueProfileForPrincipalUser) {
@@ -145,6 +179,13 @@ public class ValueProfileServiceImpl implements ValueProfileService {
         return valueProfileMatching;
     }
 
+    /**
+     * Counts how many times there are values for each {@link Scale}
+     * in the last passed value compatibility test for given user.
+     * And put these {@link Scale} - value pairs to {@link Map}.
+     * @param user must not be {@literal null}.
+     * @return {@link Map<Scale, Integer>}.
+     */
     private  Map<Scale, Integer> getScaleValues(User user){
 
         ValueCompatibilityAnswersEntity answersEntityPrincipal = valueCompatibilityAnswersService.getLastPassedTest(user);

@@ -8,12 +8,15 @@ import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
 
+/**
+ * Extension of {@link MongoRepository} for {@link TokenEntity}.
+ * @author Maryna Kontar
+ */
 @Repository
 public interface TokenRepository extends MongoRepository<TokenEntity, ObjectId> {
     Optional<TokenEntity> findByUserId(ObjectId userId);
     Optional<TokenEntity> findByToken(String token);
     Optional<TokenEntity> findByUserIdAndType(ObjectId userId, TokenType tokenType);
-    Optional<TokenEntity> findByTypeAndToken(TokenType type, String token);
 
     void removeAllByUserId(ObjectId userId);
 }

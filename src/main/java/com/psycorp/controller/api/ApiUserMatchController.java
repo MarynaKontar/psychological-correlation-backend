@@ -67,7 +67,7 @@ public class ApiUserMatchController {
 
     /**
      * Endpoint for url ":/match/getUsersForMatching".
-     * Get users for matching with principal.
+     * Gets users for matching with principal user.
      * If there is userForMatchingToken than return singleton list with user
      * that has this userForMatchingToken.
      * If no userForMatchingToken, than return all usersForMatching for principal user.
@@ -77,7 +77,7 @@ public class ApiUserMatchController {
      */
     @GetMapping("/getUsersForMatching")
     public ResponseEntity<List<SimpleUserDto>> getUsersForMatching(
-            @RequestHeader(value = "userForMatchingToken") String userForMatchingToken) {
+            @RequestHeader(value = "userForMatchingToken", required = false) String userForMatchingToken) {
         LOGGER.trace("getUsersForMatching: {}", userForMatchingToken);
         List<User> users = userAccountService.getUsersForMatching(userForMatchingToken);
         return ResponseEntity.ok()

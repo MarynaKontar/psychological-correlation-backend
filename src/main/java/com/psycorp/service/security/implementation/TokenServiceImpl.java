@@ -38,7 +38,7 @@ import static com.psycorp.security.SecurityConstant.ACCESS_TOKEN_PREFIX;
 /**
  * Service implementation for TokenService.
  * @author Vitaliy Proskura
- * @author  Maryna Kontar
+ * @author Maryna Kontar
  */
 @Service
 @PropertySource(value = {"classpath:common.properties"}, encoding = "utf-8")
@@ -105,21 +105,22 @@ public class TokenServiceImpl implements TokenService {
 
     /**
      * Generates access token for anonim user (that doesn't have password).
-     * @param user anonim user.
+     * @param user saved in database anonim user.
      * If user is registered (has password) token will be returned too.
      * @return access token value.
      */
     @Override
     public TokenEntity generateAccessTokenForAnonim(User user) {
-        user = userService.find(user);
+//        user = userService.find(user);
         TokenEntity token =  createUserToken(user.getId(), TokenType.ACCESS_TOKEN);
         return token;
     }
 
     /**
-     * Get user by token.
+     * Gets user by token.
      * @param token the token used to receive the user
      * @return {@link User}, if token and user exist.
+     * @throws AuthorizationException if none found.
      */
     @Override
     public User getUserByToken(String token){
@@ -132,22 +133,24 @@ public class TokenServiceImpl implements TokenService {
     /**
      * Changes {@link TokenType} from INVITE to ACCESS.
      * If the type of token is already ACCESS, then it does not change.
+     * Token value isn't changed.
      * @param token token whose type needs to be changed.
+     * @throws AuthorizationException if none {@link TokenEntity} find for given token.
+     * @throws BadRequestException if doesn't exist {@link TokenEntity}
+     * not for{@link TokenType} ACCESS_TOKEN not for INVITE_TOKEN for this token value.
      */
     @Override
     public void changeInviteTokenToAccess(String token) {
         token = token.substring(ACCESS_TOKEN_PREFIX.length() + 1); //delete "Bearer "
         TokenEntity tokenEntity = tokenRepository.findByToken(token).orElseThrow(() -> new AuthorizationException("", ErrorEnum.TOKEN_NOT_FOUND));
         if (tokenEntity.getType().equals(TokenType.ACCESS_TOKEN)) { return; }
-        if (ifExistByTypeAndToken(TokenType.INVITE_TOKEN, token)) {
-            tokenEntity = getByTypeAndToken(TokenType.INVITE_TOKEN, token);
-
+        if (tokenEntity.getType().equals(TokenType.INVITE_TOKEN)) {
             // UPDATE TOKENTYPE and EXPIRATIONDATE
             Update update = new Update().set("type", TokenType.ACCESS_TOKEN)
                     .set("expirationDate", getTokenExpirationDate(TokenType.ACCESS_TOKEN));
             Query query = Query.query(Criteria.where(Fields.UNDERSCORE_ID).is(tokenEntity.getId()));
             UpdateResult updateResult = mongoOperations.updateFirst(query, update, TokenEntity.class);
-        } else throw new BadRequestException("tokenEntity isn't exist with token: " + tokenEntity.getToken());
+        } else throw new BadRequestException("tokenEntity with INVITE_TOKEN type isn't exist for token: " + tokenEntity.getToken());
     }
 
     /**
@@ -175,7 +178,7 @@ public class TokenServiceImpl implements TokenService {
     }
 
     /**
-     * Get token (or creates it, if not exist) for {@link User} with userId.
+     * Gets token (or creates it, if not exist) for {@link User} with userId.
      * @param token token of the registered user or null if token doesn't exist.
      * @param userId user id for whom token is getting or creating; must not be {@literal null}.
      * @return token value if userId and token is valid.
@@ -212,7 +215,7 @@ public class TokenServiceImpl implements TokenService {
      * If n > 5 than n = 5.
      * @param n number of token's values to create; must not be {@literal null}
      * @return list of tokens values with size of n.
-     * @throws {@link BadRequestException} if n is {@literal null} or less than 1.
+     * @throws BadRequestException if n is {@literal null} or less than 1.
      */
     @Override
     @Transactional
@@ -269,7 +272,7 @@ public class TokenServiceImpl implements TokenService {
     }
 
     /**
-     * Get expiration date for all {@link TokenType}.
+     * Gets expiration date for all {@link TokenType}.
      * @param tokenType token type.
      * @return {@link LocalDateTime} expiration date of tiken with {@link TokenType} tokenType.
      */
@@ -296,31 +299,11 @@ public class TokenServiceImpl implements TokenService {
     }
 
     /**
-     * Returns whether a {@link TokenEntity} with the given type and token value exists.
-     * @param type token type.
-     * @param token token value.
-     * @return {@literal true} if a {@link TokenEntity} with the given type and token value exists, {@literal false} otherwise.
-     */
-    private Boolean ifExistByTypeAndToken(TokenType type, String token){
-        return tokenRepository.findByTypeAndToken(type, token).isPresent();
-    }
-
-    /**
-     * Retrieves a {@link TokenEntity} by its type and token value.
-     * @param type
-     * @param token
-     * @return {@link TokenEntity} with given type and token or {@literal null} if none found.
-     */
-    private TokenEntity getByTypeAndToken(TokenType type, String token){
-        return tokenRepository.findByTypeAndToken(type, token).orElse(null);
-    }
-
-    /**
      * Verifies  the encoded password obtained from storage matches the submitted raw
      * password after it too is encoded. The stored password itself is never decoded.
      * @param rawPassword the raw password to encode and match.
      * @param storedPassword the encoded password from storage to compare with.
-     * @throws {@link BadCredentialsException} if passwords don't match.
+     * @throws BadCredentialsException if passwords don't match.
      */
     private void validateUserPassword (String rawPassword, String storedPassword) {
         if(!passwordEncoder.matches(rawPassword, storedPassword)) throw new BadCredentialsException("Bad Credentials");

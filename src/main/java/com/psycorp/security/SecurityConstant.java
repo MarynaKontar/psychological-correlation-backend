@@ -2,7 +2,6 @@ package com.psycorp.security;
 
 /**
  * @author Vitaliy Proskura
- * @author Maryna Kontar
  */
 public class SecurityConstant {
     public static final String ACCESS_TOKEN_PREFIX = "Bearer";

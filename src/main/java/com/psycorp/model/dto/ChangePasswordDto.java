@@ -5,9 +5,7 @@ import lombok.ToString;
 
 /**
  * DTO (Data Transfer Object) data level.
- * <p>
  * Holds data that received from client for changing password.
- * <p>
  * This class with {@link com.psycorp.model.security.CredentialsEntity},
  * {@link com.psycorp.model.objects.Credentials},
  * {@link com.psycorp.model.dto.CredentialsDto},

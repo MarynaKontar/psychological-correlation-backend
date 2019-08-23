@@ -9,6 +9,7 @@ import org.springframework.core.env.Environment;
  * Dto converter for {@link Scale}.
  * Scale cant't extends from AbstractEntity (Scale is enum)
  * so ScaleDtoConverter can't extends AbstractDtoConverter like another dto converters.
+ * @author Maryna Kontar
  */
 class ScaleDtoConverter {
 

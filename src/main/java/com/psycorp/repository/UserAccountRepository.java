@@ -7,6 +7,10 @@ import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
 
+/**
+ * Extension of {@link MongoRepository} for {@link UserAccountEntity}.
+ * @author Maryna Kontar
+ */
 @Repository
 public interface UserAccountRepository extends MongoRepository<UserAccountEntity, ObjectId>{
 

@@ -13,8 +13,8 @@ spring:
       username: mongodb_admin
       password: MiVpp1g
       authentication-database: admin
-#при пуше на git, убрать комментари с username,password, authentication-database
-#и сменить порт на 27017
+# when pushing to git, remove comments from username, password, authentication-database
+# and change the port to 27017
 
 
 #logging:
@@ -25,4 +25,3 @@ spring:
 #  level:
 ##    org.springframework.web: INFO
 #    com.psycorp.controller: TRACE
-##    org.hibernate: DEBUG

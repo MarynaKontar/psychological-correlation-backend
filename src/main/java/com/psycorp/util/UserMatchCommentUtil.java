@@ -15,6 +15,7 @@ import java.util.Arrays;
 
 /**
  * Util class for getting comment on users matching for some Area or Scale.
+ * @author Maryna Kontar
  */
 public class UserMatchCommentUtil {
 

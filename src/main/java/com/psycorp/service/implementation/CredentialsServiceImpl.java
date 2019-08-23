@@ -34,7 +34,7 @@ import org.springframework.transaction.annotation.Transactional;
 /**
  * Service implementation for CredentialsService.
  * @author Vitaliy Proskura
- * @author  Maryna Kontar
+ * @author Maryna Kontar
  */
 
 @Service
@@ -136,10 +136,19 @@ public class CredentialsServiceImpl implements CredentialsService{
         }
     }
 
-    private User update(Credentials credentials, ObjectId userId){
+    /**
+     * Updates credentials for principal user: updates principal user info,
+     * update password if it isn't {@literal null}, create user account if none exists.
+     * @param credentials must not be {@literal null}.
+     * @param principalId must not be {@literal null}.
+     * @return updated user.
+     * @throws NullPointerException if credentials or principalId is {@literal null}.
+     * @throws BadRequestException if credential.getUser().getName() or credentials.getUser().getEmail() already exists in database.
+     */
+    private User update(Credentials credentials, ObjectId principalId){
 
-        User principal = userService.findById(userId);
-        ObjectId credentialsId = findByUserId(userId).getId();
+        User principal = userService.findById(principalId);
+        ObjectId credentialsId = findByUserId(principalId).getId();
 
         // CHECK NAME AND EMAIL ON UNIQUE
         if (credentials.getUser().getName() != null &&
@@ -179,7 +188,8 @@ public class CredentialsServiceImpl implements CredentialsService{
      * Inserts new user, user account entity and credential entity to database.
      * @param credentials must not be {@literal null}.
      * @return inserted user.
-     * @throws BadRequestException if user name or email already exists in database.
+     * @throws BadRequestException if credential.getUser().getName()
+     * or credentials.getUser().getEmail() already exists in database.
      */
     private User insert(Credentials credentials){
 
@@ -205,6 +215,12 @@ public class CredentialsServiceImpl implements CredentialsService{
         return user;
     }
 
+    /**
+     * Create new {@link CredentialsEntity} for user with userId.
+     * @param credentials must not be {@literal null}.
+     * @param userId must not be {@literal null}.
+     * @return created {@link CredentialsEntity} for user with userId.
+     */
     private CredentialsEntity createCredentialsEntity(Credentials credentials, ObjectId userId) {
         CredentialsEntity credentialsEntity = new CredentialsEntity();
         credentialsEntity.setUserId(userId);
@@ -212,6 +228,12 @@ public class CredentialsServiceImpl implements CredentialsService{
         return credentialsEntity;
     }
 
+    /**
+     * Finds credentials entity by userId.
+     * @param userId must not be {@literal null}.
+     * @return credentials entity by userId.
+     * @throws AuthorizationException if none found.
+     */
     private CredentialsEntity findByUserId(ObjectId userId) {
         return credentialsRepository.findByUserId(userId).orElseThrow(() ->
                 new AuthorizationException("Not found credentials for userId: " + userId, ErrorEnum.NOT_AUTHORIZED));

@@ -34,7 +34,7 @@ import java.util.stream.Collectors;
 
 /**
  * Service implementation for UserService.
- * @author  Maryna Kontar
+ * @author Maryna Kontar
  */
 @Service
 public class UserServiceImpl implements UserService {
@@ -67,6 +67,10 @@ public class UserServiceImpl implements UserService {
         this.env = env;
     }
 
+    /**
+     * Creates anonim user with role ANONIM, without password.
+     * @return created user.
+     */
     @Override
     @Transactional
     public User createAnonimUser() {
@@ -81,14 +85,15 @@ public class UserServiceImpl implements UserService {
     }
 
     /**
-     * Saved name, age and gender to principal user.
+     * Saves name, age and gender to principal user.
      * If in user will be an email, it will not be saved. User role isn't changed.
-     * @param user that contain incomplete user information (name, age and gender).
+     * @param user that contain incomplete user information (name, age and gender), must not be {@literal null}.
      * @return updated user
+     * @throws BadRequestException if user or user name, age or gender are {@literal null}
      */
     @Override
     public User addNameAgeAndGender(User user) {
-        if(user.getName() == null || user.getAge() == null || user.getGender() == null) {
+        if(user == null || user.getName() == null || user.getAge() == null || user.getGender() == null) {
             throw new BadRequestException("User name, age or gender cant be null");
         }
         User principal = getPrincipalUser();
@@ -109,6 +114,13 @@ public class UserServiceImpl implements UserService {
         return user;
     }
 
+    /**
+     * Adds ids of all users from usersForMatching to field usersForMatchingId of user at position.
+     * @param user user to whom we are adding ids to field usersForMatchingId at position, must not be {@literal null}.
+     * @param usersForMatching users whose ids we are adding to user, must not be {@literal null}.
+     * @param position the position to which we will add ids, must not be {@literal null}.
+     * @return updated user.
+     */
     @Override
     public User addNewUsersForMatching(User user, List<User> usersForMatching, Update.Position position){
         Update updateUser = new Update();
@@ -122,6 +134,12 @@ public class UserServiceImpl implements UserService {
         return user;
     }
 
+    /**
+     * Finds user.
+     * @param user the user by whose id the user is taken from the database.
+     * @return user from database, must not be {@literal null}.
+     * @throws BadRequestException if user or user id is {@literal null}.
+     */
     @Override
     public User find(User user) {
         if (user != null && user.getId() != null) {
@@ -132,12 +150,25 @@ public class UserServiceImpl implements UserService {
         return user;
     }
 
+    /**
+     * Finds user by userId.
+     * @param userId the id of the user, must not be {@literal null}..
+     * @return user from database.
+     * @throws IllegalArgumentException if {@code id} is {@literal null}.
+     * @throws BadRequestException if none found.
+     */
     @Override
     public User findById(ObjectId userId) {
         return userRepository.findById(userId)
                 .orElseThrow(() -> new BadRequestException(env.getProperty("error.noUserFound") + " for user id: " + userId));
     }
 
+    /**
+     * Finds user by name or email {@code nameOrEmail}.
+     * @param nameOrEmail name or email of user, must not be {@literal null}.
+     * @return user from database.
+     * @throws BadRequestException if nameOrEmail is {@literal null} or none found.
+     */
     @Override
     public User findUserByNameOrEmail(String nameOrEmail) {
         if(nameOrEmail == null) throw new BadRequestException(env.getProperty("error.noUserFound"));
@@ -146,14 +177,25 @@ public class UserServiceImpl implements UserService {
                         + nameOrEmail));
     }
 
+    /**
+     * Gets principal user.
+     * @return principal user.
+     * @throws AuthorizationException if none found.
+     */
     @Override
     public User getPrincipalUser() {
         TokenPrincipal tokenPrincipal = (TokenPrincipal) authService.getAuthPrincipal();
-        if(tokenPrincipal != null && tokenPrincipal.getId() != null) { //если есть токен
-            return findById(tokenPrincipal.getId()); // и для него есть пользователь, то берем этого пользователя
-        } else { throw new AuthorizationException("User not authorised", ErrorEnum.NOT_AUTHORIZED); } // если токен == null или у него id == null
+        if(tokenPrincipal != null && tokenPrincipal.getId() != null) { //if token exist
+            return findById(tokenPrincipal.getId()); // and for it there is user, than take this user
+        } else { throw new AuthorizationException("User not authorised", ErrorEnum.NOT_AUTHORIZED); } // if token == null or token id == null
     }
 
+    /**
+     * Checks whether an user with given name or email exists.
+     * @param nameOrEmail must not be {@literal null}.
+     * @throws BadRequestException if user with given name or email {@code nameOrEmail} exists
+     * or if {@code nameOrEmail} is {@literal null}.
+     */
     @Override
     public void checkIfUsernameOrEmailExist(String nameOrEmail) {
         if(nameOrEmail == null) throw new BadRequestException(env.getProperty("error.UserNameOrEmailCan`tBeNull"));
@@ -164,13 +206,27 @@ public class UserServiceImpl implements UserService {
         }
     }
 
+    /**
+     * Returns whether an user with the given id exists.
+     * @param userId must not be {@literal null}.
+     * @return {@literal true} if an user with the given id exists, {@literal false} otherwise.
+     * @throws IllegalArgumentException if {@code id} is {@literal null}.
+     */
     @Override
     public boolean checkIfExistById(ObjectId userId) {
         return userRepository.existsById(userId);
     }
 
+    /**
+     * Updates fields role, name, age, gender and email for principal user.
+     * Field role becomes USER.
+     * @param user with information for updating, must not be {@literal null}.
+     * @return updated principal user.
+     * @throws BadRequestException if user is {@literal null}.
+     */
     @Override
     public User updateUser(User user) {
+        if (user == null) {throw new BadRequestException(env.getProperty("error.UserCan`tBeNull"));}
         User principal = getPrincipalUser();
         Update updateUser = new Update();
         if (user.getRole() != null) { updateUser.set("role", UserRole.USER); }
@@ -181,16 +237,23 @@ public class UserServiceImpl implements UserService {
 
         Query queryUser = Query.query(Criteria.where(Fields.UNDERSCORE_ID).is(principal.getId()));
         user = mongoOperations.findAndModify(queryUser, updateUser,
-                new FindAndModifyOptions().returnNew(true), User.class);// вернет уже измененный документ (returnNew(true))
+                new FindAndModifyOptions().returnNew(true), User.class);// returns already updated document (returnNew(true))
         return user;
     }
 
 
+    /**
+     * Deletes user from database. In addition to the user himself, deletes his account, tests,
+     * and deletes his ID from other users.
+     * TODO method isn't finished!!! Don't use it!!!
+     * @param userId id of the user to be deleted.
+     * @return deleted user.
+     */
     @Override
     @Transactional
     public User deleteUser(ObjectId userId) {
-//проверку на principal
-//        authUtil.userAuthorization(userId);
+        // check on principal
+        // authUtil.userAuthorization(userId);
         //TODO remove user from usersForMatchingId in all users
         User user = findById(userId);
         valueCompatibilityAnswersRepository.removeAllByUserId(userId);

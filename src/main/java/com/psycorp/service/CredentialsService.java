@@ -7,7 +7,7 @@ import com.psycorp.model.objects.UserAccount;
 /**
  * Service interface for {@link com.psycorp.model.security.CredentialsEntity} and {@link Credentials}.
  * @author Vitaliy Proskura
- * @author  Maryna Kontar
+ * @author Maryna Kontar
  */
 public interface CredentialsService {
 

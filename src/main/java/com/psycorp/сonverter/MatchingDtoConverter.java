@@ -7,6 +7,8 @@ import org.springframework.stereotype.Component;
 
 /**
  * Dto converter for {@link Matching}.
+ * @author Vitaliy Proskura
+ * @author Maryna Kontar
  */
 @Component
 public class MatchingDtoConverter extends AbstractDtoConverter<Matching, MatchingDto>{

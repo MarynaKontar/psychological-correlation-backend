@@ -37,7 +37,7 @@ import static org.springframework.data.mongodb.core.aggregation.Aggregation.*;
 
 /**
  * Service implementation for UserAccountService.
- * @author  Maryna Kontar
+ * @author Maryna Kontar
  */
 @Service
 public class UserAccountServiceImpl implements UserAccountService {
@@ -62,6 +62,19 @@ public class UserAccountServiceImpl implements UserAccountService {
     }
 
     /**
+     * Insert new {@link UserAccountEntity} for saved in database user.
+     * @param user must not be {@literal null}, must be saved in database.
+     * @return inserted {@link UserAccountEntity}.
+     */
+    @Override
+    public UserAccountEntity insert(User user) {
+        UserAccountEntity userAccountEntity = new UserAccountEntity();
+        userAccountEntity.setUserId(user.getId());
+        userAccountEntity.setAccountType(AccountType.OPEN);
+        return userAccountRepository.insert(userAccountEntity);
+    }
+
+    /**
      * Gives an user account for user, if there is, or create anonymous account without writing to the database.
      * @param user for whom the account is being getting
      * @return user account obtained by conversion UserAccountEntity from the database, if there is,
@@ -71,11 +84,16 @@ public class UserAccountServiceImpl implements UserAccountService {
     public UserAccount getUserAccount(User user) {
         UserAccountEntity userAccountEntity = getUserAccountEntityByUserIdOrNull(user.getId());
         if (userAccountEntity == null) { // if user aren`t registered and don`t have account
-            return getAnonimUserAccount(user);
+            return convertToAnonimUserAccount(user);
         }
-        return getUserAccount(userAccountEntity);
+        return convertToUserAccount(userAccountEntity);
     }
 
+    /**
+     * Gets list of {@link UserAccount} for all registered users from userForMatching of principal user
+     * that passed value compatibility test.
+     * @return list of {@link UserAccount}.
+     */
     @Override
     public List<UserAccount> getAllUserForMatchingPassedTest() {
 
@@ -90,7 +108,7 @@ public class UserAccountServiceImpl implements UserAccountService {
                 Aggregation.match(Criteria.where("userId")
                         .in(userService.getPrincipalUser().getUsersForMatchingId())),
                 lookupOperation,
-                unwind("userAccountEntityInfo"), // unwind reslts for user with multiply valueCompatibilityAnswersEntities
+                unwind("userAccountEntityInfo"), // unwind results for user with multiply valueCompatibilityAnswersEntities
                 Aggregation.match(Criteria.where("userAccountEntityInfo").ne(null)),
                 Aggregation.match(Criteria.where("userAccountEntityInfo.passed").is(true)),
                 group(fields).addToSet("userId").as("userIds"), // only unique
@@ -98,17 +116,27 @@ public class UserAccountServiceImpl implements UserAccountService {
                 Aggregation.sort(Sort.Direction.DESC, "userId")
         );
 
-        AggregationResults<UserAccountEntity> aggregationResults = mongoOperations.aggregate(aggregation, "userAccountEntity", UserAccountEntity.class);
+        AggregationResults<UserAccountEntity> aggregationResults = mongoOperations
+                .aggregate(aggregation, "userAccountEntity", UserAccountEntity.class);
         List<UserAccountEntity> results = aggregationResults.getMappedResults();
         List<UserAccount> userAccounts = results.stream()
-                .map(userAccountEntity -> getUserAccount(userAccountEntity))
+                .map(userAccountEntity -> convertToUserAccount(userAccountEntity))
                 .collect(Collectors.toList());
 
+        //add users that pass test but not registered yet
         return userAccounts;
     }
 
+    /**
+     * Gets a {@link Page} of {@link UserAccount} for registered users,
+     * that passed value compatibility test (except principal user)
+     * meeting the paging restriction provided in the {@code Pageable} object.
+     * @param pageable {@code Pageable} object that defines page options, must not be {@literal null}.
+     * @return a page of {@link UserAccount} for registered users,
+     * that passed value compatibility test (except principal user).
+     */
     @Override
-    public Page<UserAccount> getAllRegisteredAndPassedTestPageable(Pageable pageable) { // only thus who is registered (have userAccount) and passed test
+    public Page<UserAccount> getAllRegisteredAndPassedTestPageable(Pageable pageable) {
 
         LookupOperation lookupOperation = LookupOperation.newLookup()
                 .from("valueCompatibilityAnswersEntity")
@@ -125,22 +153,27 @@ public class UserAccountServiceImpl implements UserAccountService {
                 Aggregation.match(Criteria.where("userAccountEntityInfo.passed").is(true)),
                 Aggregation.group(fields).addToSet("userId").as("userIds"),
                 Aggregation.project(fields),
-//                Aggregation.sort(Sort.Direction.DESC, "passDate"),
                 Aggregation.sort(Sort.Direction.DESC, "userId"),
 
                 Aggregation.skip(((pageable.getPageNumber())*pageable.getPageSize())),
                 Aggregation.limit(pageable.getPageSize())
         );
 
-        AggregationResults<UserAccountEntity> aggregationResults = mongoOperations.aggregate(aggregation, "userAccountEntity", UserAccountEntity.class);
+        AggregationResults<UserAccountEntity> aggregationResults = mongoOperations
+                .aggregate(aggregation, "userAccountEntity", UserAccountEntity.class);
         List<UserAccountEntity> results = aggregationResults.getMappedResults();
         List<UserAccount> userAccounts = results.stream()
-                .map(userAccountEntity -> getUserAccount(userAccountEntity))
+                .map(userAccountEntity -> convertToUserAccount(userAccountEntity))
                 .collect(Collectors.toList());
         Page<UserAccount> page = new PageImpl<>(userAccounts, pageable, getAllRegisteredAndPassedTest().size());
         return page;
     }
 
+    /**
+     * Gets {@link UserAccountEntity} by userId user id.
+     * @param userId must not be {@literal null}.
+     * @return {@link UserAccountEntity} or {@literal null} if none exists.
+     */
     @Override
     public UserAccountEntity getUserAccountEntityByUserIdOrNull(ObjectId userId) {
         Optional<UserAccountEntity> userAccountEntityOptional = userAccountRepository.findByUserId(userId);
@@ -148,20 +181,13 @@ public class UserAccountServiceImpl implements UserAccountService {
         return userAccountEntity;
     }
 
-    @Override
-    public UserAccountEntity insert(User user) {
-        UserAccountEntity userAccountEntity = new UserAccountEntity();
-        userAccountEntity.setUserId(user.getId());
-        userAccountEntity.setAccountType(AccountType.OPEN);
-       return userAccountRepository.insert(userAccountEntity);
-    }
-
-    @Override
-    public UserAccount update(UserAccount userAccount) {
-        userAccount.setUser(userService.updateUser(userAccount.getUser()));
-        return userAccount;
-    }
-
+    /**
+     * Returns singleton list with user retrieves by userForMatchingToken
+     * or list of usersForMatching for principal user if userForMatchingToken is {@literal null}.
+     * @param userForMatchingToken
+     * @return singleton list with user retrieves by userForMatchingToken or list of usersForMatching
+     * for principal user if userForMatchingToken is {@literal null}.
+     */
     @Override
     public List<User> getUsersForMatching(String userForMatchingToken) {
         if (userForMatchingToken != null) {
@@ -175,6 +201,23 @@ public class UserAccountServiceImpl implements UserAccountService {
                .collect(Collectors.toList());
     }
 
+    /**
+     * Updates {@link UserAccount}.
+     * @param userAccount must not be {@literal null}.
+     * @return updated user account.
+     */
+    @Override
+    public UserAccount update(UserAccount userAccount) {
+        userAccount.setUser(userService.updateUser(userAccount.getUser()));
+        return userAccount;
+    }
+
+    /**
+     * Adds principal user id to usersWhoInvitedYouId field of {@link UserAccountEntity} for userAccount
+     * and id of user from userAccount to usersWhoYouInviteId field of {@link UserAccountEntity} for principal user.
+     * @param userAccount must not be {@literal null}.
+     * @return updated user account.
+     */
     @Override
     @Transactional
     public UserAccount inviteForMatching(UserAccount userAccount) {
@@ -195,11 +238,16 @@ public class UserAccountServiceImpl implements UserAccountService {
         UserAccountEntity userAccountEntity = mongoOperations.findAndModify(query1, update1,
                 new FindAndModifyOptions().returnNew(true), UserAccountEntity.class);
 
-        userAccount = getUserAccount(userAccountEntity);
+        userAccount = convertToUserAccount(userAccountEntity);
         return userAccount;
     }
 
-    private UserAccount getAnonimUserAccount(User user) {
+    /**
+     * Creates {@link UserAccount} for user without creating and writing {@link UserAccountEntity} to the database.
+     * @param user must not be {@literal null}.
+     * @return {@link UserAccount} for user.
+     */
+    private UserAccount convertToAnonimUserAccount(User user) {
         UserAccount userAccount = new UserAccount();
         Boolean isValueCompatibilityTestPassed = valueCompatibilityAnswersService.ifTestPassed(user.getId());
 
@@ -228,17 +276,26 @@ public class UserAccountServiceImpl implements UserAccountService {
         return userAccount;
     }
 
+    /**
+     * Gets all {@link UserAccount} for registered and passed value compatibility test users.
+     * @return list of {@link UserAccount}.
+     */
     private List<UserAccount> getAllRegisteredAndPassedTest() { // only thus who is registered (have userAccount) and pass test
 
         List<UserAccount> userAccounts = userAccountRepository.findAll().stream()
                 .filter(userAccountEntity -> valueCompatibilityAnswersService.ifTestPassed(userAccountEntity.getUserId()))
                 .filter(userAccountEntity -> !userAccountEntity.getUserId().equals(userService.getPrincipalUser().getId())) // not include principal user
-                .map(this::getUserAccount)
+                .map(this::convertToUserAccount)
                 .collect(Collectors.toList());
         return userAccounts;
     }
 
-    private UserAccount getUserAccount(UserAccountEntity userAccountEntity) {
+    /**
+     * Convert {@link UserAccountEntity} to {@link UserAccount}.
+     * @param userAccountEntity must not be {@literal null}.
+     * @return {@link UserAccount}.
+     */
+    private UserAccount convertToUserAccount(UserAccountEntity userAccountEntity) {
 
         UserAccount userAccount = new UserAccount();
         User user = userService.findById(userAccountEntity.getUserId());
@@ -283,21 +340,14 @@ public class UserAccountServiceImpl implements UserAccountService {
         return userAccount;
     }
 
+    /**
+     * Gets {@link UserAccountEntity} by userId.
+     * @param userId  must not be {@literal null}.
+     * @return {@link UserAccountEntity}.
+     */
     private UserAccountEntity getUserAccountEntityByUserId(ObjectId userId) {
         return userAccountRepository.findByUserId(userId).orElseThrow(() ->
                 new BadRequestException("user account not found for user id: " + userId));
-    }
-
-    @Data
-    private class UserAccountInfo {
-        private ObjectId id;
-        private ObjectId userId;
-        private AccountType accountType;
-        private List<ObjectId> usersWhoInvitedYouId; // пользователи, которые пригласили тебя сравнить профили
-        private List<ObjectId> usersWhoYouInviteId; // пользователи, которых ты пригласил сравнить профили
-        private ValueCompatibilityAnswersEntity userAccountEntityInfo;
-        private List<ObjectId> ids;
-        private Integer count;
     }
 
 }

@@ -8,6 +8,7 @@ import org.springframework.stereotype.Component;
 
 /**
  * Dto converter for {@link ValueProfileMatching}.
+ * @author Maryna Kontar
  */
 @Component
 public class ValueProfileMatchingDtoConverter extends AbstractDtoConverter<ValueProfileMatching, ValueProfileMatchingDto> {

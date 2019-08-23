@@ -9,6 +9,7 @@ import org.springframework.stereotype.Component;
 
 /**
  * Dto converter for {@link Choice}.
+ * @author Maryna Kontar
  */
 @Component
 public class ChoiceDtoConverter extends AbstractDtoConverter<Choice, ChoiceDto>{
