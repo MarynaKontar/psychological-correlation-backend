@@ -87,7 +87,7 @@ public class ApiUserMatchController {
 
     /**
      * Endpoint for url ":/match/value-profile-for-matching".
-     * Create value compatibility profiles for user with userId and principal user
+     * Creates value compatibility profiles for user with userId and principal user
      * with comments that describe differences between that profiles.
      * Profiles are creating based on the results of the last passed value compatibility test.
      * @param userId id of the user for whom the matching profile will be created with the principal user.

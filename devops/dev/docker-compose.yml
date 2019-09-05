@@ -18,7 +18,7 @@ services:
 
   psymatch-mongodb:
     container_name: psymatch-mongodb
-    image: mongo:3.6
+    image: mongo:4.2.0
     volumes:
       - ./data/db:/data/db
     ports:

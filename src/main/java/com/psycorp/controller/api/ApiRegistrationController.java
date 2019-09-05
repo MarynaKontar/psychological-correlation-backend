@@ -72,7 +72,7 @@ public class ApiRegistrationController {
 
     /**
      * Endpoint for url ":/registration/changePassword".
-     * Change password.
+     * Changes password.
      * @param changePasswordDto contain old and new password.
      * @return ResponseEntity<> with HttpStatus NO_CONTENT if the password was successfully changed.
      */
