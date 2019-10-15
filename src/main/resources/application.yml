@@ -5,6 +5,8 @@ server:
     context-path: /api
 
 spring:
+#  profiles:
+#  active: test
   data:
     mongodb:
       host: ${DB_HOST:localhost}
@@ -13,8 +15,15 @@ spring:
       username: mongodb_admin
       password: MiVpp1g
       authentication-database: admin
-# when pushing to git, remove comments from username, password, authentication-database
-# and change the port to 27017
+## when pushing to git, remove comments from username, password, authentication-database
+## and change the port to 27017
+#
+  main:
+      allow-bean-definition-overriding: true
+# when migrate from spring 2.0.0 to 2.1.2 you need to add this? itherwise there will be an error:
+# The bean 'tokenAuthFilter', defined in class path resource [com/psycorp/configuration/SecurityConfig.class],
+#could not be registered. A bean with that name has already been defined in file
+#[/home/maryna/IdeaProjects/psymatch-backend/target/classes/com/psycorp/security/token/TokenAuthFilter.class] and overriding is disabled.
 
 
 #logging:
@@ -25,3 +34,17 @@ spring:
 #  level:
 ##    org.springframework.web: INFO
 #    com.psycorp.controller: TRACE
+
+#---
+#
+#spring:
+#  profiles: test
+#  data:
+#      mongodb:
+#        host: localhost
+#        port: 27018
+#        database: psymatch
+#        username: mongodb_admin
+#        password: MiVpp1g
+#        authentication-database: admin
+#

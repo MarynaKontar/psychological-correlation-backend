@@ -3,6 +3,7 @@ package com.psycorp.controller.api;
 import com.psycorp.model.dto.ChangePasswordDto;
 import com.psycorp.model.dto.CredentialsDto;
 import com.psycorp.model.dto.UserAccountDto;
+import com.psycorp.model.objects.Credentials;
 import com.psycorp.model.objects.UserAccount;
 import com.psycorp.service.CredentialsService;
 import com.psycorp.service.security.TokenService;
@@ -14,6 +15,7 @@ import org.springframework.context.annotation.PropertySource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
@@ -65,9 +67,10 @@ public class ApiRegistrationController {
         HttpHeaders headers = new HttpHeaders();
         headers.set("AUTHORIZATION", token);
         LOGGER.trace("Registration success: '{}'", userAccount.getUser().getId());
+        UserAccountDto userAccountDto = userAccountDtoConverter.transform(userAccount);
         return ResponseEntity.status(HttpStatus.CREATED)
                 .headers(headers)
-                .body(userAccountDtoConverter.transform(userAccount));
+                .body(userAccountDto);
     }
 
     /**
@@ -96,6 +99,15 @@ public class ApiRegistrationController {
         HttpHeaders httpHeaders = new HttpHeaders();
         httpHeaders.add("messageError", "Something wrong: " + ex.getMessage()
                         + "; path: " + request.getServletPath());
+        return ResponseEntity.badRequest().headers(httpHeaders).build();
+    }
+
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<HttpHeaders> handleMethodArgumentNotValidException(MethodArgumentNotValidException ex, HttpServletRequest request) {
+        LOGGER.trace("IP: {}:{}:{} : MethodArgumentNotValidException: {}", request.getRemoteHost(), request.getRemotePort(), request.getRemoteUser(), ex);
+        HttpHeaders httpHeaders = new HttpHeaders();
+        httpHeaders.add("messageError", "Something wrong: " + ex.getMessage()
+                + "; path: " + request.getServletPath());
         return ResponseEntity.badRequest().headers(httpHeaders).build();
     }
 }

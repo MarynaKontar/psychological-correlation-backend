@@ -30,6 +30,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import static com.psycorp.security.SecurityConstant.ACCESS_TOKEN_PREFIX;
+
 
 /**
  * Service implementation for CredentialsService.
@@ -90,7 +92,7 @@ public class CredentialsServiceImpl implements CredentialsService{
             //if user is registered by INVITE_TOKEN, change it to ACCESS_TOKEN
             TokenEntity tokenEntity = tokenService.findByUserId(principalId);
             if(tokenEntity.getToken() != null && tokenEntity.getType() == TokenType.INVITE_TOKEN) {
-                tokenService.changeInviteTokenToAccess(tokenEntity.getToken());
+                tokenService.changeInviteTokenToAccess(ACCESS_TOKEN_PREFIX + " " + tokenEntity.getToken());
             }
 
             // and if there is user for token, than update this user
@@ -121,7 +123,7 @@ public class CredentialsServiceImpl implements CredentialsService{
         User principal = userService.getPrincipalUser();
         CredentialsEntity credentialsEntity = findByUserId(principal.getId());
         if (!passwordEncoder.matches(oldPassword, credentialsEntity.getPassword())) {
-            throw new AuthorizationException("You entered the wrong password. ", ErrorEnum.PASSWORD_WRONG);
+            throw new AuthorizationException(env.getProperty("error.YouEnterWrongPassword"), ErrorEnum.PASSWORD_WRONG);
         }
 
         ObjectId credentialsId = credentialsEntity.getId();

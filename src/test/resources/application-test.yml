@@ -1,0 +1,17 @@
+#server:
+#  port: 8080
+#  servlet:
+#    context-path: /api
+
+spring:
+  data:
+    mongodb:
+      host: localhost
+      port: 27018
+      database: psymatch
+      username: mongodb_admin
+      password: MiVpp1g
+      authentication-database: admin
+
+  main:
+      allow-bean-definition-overriding: true

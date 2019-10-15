@@ -1,21 +1,21 @@
 package com.psycorp.service.implementation;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
-public class CredentialsServiceImplTest {
+class CredentialsServiceImplTest {
 
-    @Before
-    public void setUp() throws Exception {
+    @BeforeEach
+    void setUp() {
     }
 
     @Test
-    public void save() {
+    void save() {
     }
 
     @Test
-    public void changePassword() {
+    void changePassword() {
     }
 }

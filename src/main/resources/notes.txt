@@ -58,6 +58,16 @@ PUT:
 
 
 
+
+
+
+
+
+
+
+
+
+
 Delete user when return to friend accout without registration.
 
 //    @Query("{$find: {'userId': ?0, 'passed': ?1}, $sort: {'passDate': -1}, $limit: 1}")
@@ -65,6 +75,12 @@ Delete user when return to friend accout without registration.
 https://drive.google.com/file/d/1XlljdGSgrBI2bKiqZJ5TVxPLzHoXacI0/view?usp=sharing
 
 Replace Credentials to security directory?
+
+
+
+
+
+
 
 
 ============= Security=============
@@ -145,3 +161,198 @@ Authentication authenticateResult = getAuthenticationManager().authenticate(auth
          Page<UserAccount> page = new PageImpl<UserAccount>(userAccounts, pageable, getAllRegisteredAndPassedTest().size());
          return page;
      }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+     ==============TESTING==================
+
+        <!--<dependency>-->
+            <!--<groupId>org.powermock</groupId>-->
+            <!--<artifactId>powermock-api-mockito2</artifactId>-->
+            <!--<version>1.7.4</version>-->
+        <!--</dependency>-->
+        <!--<dependency>-->
+            <!--<groupId>org.powermock</groupId>-->
+            <!--<artifactId>powermock-module-junit4</artifactId>-->
+            <!--<version>2.0.2</version>-->
+        <!--</dependency>-->
+
+
+     //        PowerMockito.mockStatic(Enum.class);
+     //        PowerMockito.when(Enum.valueOf(ImportOrderOption.class,"TOP")).thenReturn(ImportOrderOption.TOP);
+
+     //        when(TokenType.valueOf(TokenType.class, "INVITE_TOKEN")).thenReturn(TokenType.INVITE_TOKEN);
+
+     //        TokenType T = PowerMockito.mock(TokenType.class);
+     //        Whitebox.setInternalState(T, "name", "NEW_TOKEN_TYPE");
+     //        Whitebox.setInternalState(T, "ordinal", 4);
+     //        PowerMockito.mockStatic(TokenType.class);
+     //        PowerMockito.when(TokenType.values()).thenReturn(new TokenType[]{
+     //                TokenType.INVITE_TOKEN, TokenType.ACCESS_TOKEN,TokenType.REFRESH_TOKEN});
+     //
+     //        PowerMockito.mockStatic(Enum.class);
+     //        PowerMockito.when(Enum.valueOf(TokenType.class,"INVITE_TOKEN")).thenReturn(TokenType.INVITE_TOKEN);
+     //        PowerMockito.when(Enum.valueOf(TokenType.class,"ACCESS_TOKEN")).thenReturn(TokenType.ACCESS_TOKEN);
+     //        PowerMockito.when(Enum.valueOf(TokenType.class,"REFRESH_TOKEN")).thenReturn(TokenType.REFRESH_TOKEN);
+     ////        PowerMockito.when(Enum.valueOf(TokenType.class,"NEW_TOKEN_TYPE")).thenReturn(T);
+     //        PowerMockito.mockStatic(TokenType.class);
+     //        PowerMockito.when(TokenType.valueOf(TokenType.class,"INVITE_TOKEN")).thenReturn(TokenType.INVITE_TOKEN);
+
+
+
+
+
+
+import org.springframework.test.annotation.DirtiesContext;
+//@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
+
+
+
+
+import static org.junit.jupiter.api.Assertions.assertAll;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assumptions.assumeFalse;
+import static org.junit.jupiter.api.Assumptions.assumingThat;
+@Test
+    void groupAssertions() {
+        int[] numbers = {0, 1, 2, 3, 4};
+        assertAll("numbers",
+                () -> assertEquals(numbers[0], 1),
+                () -> assertEquals(numbers[3], 3),
+                () -> assertEquals(numbers[4], 1)
+        );
+    }
+
+    @Test
+    void falseAssumption() {
+        assumeFalse(5 < 1);
+        assertEquals(5 + 2, 7);
+    }
+
+    @Test
+    void assumptionThat() {
+        String someString = "Just a string";
+        assumingThat(
+                someString.equals("Just a string"),
+                () -> assertEquals(2 + 2, 4)
+        );
+    }
+
+
+
+
+
+
+            <!--Embedded mongodb -->
+            <!--<dependency>-->
+                <!--<groupId>de.flapdoodle.embed</groupId>-->
+                <!--<artifactId>de.flapdoodle.embed.mongo</artifactId>-->
+                <!--<scope>test</scope>-->
+            <!--</dependency>-->
+
+
+            Container for using mongodb for testing with docker
+            <!-- https://mvnrepository.com/artifact/org.testcontainers/testcontainers -->
+            <!--To create mongo container for testing with docker container-->
+            <!--<dependency>-->
+                <!--<groupId>org.testcontainers</groupId>-->
+                <!--<artifactId>testcontainers</artifactId>-->
+                <!--<version>1.12.1</version>-->
+                <!--<scope>test</scope>-->
+            <!--</dependency>-->
+
+
+            Вместо DTO можно использовать
+            <!--<dependency>-->
+                <!--<groupId>org.modelmapper</groupId>-->
+                <!--<artifactId>modelmapper</artifactId>-->
+                <!--<version>${modelmapper.version}</version>-->
+            <!--</dependency>-->
+
+
+
+                    Manual mongodb dependencies
+                    <!--<dependency>-->
+                        <!--<groupId>org.mongodb</groupId>-->
+                        <!--<artifactId>mongo-java-driver</artifactId>-->
+                        <!--<version>3.11.0</version>-->
+                    <!--</dependency>-->
+                    <!--<dependency>-->
+                        <!--<groupId>org.mongodb</groupId>-->
+                        <!--<artifactId>mongodb-driver-core</artifactId>-->
+                        <!--<version>3.11.0</version>-->
+                    <!--</dependency>-->
+
+                    <!--<dependency>-->
+                        <!--<groupId>org.mongodb</groupId>-->
+                        <!--<artifactId>bson</artifactId>-->
+                        <!--<version>3.11.0</version>-->
+                    <!--</dependency>-->
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                           //        Fixture.of(SimpleUserDto.class).addTemplate("registeredUserDto", new Rule() {{
+                    //            add("name", "userName");
+                    //            add("email", "email@gmail.com");
+                    //            add("gender", "someGender");
+                    //            add("age", 35);
+                    //        }});
+
+                    //        Fixture.of(UserAccountDto.class).addTemplate("userAccountDto", new Rule() {{
+                    //            add("user", has(1).of(SimpleUserDto.class, "registeredUserDto"));
+                    //            add("accountType", AccountType.OPEN);
+                    //            add("isValueCompatibilityTestPassed", false);
+                    //        }});
+                    //
+                    //        private List<String> inviteTokens;
+                    //        private List<SimpleUserDto> usersForMatching;
+                    //        private List<SimpleUserDto> usersWhoYouInvite;
+                    //        private List<SimpleUserDto> usersWhoInvitedYou;
+
+
+                        @BeforeEach
+                        public void setUp() throws Exception {
+                    //        MockitoAnnotations.initMocks(this);
+                    //        mockMvc = MockMvcBuilders
+                    //                .standaloneSetup(apiRegistrationController)
+                    //                .addFilters(tokenAuthFilter)
+                    //                .build();
+                        }

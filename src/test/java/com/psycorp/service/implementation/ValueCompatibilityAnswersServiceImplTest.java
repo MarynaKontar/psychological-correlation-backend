@@ -1,33 +1,33 @@
 package com.psycorp.service.implementation;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
-public class ValueCompatibilityAnswersServiceImplTest {
+class ValueCompatibilityAnswersServiceImplTest {
 
-    @Before
-    public void setUp() throws Exception {
+    @BeforeEach
+    void setUp() {
     }
 
     @Test
-    public void getInitValueCompatibilityAnswers() {
+    void getInitValueCompatibilityAnswers() {
     }
 
     @Test
-    public void saveFirstPartOfTests() {
+    void saveFirstPartOfTests() {
     }
 
     @Test
-    public void saveChoices() {
+    void saveChoices() {
     }
 
     @Test
-    public void getLastPassedTest() {
+    void getLastPassedTest() {
     }
 
     @Test
-    public void ifTestPassed() {
+    void ifTestPassed() {
     }
 }

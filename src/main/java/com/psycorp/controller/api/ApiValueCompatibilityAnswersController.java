@@ -79,8 +79,9 @@ public class ApiValueCompatibilityAnswersController {
     @GetMapping("/initTest")
     public ResponseEntity<ValueCompatibilityAnswersDto> getInitValueCompatibilityAnswers(){
         LOGGER.trace("getInitValueCompatibilityAnswers");
-        return ResponseEntity.ok().headers(httpHeaders).body(valueCompatibilityAnswersDtoConverter
-                .transform(valueCompatibilityAnswersService.getInitValueCompatibilityAnswers()));
+        ValueCompatibilityAnswersDto valueCompatibilityAnswersDto = valueCompatibilityAnswersDtoConverter
+                .transform(valueCompatibilityAnswersService.getInitValueCompatibilityAnswers());
+        return ResponseEntity.ok().headers(httpHeaders).body(valueCompatibilityAnswersDto);
     }
 
     /**

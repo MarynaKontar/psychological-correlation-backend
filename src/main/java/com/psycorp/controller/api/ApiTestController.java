@@ -1,6 +1,8 @@
 package com.psycorp.controller.api;
 
 import com.psycorp.model.dto.SomeDto;
+import com.psycorp.model.dto.ValueCompatibilityAnswersDto;
+import com.psycorp.model.entity.ValueCompatibilityAnswersEntity;
 import com.psycorp.service.ValueCompatibilityAnswersService;
 import com.psycorp.service.UserMatchService;
 import com.psycorp.service.UserService;
@@ -50,6 +52,10 @@ public class ApiTestController {
         this.userMatchDtoConverter = userMatchDtoConverter;
     }
 
+    @GetMapping("/testEndpoint")
+    public ResponseEntity<ValueCompatibilityAnswersEntity> testEndpoint() {
+        return ResponseEntity.ok(new ValueCompatibilityAnswersEntity());
+    }
 
 //    @GetMapping("/getVCAnswersWithUserInfo")
 //    public ResponseEntity<List<SomeDto>> getSuitableUsers() {

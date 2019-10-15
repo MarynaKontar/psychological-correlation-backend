@@ -76,6 +76,7 @@ public class UserAccountServiceImpl implements UserAccountService {
 
     /**
      * Gives an user account for user, if there is, or create anonymous account without writing to the database.
+     * For the anonymous user does not check whether there is a user in the database.
      * @param user for whom the account is being getting
      * @return user account obtained by conversion UserAccountEntity from the database, if there is,
      * or created anonymous account without writing to the database
@@ -176,9 +177,9 @@ public class UserAccountServiceImpl implements UserAccountService {
      */
     @Override
     public UserAccountEntity getUserAccountEntityByUserIdOrNull(ObjectId userId) {
-        Optional<UserAccountEntity> userAccountEntityOptional = userAccountRepository.findByUserId(userId);
-        UserAccountEntity userAccountEntity = userAccountEntityOptional.orElse(null);
-        return userAccountEntity;
+//        Optional<UserAccountEntity> userAccountEntityOptional = userAccountRepository.findByUserId(userId);
+//        UserAccountEntity userAccountEntity = userAccountEntityOptional.orElse(null);
+        return userAccountRepository.findByUserId(userId).orElse(null);
     }
 
     /**
