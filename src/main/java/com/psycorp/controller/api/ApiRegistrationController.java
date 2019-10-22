@@ -67,10 +67,9 @@ public class ApiRegistrationController {
         HttpHeaders headers = new HttpHeaders();
         headers.set("AUTHORIZATION", token);
         LOGGER.trace("Registration success: '{}'", userAccount.getUser().getId());
-        UserAccountDto userAccountDto = userAccountDtoConverter.transform(userAccount);
         return ResponseEntity.status(HttpStatus.CREATED)
                 .headers(headers)
-                .body(userAccountDto);
+                .body(userAccountDtoConverter.transform(userAccount));
     }
 
     /**

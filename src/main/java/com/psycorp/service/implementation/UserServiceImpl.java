@@ -94,7 +94,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public User addNameAgeAndGender(User user) {
         if(user == null || user.getName() == null || user.getAge() == null || user.getGender() == null) {
-            throw new BadRequestException("User name, age or gender cant be null");
+            throw new BadRequestException(env.getProperty("error.UserNameAgeOrGenderCantBeNull"));
         }
         User principal = getPrincipalUser();
 

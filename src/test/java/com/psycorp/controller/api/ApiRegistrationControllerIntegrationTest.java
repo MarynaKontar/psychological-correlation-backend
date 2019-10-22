@@ -1,47 +1,25 @@
 package com.psycorp.controller.api;
 
 import br.com.six2six.fixturefactory.Fixture;
-import br.com.six2six.fixturefactory.Rule;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.psycorp.model.dto.ChangePasswordDto;
 import com.psycorp.model.dto.CredentialsDto;
 import com.psycorp.model.dto.UserAccountDto;
 import com.psycorp.model.entity.User;
 import com.psycorp.model.entity.UserAccountEntity;
-import com.psycorp.model.entity.UserMatchEntity;
-import com.psycorp.model.entity.ValueCompatibilityAnswersEntity;
 import com.psycorp.model.enums.AccountType;
-import com.psycorp.model.enums.Gender;
 import com.psycorp.model.enums.TokenType;
 import com.psycorp.model.enums.UserRole;
 import com.psycorp.model.security.CredentialsEntity;
 import com.psycorp.model.security.TokenEntity;
-import com.psycorp.repository.UserAccountRepository;
-import com.psycorp.repository.UserRepository;
-import com.psycorp.repository.security.CredentialsRepository;
-import com.psycorp.repository.security.TokenRepository;
-import com.psycorp.service.CredentialsService;
 import com.psycorp.service.UserAccountService;
 import com.psycorp.service.UserService;
 import com.psycorp.service.security.TokenService;
-import com.psycorp.сonverter.CredentialsDtoConverter;
-import com.psycorp.сonverter.UserAccountDtoConverter;
-import org.bson.types.ObjectId;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.core.env.Environment;
-import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.http.MediaType;
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
-import java.time.LocalDateTime;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -56,72 +34,30 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 /**
  * Integration tests for {@link ApiRegistrationController}.
- * For server use {@link MockMvc}.
+ * For server uses {@link MockMvc}.
  * Use not embedded mongo database described in application-test.yml
  */
-@SpringBootTest
-@AutoConfigureMockMvc
-@ActiveProfiles("test")
-class ApiRegistrationControllerIntegrationTest {
+class ApiRegistrationControllerIntegrationTest extends AbstractControllerTest{
 
-    private String oldPassword = "oldPassword";
-    private String newPassword = "newPassword";
-
-    @Autowired
-    private MockMvc mockMvc;
-    @Autowired
-    private MongoTemplate mongoTemplate;
-
-    @Autowired
-    private CredentialsService credentialsService;
     @Autowired
     private TokenService tokenService;
     @Autowired
-    private UserAccountDtoConverter userAccountDtoConverter;
-    @Autowired
-    private CredentialsDtoConverter credentialsDtoConverter;
-    @Autowired
     private UserService userService;
     @Autowired
-    private CredentialsRepository credentialsRepository;
-    @Autowired
-    private UserRepository userRepository;
-    @Autowired
-    private TokenRepository tokenRepository;
-    @Autowired
-    private UserAccountRepository userAccountRepository;
-    @Autowired
     private UserAccountService userAccountService;
-    @Autowired
-    private PasswordEncoder passwordEncoder;
-    @Autowired
-    private Environment env;
-
-    @Autowired
-    private ObjectMapper mapper;
-
-    @AfterEach
-    void tearDown() {
-        mongoTemplate.dropCollection(User.class);
-        mongoTemplate.dropCollection(UserAccountEntity.class);
-        mongoTemplate.dropCollection(CredentialsEntity.class);
-        mongoTemplate.dropCollection(TokenEntity.class);
-        mongoTemplate.dropCollection(ValueCompatibilityAnswersEntity.class);
-        mongoTemplate.dropCollection(UserMatchEntity.class);
-    }
 
 
-    //  ========================= register(@RequestBody @NotNull @Valid CredentialsDto credentialsDto,=================
-    //  ========================= @RequestHeader(value = "Authorization", required = false) String token) =============
+    //  ========= /registration ========================================================================================
+    //  ========= ResponseEntity<UserAccountDto> register(@RequestBody @NotNull @Valid CredentialsDto credentialsDto,===
+    //  ========= @RequestHeader(value = "Authorization", required = false) String token) ==============================
 
     /**
      * Test success registration for new user (there isn't "Authorization" in request header)
      * @throws Exception (JsonProcessingException and UnsupportedEncodingException for mapper and Exception for perform)
      */
     @Test
-    void registerSuccessNewUser() throws Exception {
+    void registerSuccessForNewUser() throws Exception {
         //given
-        fixtureCredentialsDto();
         CredentialsDto credentialsDto = Fixture.from(CredentialsDto.class).gimme("credentialsRegistrationDto");
 
         //when
@@ -137,7 +73,7 @@ class ApiRegistrationControllerIntegrationTest {
         UserAccountDto userAccountDto = mapper
                 .readValue(mvcResult.getResponse().getContentAsString(), UserAccountDto.class);
 
-        // asserts that user user, user account, credentials and token was created
+        // asserts that user, user account, credentials and token was created
         Optional<CredentialsEntity> credentialsEntityOptional = credentialsRepository.findByUserId(userAccountDto.getUser().getId());
         assertDoesNotThrow(() -> userService.findUserByNameOrEmail(credentialsDto.getName()));
         assertNotNull(userAccountService.getUserAccountEntityByUserIdOrNull(userAccountDto.getUser().getId()));
@@ -168,9 +104,9 @@ class ApiRegistrationControllerIntegrationTest {
 
 
     @Test
-    void registerSuccessExistsUser() throws Exception {
+    void registerSuccessForExistsUser() throws Exception {
         //given
-        Map<String, Object> preparedObjects = populateDbForSuccessfulRegistrationOfExistsUserTest();
+        Map<String, Object> preparedObjects = populateDbWithAnonimUserAndCredentialsAndToken();
         User principal = (User) preparedObjects.get("user");
         TokenEntity tokenEntity = (TokenEntity) preparedObjects.get("tokenEntity");
         CredentialsDto credentialsDto = Fixture.from(CredentialsDto.class).gimme("credentialsRegistrationDto");
@@ -218,101 +154,13 @@ class ApiRegistrationControllerIntegrationTest {
                 ACCESS_TOKEN_PREFIX + " " + updatedTokenEntity.getToken());
     }
 
+
+    // ========================= /registration/changePassword ==========================================================
+    // ========================= changePassword(@RequestBody @NotNull ChangePasswordDto changePasswordDto) =============
     @Test
-    public void registerThrowExceptionForNotValidToken() throws Exception {
+    void changePasswordSuccessForValidTokenAndOldPassword() throws Exception {
         //given
-        fixtureCredentialsDto();
-        CredentialsDto credentialsDto = Fixture.from(CredentialsDto.class).gimme("credentialsRegistrationDto");
-
-        //when
-        mockMvc.perform(post("/registration")
-                .content(mapper.writeValueAsString(credentialsDto))
-                .contentType(MediaType.APPLICATION_JSON_UTF8)
-                .header("AUTHORIZATION", ACCESS_TOKEN_PREFIX + " " + "notValidToken"))
-                .andExpect(status().isUnauthorized())
-                .andReturn();
-    }
-
-    @Test
-    public void registerThrowsExceptionForNullCredentialsDto() throws Exception {
-        //when
-        MvcResult mvcResult  = mockMvc.perform(post("/registration"))
-                .andExpect(status().is4xxClientError())
-                .andExpect(header().exists("messageError"))
-                .andReturn();
-
-        //then
-        assertTrue(mvcResult.getResponse().getHeader("messageError").contains("Required request body is missing"));
-    }
-
-    @Test
-    public void registerThrowsExceptionForNullCredentialsDtoFields() throws Exception {
-        //given
-        fixtureMissingCredentialsDto();
-        CredentialsDto credentialsDtoNullName = Fixture.from(CredentialsDto.class).gimme("credentialsDtoNullName");
-        CredentialsDto credentialsDtoNullEmail = Fixture.from(CredentialsDto.class).gimme("credentialsDtoNullEmail");
-        CredentialsDto credentialsDtoNullPassword = Fixture.from(CredentialsDto.class).gimme("credentialsDtoNullPassword");
-        CredentialsDto credentialsDtoNullGender = Fixture.from(CredentialsDto.class).gimme("credentialsDtoNullGender");
-        CredentialsDto credentialsDtoNullAge = Fixture.from(CredentialsDto.class).gimme("credentialsDtoNullAge");
-
-        //when
-        MvcResult mvcResult = mockMvc.perform(post("/registration")
-                .content(mapper.writeValueAsString(credentialsDtoNullName))
-                .contentType(MediaType.APPLICATION_JSON_UTF8))
-                .andExpect(header().exists("messageError"))
-                .andExpect(status().is(400))
-                .andReturn();
-
-        //then
-        assertTrue(mvcResult.getResponse().getHeader("messageError").contains("Validation failed for argument"));
-
-        //when
-        mvcResult = mockMvc.perform(post("/registration")
-                .content(mapper.writeValueAsString(credentialsDtoNullEmail))
-                .contentType(MediaType.APPLICATION_JSON_UTF8))
-                .andExpect(header().exists("messageError"))
-                .andExpect(status().is(400))
-                .andReturn();
-        //then
-        assertTrue(mvcResult.getResponse().getHeader("messageError").contains("Validation failed for argument"));
-
-        //when
-        mvcResult = mockMvc.perform(post("/registration")
-                .content(mapper.writeValueAsString(credentialsDtoNullPassword))
-                .contentType(MediaType.APPLICATION_JSON_UTF8))
-                .andExpect(header().exists("messageError"))
-                .andExpect(status().is(400))
-                .andReturn();
-        //then
-        assertTrue(mvcResult.getResponse().getHeader("messageError").contains("Validation failed for argument"));
-
-        //when
-        mvcResult = mockMvc.perform(post("/registration")
-                .content(mapper.writeValueAsString(credentialsDtoNullGender))
-                .contentType(MediaType.APPLICATION_JSON_UTF8))
-                .andExpect(header().exists("messageError"))
-                .andExpect(status().is(400))
-                .andReturn();
-        //then
-        assertTrue(mvcResult.getResponse().getHeader("messageError").contains("Validation failed for argument"));
-
-        //when
-        mvcResult = mockMvc.perform(post("/registration")
-                .content(mapper.writeValueAsString(credentialsDtoNullAge))
-                .contentType(MediaType.APPLICATION_JSON_UTF8))
-                .andExpect(header().exists("messageError"))
-                .andExpect(status().is(400))
-                .andReturn();
-        //then
-        assertTrue(mvcResult.getResponse().getHeader("messageError").contains("Validation failed for argument"));
-    }
-
-
-    // ========================= changePassword() ==============================
-    @Test
-    void successfulChangePassword() throws Exception {
-        //given
-        Map<String, Object> preparedObjects = populateDbForChangePasswordTest();
+        Map<String, Object> preparedObjects = populateDbForChangePasswordIntegrationTest();
         User user = (User) preparedObjects.get("user");
         TokenEntity tokenEntity = (TokenEntity) preparedObjects.get("tokenEntity");
 
@@ -340,9 +188,9 @@ class ApiRegistrationControllerIntegrationTest {
     }
 
     @Test
-    void failedChangePasswordWithFailedOldPassword() throws Exception {
+    void changePasswordFailedForNotValidOldPassword() throws Exception {
         //given
-        Map<String, Object> preparedObjects = populateDbForChangePasswordTest();
+        Map<String, Object> preparedObjects = populateDbForChangePasswordIntegrationTest();
         TokenEntity tokenEntity = (TokenEntity) preparedObjects.get("tokenEntity");
 
         fixtureChangePasswordDto("notValidPassword", newPassword);
@@ -363,24 +211,14 @@ class ApiRegistrationControllerIntegrationTest {
                 .contains(env.getProperty("error.YouEnterWrongPassword")));
     }
 
-    private Map<String, Object> populateDbForChangePasswordTest() {
-        fixtureRegisteredUser();
-        User user = Fixture.from(User.class).gimme("user");
-        user = userRepository.save(user);
 
-        TokenEntity tokenEntity = new TokenEntity();
-        tokenEntity.setType(TokenType.ACCESS_TOKEN);
-        tokenEntity.setToken("someToken");
-        tokenEntity.setUserId(user.getId());
-        tokenEntity.setExpirationDate(LocalDateTime.now().plusDays(1));
-        tokenEntity = tokenRepository.save(tokenEntity);
-
-        CredentialsEntity credentialsEntity = new CredentialsEntity();
-        credentialsEntity.setUserId(user.getId());
-        credentialsEntity.setPassword(passwordEncoder.encode(oldPassword));
-        credentialsEntity = credentialsRepository.save(credentialsEntity);
-
-        UserAccountEntity userAccountEntity = userAccountService.insert(user);
+    //==================== private ==========================================
+    private Map<String, Object> populateDbForChangePasswordIntegrationTest() {
+        // populate db with user, tokenEntity, credentialsEntity and userAccountEntity
+        User user = populateDbWithRegisteredUser();
+        TokenEntity tokenEntity = populateDbWithTokenEntity(user, TokenType.ACCESS_TOKEN);
+        CredentialsEntity credentialsEntity = populateDbWithCredentialsEntity(user, oldPassword);
+        UserAccountEntity userAccountEntity = populateDbWithUserAccountEntity(user);
 
         Map<String, Object> preparedObjects = new HashMap<>(4);
         preparedObjects.put("user", user);
@@ -389,24 +227,6 @@ class ApiRegistrationControllerIntegrationTest {
         preparedObjects.put("userAccountEntity", userAccountEntity);
         return preparedObjects;
     }
-
-    private Map<String, Object> populateDbForSuccessfulRegistrationOfExistsUserTest() {
-        fixtureCredentialsDto();
-
-        // add to db anonim user and token for it
-        User user = userService.createAnonimUser();
-
-        TokenEntity tokenEntity = tokenService.generateAccessTokenForAnonim(user);
-        tokenEntity.setType(TokenType.INVITE_TOKEN);
-        tokenEntity = tokenRepository.save(tokenEntity);
-
-        Map<String, Object> preparedObjects = new HashMap<>(2);
-        preparedObjects.put("user", user);
-        preparedObjects.put("tokenEntity", tokenEntity);
-
-        return preparedObjects;
-    }
-
 
     // ========================= Assertion ==========================
     private void assertUserWithCredentialsDto(User user, CredentialsDto credentialsDto) {

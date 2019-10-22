@@ -10,12 +10,15 @@ import com.psycorp.model.entity.User;
 import com.psycorp.model.entity.UserAccountEntity;
 import com.psycorp.model.entity.UserMatchEntity;
 import com.psycorp.model.entity.ValueCompatibilityAnswersEntity;
+import com.psycorp.model.enums.AccountType;
 import com.psycorp.model.enums.TokenType;
 import com.psycorp.model.enums.UserRole;
 import com.psycorp.model.objects.UserAccount;
 import com.psycorp.model.security.CredentialsEntity;
 import com.psycorp.model.security.TokenEntity;
+import com.psycorp.repository.UserAccountRepository;
 import com.psycorp.repository.UserRepository;
+import com.psycorp.repository.ValueCompatibilityAnswersRepository;
 import com.psycorp.repository.security.CredentialsRepository;
 import com.psycorp.repository.security.TokenRepository;
 import com.psycorp.service.implementation.CredentialsServiceImpl;
@@ -29,6 +32,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.core.env.Environment;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.ActiveProfiles;
@@ -38,14 +42,13 @@ import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 
-import static com.psycorp.FixtureObjectsForTest.fixtureAnonimUser;
-import static com.psycorp.FixtureObjectsForTest.fixtureCredentialsDto;
-import static com.psycorp.FixtureObjectsForTest.fixtureRegisteredUser;
+import static com.psycorp.FixtureObjectsForTest.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * Astract class for test controllers and security layer.
  * Service layer, dto and server are mocked.
- * For server use {@link MockMvc}.
+ * For server uses {@link MockMvc}.
  * Repository layer uses only for populate db before tests.
  * Use not embedded mongo database described in application-test.yml
  */
@@ -53,39 +56,53 @@ import static com.psycorp.FixtureObjectsForTest.fixtureRegisteredUser;
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
 public abstract class AbstractControllerTest {
-    String oldPassword = "oldPassword";
-    String newPassword = "newPassword";
+    final static String oldPassword = "oldPassword";
+    final static String newPassword = "newPassword";
+    Integer TOTAL_NUMBER_OF_QUESTIONS_FOR_AREA;
 
     @Autowired
     MockMvc mockMvc;
     @Autowired
     private MongoTemplate mongoTemplate;
 
-    @MockBean
-    CredentialsServiceImpl credentialsService;
-    @MockBean
-    TokenServiceImpl tokenService;
-    @MockBean
-    CredentialsDtoConverter credentialsDtoConverter;
-    @MockBean
-    UserAccountDtoConverter userAccountDtoConverter;
-
     @Autowired
-    private UserRepository userRepository;
+    UserRepository userRepository;
     @Autowired
-    private TokenRepository tokenRepository;
+    TokenRepository tokenRepository;
     @Autowired
-    private CredentialsRepository credentialsRepository;
+    CredentialsRepository credentialsRepository;
     @Autowired
-    private PasswordEncoder passwordEncoder;
+    UserAccountRepository userAccountRepository;
+    @Autowired
+    ValueCompatibilityAnswersRepository valueCompatibilityAnswersRepository;
+    @Autowired
+    PasswordEncoder passwordEncoder;
     @Autowired
     ObjectMapper mapper;
+    @Autowired
+    Environment env;
+
 
     @BeforeAll
     static void startUp() {
         fixtureAnonimUser();
         fixtureCredentialsDto();
         fixtureRegisteredUser();
+    }
+
+    /**
+     * Checks if all collections is empty.
+     */
+    @BeforeEach
+    void start() {
+        assertEquals(mongoTemplate.findAll(User.class).size(), 0);
+        assertEquals(mongoTemplate.findAll(CredentialsEntity.class).size(), 0);
+        assertEquals(mongoTemplate.findAll(TokenEntity.class).size(), 0);
+        assertEquals(mongoTemplate.findAll(ValueCompatibilityAnswersEntity.class).size(), 0);
+        assertEquals(mongoTemplate.findAll(UserAccountEntity.class).size(), 0);
+        assertEquals(mongoTemplate.findAll(UserMatchEntity.class).size(), 0);
+
+        TOTAL_NUMBER_OF_QUESTIONS_FOR_AREA = Integer.valueOf(env.getProperty("total.number.of.questions")); // 15
     }
 
     /**
@@ -101,78 +118,65 @@ public abstract class AbstractControllerTest {
         mongoTemplate.dropCollection(UserMatchEntity.class);
     }
 
-    Map<String, Object> prepareObjectsForSuccessfulRegistrationTest() {
-        // populate db with user, tokenEntity and credentialsEntity
-//        fixtureAnonimUser();
-        User user = Fixture.from(User.class).gimme("anonimUser");
-        user = userRepository.save(user);
-
-        TokenEntity tokenEntity = new TokenEntity();
-        tokenEntity.setType(TokenType.ACCESS_TOKEN);
-        tokenEntity.setToken("someToken");
-        tokenEntity.setUserId(user.getId());
-        tokenEntity.setExpirationDate(LocalDateTime.now().plusDays(1));
-        tokenEntity = tokenRepository.save(tokenEntity);
-
-        CredentialsEntity credentialsEntity = new CredentialsEntity();
-        credentialsEntity.setUserId(user.getId());
-        credentialsEntity = credentialsRepository.save(credentialsEntity);
-
-        // prepare objects for successful registration test
-//        fixtureCredentialsDto();
-        CredentialsDto credentialsDto = Fixture.from(CredentialsDto.class).gimme("credentialsRegistrationDto");
-
-        user.setAge(credentialsDto.getAge());
-        user.setGender(credentialsDto.getGender());
-        user.setName(credentialsDto.getName());
-        user.setEmail(credentialsDto.getEmail());
-        user.setRole(UserRole.USER);
-
-        UserAccount userAccount = new UserAccount();
-        userAccount.setUser(user);
-
-        UserAccountDto userAccountDto = new UserAccountDto();
-        SimpleUserDto simpleUserDto = new SimpleUserDto();
-        simpleUserDto.setId(user.getId());
-        simpleUserDto.setName(user.getName());
-        simpleUserDto.setEmail(user.getEmail());
-        simpleUserDto.setGender(user.getGender());
-        simpleUserDto.setAge(user.getAge());
-        userAccountDto.setUser(simpleUserDto);
-
-        Map<String, Object> preparedObjects = new HashMap<>(6);
-        preparedObjects.put("user", user);
-        preparedObjects.put("tokenEntity", tokenEntity);
-        preparedObjects.put("credentialsEntity", credentialsEntity);
-        preparedObjects.put("credentialsDto", credentialsDto);
-        preparedObjects.put("userAccount", userAccount);
-        preparedObjects.put("userAccountDto", userAccountDto);
-        return preparedObjects;
+    User populateDbWithRegisteredUser() {
+        User user = Fixture.from(User.class).gimme("user");
+        return userRepository.save(user);
     }
 
-    Map<String, Object> populateDbForChangePasswordTest() {
-        // populate db with user, tokenEntity and credentialsEntity
-//        fixtureRegisteredUser();
-        User user = Fixture.from(User.class).gimme("user");
-        user = userRepository.save(user);
+    User populateDbWithAnonimUser() {
+        User user = Fixture.from(User.class).gimme("anonimUser");
+        return userRepository.save(user);
+    }
 
+    TokenEntity populateDbWithTokenEntity(User user, TokenType tokenType) {
         TokenEntity tokenEntity = new TokenEntity();
-        tokenEntity.setType(TokenType.ACCESS_TOKEN);
+        tokenEntity.setType(tokenType);
         tokenEntity.setToken("someToken");
         tokenEntity.setUserId(user.getId());
         tokenEntity.setExpirationDate(LocalDateTime.now().plusDays(1));
-        tokenEntity = tokenRepository.save(tokenEntity);
+        return tokenRepository.save(tokenEntity);
+    }
 
+    CredentialsEntity populateDbWithCredentialsEntity(User user, String password) {
         CredentialsEntity credentialsEntity = new CredentialsEntity();
         credentialsEntity.setUserId(user.getId());
-        credentialsEntity.setPassword(passwordEncoder.encode(oldPassword));
-        credentialsEntity = credentialsRepository.save(credentialsEntity);
+        if(password != null) { credentialsEntity.setPassword(passwordEncoder.encode(password)); }
+        return credentialsRepository.save(credentialsEntity);
+    }
+
+    UserAccountEntity populateDbWithUserAccountEntity(User user) {
+        UserAccountEntity userAccountEntity = new UserAccountEntity();
+        userAccountEntity.setUserId(user.getId());
+        userAccountEntity.setAccountType(AccountType.OPEN);
+        return userAccountRepository.insert(userAccountEntity);
+    }
+
+    Map<String, Object> populateDbWithAnonimUserAndCredentialsAndToken() {
+
+        // add to db anonim user, credentialsEntity and tokenEntity for it
+        User user = populateDbWithAnonimUser();
+        CredentialsEntity credentialsEntity = populateDbWithCredentialsEntity(user, null);
+        TokenEntity tokenEntity = populateDbWithTokenEntity(user, TokenType.ACCESS_TOKEN);
 
         Map<String, Object> preparedObjects = new HashMap<>(3);
         preparedObjects.put("user", user);
-        preparedObjects.put("tokenEntity", tokenEntity);
         preparedObjects.put("credentialsEntity", credentialsEntity);
+        preparedObjects.put("tokenEntity", tokenEntity);
+
         return preparedObjects;
     }
 
+    Map<String, Object> populateDbWithRegisteredUserAndCredentialsAndUserAccountAndToken() {
+        User user = populateDbWithRegisteredUser();
+        TokenEntity tokenEntity = populateDbWithTokenEntity(user, TokenType.ACCESS_TOKEN);
+        CredentialsEntity credentialsEntity = populateDbWithCredentialsEntity(user, oldPassword);
+        UserAccountEntity userAccountEntity = populateDbWithUserAccountEntity(user);
+
+        Map<String, Object> preparedObjects = new HashMap<>(4);
+        preparedObjects.put("user", user);
+        preparedObjects.put("tokenEntity", tokenEntity);
+        preparedObjects.put("credentialsEntity", credentialsEntity);
+        preparedObjects.put("userAccountEntity", userAccountEntity);
+        return preparedObjects;
+    }
 }

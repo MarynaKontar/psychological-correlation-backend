@@ -1,148 +1,111 @@
 package com.psycorp.controller.api;
 
 import br.com.six2six.fixturefactory.Fixture;
-import br.com.six2six.fixturefactory.Rule;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.mongodb.client.MongoCollection;
 import com.psycorp.model.dto.SimpleUserDto;
-import com.psycorp.model.dto.UserAccountDto;
 import com.psycorp.model.entity.User;
-import com.psycorp.model.entity.UserAccountEntity;
-import com.psycorp.model.entity.UserMatchEntity;
-import com.psycorp.model.entity.ValueCompatibilityAnswersEntity;
-import com.psycorp.model.enums.Gender;
-import com.psycorp.model.enums.TokenType;
-import com.psycorp.model.enums.UserRole;
-import com.psycorp.model.objects.Credentials;
-import com.psycorp.model.objects.UserAccount;
-import com.psycorp.model.security.CredentialsEntity;
 import com.psycorp.model.security.TokenEntity;
-import com.psycorp.security.token.TokenAuthFilter;
-import com.psycorp.service.UserService;
-import com.psycorp.service.security.TokenService;
-import org.bson.types.ObjectId;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.InjectMocks;
-import org.mockito.MockitoAnnotations;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.data.mongodb.core.MongoTemplate;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
-import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.test.web.servlet.MvcResult;
 
-import java.util.Arrays;
-import java.util.Date;
+import java.util.Map;
 
+import static com.psycorp.FixtureObjectsForTest.fixtureMissingIncompleteSimpleUserDto;
+import static com.psycorp.FixtureObjectsForTest.fixtureSimpleUserDto;
+import static com.psycorp.security.SecurityConstant.ACCESS_TOKEN_PREFIX;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@SpringBootTest
-@AutoConfigureMockMvc
-@ActiveProfiles("test")
-public class ApiUserControllerIntegrationTest {
+/**
+ * Integration tests for {@link ApiUserController}.
+ * For server uses {@link MockMvc}.
+ * Use not embedded mongo database described in application-test.yml
+ */
+class ApiUserControllerIntegrationTest extends AbstractControllerTest {
 
-    @Autowired
-    private MockMvc mockMvc;
-    @Autowired
-    private MongoTemplate mongoTemplate;
-    @MockBean
-    private UserService userService;
-    @Autowired
-    TokenService tokenService;
 
-    private long idConstant = 15478;
-    private ObjectId id = new ObjectId(new Date(idConstant), 101);
-    private ObjectId userId = new ObjectId(new Date(idConstant), 202);
-    private User user;
+    //  ========================= /user/incompleteRegistration =========================================================
+    //  ========================= ResponseEntity<SimpleUserDto> incompleteRegistration( ================================
+    //  ========================= @RequestBody @NotNull @Valid SimpleUserDto userDto) ==================================
 
-    private MongoCollection userCollection;
-    private MongoCollection credentialsEntityCollection;
-    private MongoCollection tokenEntityCollection;
-    private MongoCollection valueCompatibilityAnswersEntityCollection;
-    private MongoCollection userMatchEntityCollection;
+    @Test
+    void incompleteRegistrationSuccess() throws Exception {
+        //given
+        Map<String, Object> preparedObjects = populateDbWithAnonimUserAndCredentialsAndToken();
+        User anonimUser = (User) preparedObjects.get("user");
+        TokenEntity tokenEntity = (TokenEntity) preparedObjects.get("tokenEntity");
 
-    @Autowired
-    private TokenAuthFilter tokenAuthFilter;
+        fixtureSimpleUserDto();
+        SimpleUserDto requestDto = Fixture.from(SimpleUserDto.class).gimme("simpleUserDto");
+        requestDto.setId(anonimUser.getId());
 
-    @BeforeEach
-    void setUp() {
-//        MockitoAnnotations.initMocks(this);
-//        mockMvc = MockMvcBuilders
-//                .standaloneSetup(apiUserController)
-//                .addFilters(tokenAuthFilter)
-//                .build();
-        userCollection = mongoTemplate.getCollection("user");
-        credentialsEntityCollection = mongoTemplate.getCollection("credentialsEntity");
-        tokenEntityCollection = mongoTemplate.getCollection("tokenEntity");
-        valueCompatibilityAnswersEntityCollection = mongoTemplate.getCollection("valueCompatibilityAnswersEntity");
-        userMatchEntityCollection = mongoTemplate.getCollection("userMatchEntity");
-    }
+        //when
+        MvcResult mvcResult = mockMvc.perform(post("/user/incompleteRegistration")
+                .content(mapper.writeValueAsString(requestDto))
+                .contentType(MediaType.APPLICATION_JSON_UTF8)
+                .header("AUTHORIZATION", ACCESS_TOKEN_PREFIX + " " + tokenEntity.getToken()))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8))
+                .andReturn();
 
-    @AfterEach
-    void tearDown() {
-        mongoTemplate.dropCollection(User.class);
-        mongoTemplate.dropCollection(UserAccountEntity.class);
-        mongoTemplate.dropCollection(CredentialsEntity.class);
-        mongoTemplate.dropCollection(TokenEntity.class);
-        mongoTemplate.dropCollection(ValueCompatibilityAnswersEntity.class);
-        mongoTemplate.dropCollection(UserMatchEntity.class);
+        //then
+        SimpleUserDto responseDto = mapper.readValue(mvcResult.getResponse().getContentAsString(), SimpleUserDto.class);
+        requestDto.setEmail(null);
+        assertEquals(requestDto, responseDto);
+        assertEquals(responseDto.getEmail(), null);
     }
 
     @Test
-    void incompleteRegistration() throws Exception {
-        User anonimUser = userService.createAnonimUser();
-        TokenEntity tokenEntity = tokenService.generateAccessTokenForAnonim(anonimUser);
-        String token = tokenEntity.getToken();
+    void incompleteRegistrationThrowsExceptionForNullSimpleUserDtoFields() throws Exception {
+        //given
+        Map<String, Object> preparedObjects = populateDbWithAnonimUserAndCredentialsAndToken();
+        TokenEntity tokenEntity = (TokenEntity) preparedObjects.get("tokenEntity");
 
-        User incompleteUser = new User();
-        incompleteUser.setId(anonimUser.getId());
-        incompleteUser.setAge(45);
-        incompleteUser.setGender(Gender.FEMALE);
-        incompleteUser.setName("name");
-        incompleteUser.setEmail("email@gmail.com");
+        fixtureMissingIncompleteSimpleUserDto();
+        SimpleUserDto simpleUserDtoNullName = Fixture.from(SimpleUserDto.class).gimme("incompleteSimpleUserDtoNullName");
+        SimpleUserDto simpleUserDtoNullGender = Fixture.from(SimpleUserDto.class).gimme("incompleteSimpleUserDtoNullGender");
+        SimpleUserDto simpleUserDtoNullAge = Fixture.from(SimpleUserDto.class).gimme("incompleteSimpleUserDtoNullAge");
 
-        SimpleUserDto simpleUserDto = new SimpleUserDto();
-        simpleUserDto.setId(incompleteUser.getId());
-        simpleUserDto.setName(incompleteUser.getName());
-        simpleUserDto.setAge(incompleteUser.getAge());
-        simpleUserDto.setGender(incompleteUser.getGender());
-        simpleUserDto.setEmail(incompleteUser.getEmail());
+        //when
+        MvcResult mvcResult = mockMvc.perform(post("/user/incompleteRegistration")
+                .content(mapper.writeValueAsString(simpleUserDtoNullName))
+                .contentType(MediaType.APPLICATION_JSON_UTF8)
+                .header("AUTHORIZATION", ACCESS_TOKEN_PREFIX + " " + tokenEntity.getToken()))
+                .andExpect(status().is(400))
+                .andExpect(header().exists("messageError"))
+                .andReturn();
 
-        HttpHeaders headers = new HttpHeaders();
-        headers.set("AUTHORIZATION", token);
-        String json = asJsonString(simpleUserDto);
+        //then
+        assertTrue(mvcResult.getResponse().getHeader("messageError").contains(env.getProperty("error.UserNameAgeOrGenderCantBeNull")));
 
-        this.mockMvc.perform(post("/incompleteRegistration")
-                .content(json)
-                .header("Content-Type", "application/json")
-                .header("AUTHORIZATION", token)
-                .accept(MediaType.APPLICATION_JSON))
-                .andExpect(status().isCreated());
+        //when
+        mvcResult = mockMvc.perform(post("/user/incompleteRegistration")
+                .content(mapper.writeValueAsString(simpleUserDtoNullGender))
+                .contentType(MediaType.APPLICATION_JSON_UTF8)
+                .header("AUTHORIZATION", ACCESS_TOKEN_PREFIX + " " + tokenEntity.getToken()))
+                .andExpect(status().is(400))
+                .andExpect(header().exists("messageError"))
+                .andReturn();
+
+        //then
+        assertTrue(mvcResult.getResponse().getHeader("messageError").contains(env.getProperty("error.UserNameAgeOrGenderCantBeNull")));
+
+        //when
+        mvcResult = mockMvc.perform(post("/user/incompleteRegistration")
+                .content(mapper.writeValueAsString(simpleUserDtoNullAge))
+                .contentType(MediaType.APPLICATION_JSON_UTF8)
+                .header("AUTHORIZATION", ACCESS_TOKEN_PREFIX + " " + tokenEntity.getToken()))
+                .andExpect(status().is(400))
+                .andExpect(header().exists("messageError"))
+                .andReturn();
+
+        //then
+        assertTrue(mvcResult.getResponse().getHeader("messageError").contains(env.getProperty("error.UserNameAgeOrGenderCantBeNull")));
     }
 
-    private void prepareUsersForTests() {
-        Fixture.of(User.class).addTemplate("anonimUser", new Rule() {{
-            add("id", userId);
-            add("name", "userName");
-            add("role", UserRole.ANONIM);
-        }});
-
-        user = Fixture.from(User.class).gimme("anonimUser");
-    }
-
-    public static String asJsonString(final Object obj) {
-        try {
-            final ObjectMapper mapper = new ObjectMapper();
-            return mapper.writeValueAsString(obj);
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-    }
 }

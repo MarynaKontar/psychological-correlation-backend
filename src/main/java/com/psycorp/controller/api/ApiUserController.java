@@ -55,8 +55,8 @@ public class ApiUserController {
     @PostMapping("/incompleteRegistration")
     public ResponseEntity<SimpleUserDto> incompleteRegistration(@RequestBody @NotNull @Valid SimpleUserDto userDto) {
         LOGGER.trace("incompleteRegistration: {}", userDto);
-        User user = userService.addNameAgeAndGender(userDtoConverter.transform(userDto));
-        return ResponseEntity.ok().body(userDtoConverter.transform(user));
+        return ResponseEntity.ok().body(userDtoConverter.transform(
+                userService.addNameAgeAndGender(userDtoConverter.transform(userDto))));
     }
 
     /**

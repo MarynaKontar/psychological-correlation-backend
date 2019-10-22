@@ -59,7 +59,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
         return new ProviderManager(Collections.singletonList(tokenAuthProvider));
     }
 
-    // Create filter as separate bean so that it is present in the Spring context.
+    // Create filter as separated bean so that it is present in the Spring context.
     // So that in the future you can work with him and customize
     @Bean
     public TokenAuthFilter tokenAuthFilter () throws Exception {

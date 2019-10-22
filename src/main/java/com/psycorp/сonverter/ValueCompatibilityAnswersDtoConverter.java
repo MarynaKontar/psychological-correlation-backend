@@ -20,12 +20,12 @@ import java.util.List;
 @Component
 public class ValueCompatibilityAnswersDtoConverter extends AbstractDtoConverter<ValueCompatibilityAnswersEntity, ValueCompatibilityAnswersDto>{
 
-    private final UserRepository userRepository;
+//    private final UserRepository userRepository;
     private final Environment env;
 
     @Autowired
-    public ValueCompatibilityAnswersDtoConverter(UserRepository userRepository, Environment env) {
-        this.userRepository = userRepository;
+    public ValueCompatibilityAnswersDtoConverter(Environment env) {
+//        this.userRepository = userRepository;
         this.env = env;
     }
 
@@ -80,9 +80,11 @@ public class ValueCompatibilityAnswersDtoConverter extends AbstractDtoConverter<
 
         entity.setUserAnswers(choices);
 
-        if(dto.getId() != null && userRepository.existsById(dto.getUserId())) {
-            entity.setUserId(userRepository.findById(dto.getUserId()).get().getId());
-        }
+//        if(dto.getId() != null && userRepository.existsById(dto.getUserId())) {
+//            entity.setUserId(userRepository.findById(dto.getUserId()).get().getId());
+//        }
+
+        entity.setUserId(dto.getUserId());
         entity.setId(dto.getId());
     }
 

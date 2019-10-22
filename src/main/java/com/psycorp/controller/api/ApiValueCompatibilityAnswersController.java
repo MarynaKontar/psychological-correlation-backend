@@ -19,6 +19,7 @@ import org.springframework.context.annotation.PropertySource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
@@ -213,6 +214,15 @@ public class ApiValueCompatibilityAnswersController {
     @ExceptionHandler(RuntimeException.class)
     public ResponseEntity<HttpHeaders> handleException(RuntimeException ex, HttpServletRequest request) {
         LOGGER.trace("IP: {}:{}:{} : EXCEPTION: {}", request.getRemoteHost(), request.getRemotePort(), request.getRemoteUser(), ex);
+        HttpHeaders httpHeaders = new HttpHeaders();
+        httpHeaders.add("messageError", "Something wrong: " + ex.getMessage()
+                + "; path: " + request.getServletPath());
+        return ResponseEntity.badRequest().headers(httpHeaders).build();
+    }
+
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<HttpHeaders> handleMethodArgumentNotValidException(MethodArgumentNotValidException ex, HttpServletRequest request) {
+        LOGGER.trace("IP: {}:{}:{} : MethodArgumentNotValidException: {}", request.getRemoteHost(), request.getRemotePort(), request.getRemoteUser(), ex);
         HttpHeaders httpHeaders = new HttpHeaders();
         httpHeaders.add("messageError", "Something wrong: " + ex.getMessage()
                 + "; path: " + request.getServletPath());

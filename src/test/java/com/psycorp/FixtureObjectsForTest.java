@@ -5,7 +5,10 @@ import br.com.six2six.fixturefactory.Fixture;
 import br.com.six2six.fixturefactory.Rule;
 import com.psycorp.model.dto.ChangePasswordDto;
 import com.psycorp.model.dto.CredentialsDto;
+import com.psycorp.model.dto.SimpleUserDto;
+import com.psycorp.model.dto.ValueCompatibilityAnswersDto;
 import com.psycorp.model.entity.User;
+import com.psycorp.model.entity.ValueCompatibilityAnswersEntity;
 import com.psycorp.model.enums.Gender;
 import com.psycorp.model.enums.UserRole;
 
@@ -46,6 +49,41 @@ public class FixtureObjectsForTest {
             add("password", PASSWORD);
             add("gender", GENDER);
             add("age", AGE);
+        }});
+    }
+
+    public static void fixtureSimpleUserDto() {
+        Fixture.of(SimpleUserDto.class).addTemplate("simpleUserDto", new Rule() {{
+            add("name", NAME);
+            add("email", EMAIL);
+            add("gender", GENDER);
+            add("age", AGE);
+        }});
+    }
+
+    public static void fixtureIncompleteSimpleUserDto() {
+        Fixture.of(SimpleUserDto.class).addTemplate("incompleteSimpleUserDto", new Rule() {{
+            add("name", NAME);
+            add("gender", GENDER);
+            add("age", AGE);
+        }});
+    }
+
+    public static void fixtureMissingIncompleteSimpleUserDto() {
+        Fixture.of(SimpleUserDto.class).addTemplate("incompleteSimpleUserDtoNullName", new Rule() {{
+            add("name", null);
+            add("gender", GENDER);
+            add("age", AGE);
+        }});
+        Fixture.of(SimpleUserDto.class).addTemplate("incompleteSimpleUserDtoNullGender", new Rule() {{
+            add("name", NAME);
+            add("gender", null);
+            add("age", AGE);
+        }});
+        Fixture.of(SimpleUserDto.class).addTemplate("incompleteSimpleUserDtoNullAge", new Rule() {{
+            add("name", NAME);
+            add("gender", GENDER);
+            add("age", null);
         }});
     }
 
@@ -94,4 +132,27 @@ public class FixtureObjectsForTest {
         }});
     }
 
+    public static void fixtureValueCompatibilityAnswersEntity() {
+         Fixture.of(ValueCompatibilityAnswersEntity.class).addTemplate("valueCompatibilityAnswersEntity", new Rule(){{
+            add("id", null);
+            add("userId", null);
+            add("creationDate", null);
+            add("passDate", null);
+            add("passed", null);
+            add("userAnswers", null);
+    //            add("userAnswers", one(Choice.class, "valid"));
+        }});
+    }
+
+    public static void fixtureValueCompatibilityAnswersDto() {
+        Fixture.of(ValueCompatibilityAnswersDto.class).addTemplate("valueCompatibilityAnswersDto", new Rule() {{
+            add("id", null);
+            add("userId", null);
+            add("passDate", null);
+            add("passed", null);
+            add("goal", null);
+            add("quality", null);
+            add("state", null);
+        }});
+    }
 }

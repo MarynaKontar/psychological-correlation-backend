@@ -44,6 +44,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import static com.psycorp.FixtureObjectsForTest.fixtureValueCompatibilityAnswersDto;
+import static com.psycorp.FixtureObjectsForTest.fixtureValueCompatibilityAnswersEntity;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
@@ -61,15 +63,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 ////@WebAppConfiguration
 ////@AutoConfigureMockMvc(secure = false)
 //@Import(SecurityConfig.class)
-public class ApiValueCompatibilityAnswersControllerTest {
+class ApiValueCompatibilityAnswersControllerNotSecuredMethodsTest {
 
-//     mockMvc.perform(MockMvcRequestBuilders.
-//             post("/muffins")
-//             .content(convertObjectToJsonString(muffin))
-//            .contentType(MediaType.APPLICATION_JSON)
-//        .accept(MediaType.APPLICATION_JSON))
-//            .andExpect(MockMvcResutMatchers.status().isCreated())
-//            .andExpect(MockMvcResutMatchers.content().json(convertObjectToJsonString(muffin)));
 
 //    @Autowired
 //    private WebApplicationContext context;
@@ -92,6 +87,8 @@ public class ApiValueCompatibilityAnswersControllerTest {
 //    @MockBean
 //    private UserDtoConverter userDtoConverter;
 
+    private ObjectMapper mapper = new ObjectMapper();
+
     @InjectMocks
     private ApiValueCompatibilityAnswersController apiValueCompatibilityAnswersController;
     private MockMvc mockMvc;
@@ -110,8 +107,6 @@ public class ApiValueCompatibilityAnswersControllerTest {
     @Mock
     private UserDtoConverter userDtoConverter;
 
-//    @MockBean
-//    private HttpHeaders httpHeaders;
 
     @BeforeEach
     public void setUp() throws Exception {
@@ -122,99 +117,68 @@ public class ApiValueCompatibilityAnswersControllerTest {
 //                .apply(springSecurity())
                 .build();
 
-        Fixture.of(ValueCompatibilityAnswersEntity.class).addTemplate("valid", new Rule(){{
-            add("id", null);
-            add("userId", null);
-            add("creationDate", null);
-            add("passDate", null);
-            add("passed", null);
-            add("userAnswers", null);
-//            add("userAnswers", one(Choice.class, "valid"));
-        }});
-
-        Fixture.of(ValueCompatibilityAnswersDto.class).addTemplate("valid", new Rule(){{
-            add("id", null);
-            add("userId", null);
-            add("passDate", null);
-            add("passed", null);
-            add("goal", null);
-            add("quality", null);
-            add("state", null);
-        }});
+        fixtureValueCompatibilityAnswersEntity();
+        fixtureValueCompatibilityAnswersDto();
     }
 
-    @Test
-    public void getInitValueCompatibilityAnswersSuccess() throws Exception {
 
-        ValueCompatibilityAnswersEntity valueCompatibilityAnswersEntity = Fixture.from(ValueCompatibilityAnswersEntity.class).gimme("valid");
-        ValueCompatibilityAnswersDto valueCompatibilityAnswersDto = Fixture.from(ValueCompatibilityAnswersDto.class).gimme("valid");
+    // ================== /test/initTest ====================================================================================
+    // ================== ResponseEntity<ValueCompatibilityAnswersDto> getInitValueCompatibilityAnswers() ==============
+
+    @Test
+    void getInitValueCompatibilityAnswersSuccess() throws Exception {
+        //given
+        ValueCompatibilityAnswersEntity valueCompatibilityAnswersEntity = Fixture.from(ValueCompatibilityAnswersEntity.class).gimme("valueCompatibilityAnswersEntity");
+        ValueCompatibilityAnswersDto valueCompatibilityAnswersDto = Fixture.from(ValueCompatibilityAnswersDto.class).gimme("valueCompatibilityAnswersDto");
         when(valueCompatibilityAnswersService.getInitValueCompatibilityAnswers()).thenReturn(valueCompatibilityAnswersEntity);
         when(valueCompatibilityAnswersDtoConverter.transform(valueCompatibilityAnswersEntity)).thenReturn(valueCompatibilityAnswersDto);
 
+        //when
         MvcResult mvcResult = mockMvc.perform(get("/test/initTest"))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8))
                 .andReturn();
 
-        ObjectMapper mapper = new ObjectMapper();
+        //then
         ValueCompatibilityAnswersDto actualValueCompatibilityAnswersDto = mapper
                 .readValue(mvcResult.getResponse().getContentAsString(), ValueCompatibilityAnswersDto.class);
 
-        ValueCompatibilityAnswersDto expectedResponseBody = valueCompatibilityAnswersDto;
-
-        assertEquals(actualValueCompatibilityAnswersDto, expectedResponseBody);
+        assertEquals(actualValueCompatibilityAnswersDto, valueCompatibilityAnswersDto);
         verify(valueCompatibilityAnswersService, times(1)).getInitValueCompatibilityAnswers();
         verify(valueCompatibilityAnswersDtoConverter, times(1)).transform(valueCompatibilityAnswersEntity);
         verifyNoMoreInteractions(valueCompatibilityAnswersService, valueCompatibilityAnswersDtoConverter);
     }
 
     @Test
-    public void saveGoal() {
+    void saveGoal() {
     }
 
     @Test
-    public void saveQuality() {
+    void saveQuality() {
     }
 
     @Test
-    public void saveState() {
+    void saveState() {
     }
 
     @Test
-    public void generateInviteTokenList() throws Exception {
-
+    void generateInviteTokenList() throws Exception {
+        //given
         List<String> tokenList = new ArrayList<>(Arrays.asList("token1", "token2", "token3"));
         when(tokenService.generateInviteTokenList(3)).thenReturn(tokenList);
 
+        //when
         MvcResult mvcResult = mockMvc.perform(get("/test/generateTokenList"))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8))
                 .andReturn();
 
-        ObjectMapper mapper = new ObjectMapper();
+        //then
         List<String> responseBody = mapper.readValue(mvcResult.getResponse().getContentAsString(), List.class);
 
         assertEquals(responseBody, tokenList);
         verify(tokenService, times(1)).generateInviteTokenList(3);
-//        verifyNoMoreInteractions(tokenService, );
+        verifyNoMoreInteractions(tokenService);
     }
 
-    @Test
-    public void getValueProfile() {
-    }
-
-    public static String asJsonString(final Object obj) {
-        try {
-            final ObjectMapper mapper = new ObjectMapper();
-            return mapper.writeValueAsString(obj);
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    public static byte[] convertObjectToJsonBytes(Object object) throws IOException {
-        ObjectMapper mapper = new ObjectMapper();
-        mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
-        return mapper.writeValueAsBytes(object);
-    }
 }
