@@ -11,6 +11,7 @@ import com.psycorp.model.entity.User;
 import com.psycorp.model.entity.ValueCompatibilityAnswersEntity;
 import com.psycorp.model.enums.Gender;
 import com.psycorp.model.enums.UserRole;
+import org.bson.types.ObjectId;
 
 /**
  * Utils class for creation of fixture for test objects
@@ -22,7 +23,7 @@ public class FixtureObjectsForTest {
     private static final Integer AGE = 35;
     private static final UserRole USER_ROLE = UserRole.USER;
     private static final UserRole ANONIM_ROLE = UserRole.ANONIM;
-    private static final String ANONIM_NAME = "anonimName";
+    public static final String ANONIM_NAME = "anonimName";
     private static final String PASSWORD = "somePassword";
 
     public static void fixtureRegisteredUser() {

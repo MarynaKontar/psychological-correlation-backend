@@ -1,11 +1,15 @@
 package com.psycorp;
 
+import br.com.six2six.fixturefactory.Fixture;
+import br.com.six2six.fixturefactory.Rule;
+import com.psycorp.model.dto.SimpleUserDto;
 import com.psycorp.model.dto.ValueCompatibilityAnswersDto;
 import com.psycorp.model.entity.Choice;
 import com.psycorp.model.entity.ValueCompatibilityAnswersEntity;
 import com.psycorp.model.enums.Area;
 import com.psycorp.model.enums.Scale;
 import com.psycorp.сonverter.ValueCompatibilityAnswersDtoConverter;
+import org.bson.types.ObjectId;
 import org.springframework.core.env.Environment;
 
 import java.time.LocalDateTime;
@@ -13,6 +17,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+
+import static com.psycorp.FixtureObjectsForTest.ANONIM_NAME;
 
 /**
  * Utils class for creation of test objects
@@ -32,6 +38,15 @@ public class ObjectsForTests {
         ValueCompatibilityAnswersDtoConverter valueCompatibilityAnswersDtoConverter = new ValueCompatibilityAnswersDtoConverter(env);
         return valueCompatibilityAnswersDtoConverter.transform(getValueCompatibilityEntity());
     }
+
+    public static SimpleUserDto getSimpleUserDtoForCreatedAnonimUser(ObjectId userId) {
+        Fixture.of(SimpleUserDto.class).addTemplate("simpleUserDtoForAnonimUser", new Rule() {{
+            add("id", userId);
+            add("name", ANONIM_NAME);
+        }});
+       return Fixture.from(SimpleUserDto.class).gimme("simpleUserDtoForAnonimUser");
+    }
+
 
     /**
      * Returns list of {@link Choice} with three {@link Area}: GOAL, QUALITY and STATE

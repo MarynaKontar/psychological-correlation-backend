@@ -1,7 +1,11 @@
 package com.psycorp.controller.api;
 
+import com.psycorp.model.dto.ChoiceDto;
+import com.psycorp.model.dto.SimpleUserDto;
 import com.psycorp.model.dto.ValueCompatibilityAnswersDto;
+import com.psycorp.model.dto.ValueProfileIndividualDto;
 import com.psycorp.model.entity.Choice;
+import com.psycorp.model.entity.Result;
 import com.psycorp.model.entity.User;
 import com.psycorp.model.entity.ValueCompatibilityAnswersEntity;
 import com.psycorp.model.enums.Area;
@@ -13,22 +17,20 @@ import org.bson.types.ObjectId;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
 import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
+import static com.psycorp.ObjectsForTests.getSimpleUserDtoForCreatedAnonimUser;
 import static com.psycorp.ObjectsForTests.getValueCompatibilityAnswersDto;
 import static com.psycorp.ObjectsForTests.getValueCompatibilityEntity;
 import static com.psycorp.security.SecurityConstant.ACCESS_TOKEN_PREFIX;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static java.util.stream.Collectors.counting;
+import static java.util.stream.Collectors.groupingBy;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
@@ -286,6 +288,27 @@ class ApiValueCompatibilityAnswersControllerIntegrationTest extends AbstractCont
         assertTrue(mvcResult.getResponse().getHeader("messageError").contains(env.getProperty("error.ItMustBe15TestsForArea")));
     }
 
+    @Test
+    void saveGoalThrowExceptionForWrongSizeOfListOfChoiceDto() throws Exception {
+        //given
+        ValueCompatibilityAnswersDto requestBody = getValueCompatibilityAnswersDto(env);
+        List<ChoiceDto> listOfGoal = requestBody.getGoal();
+        listOfGoal.remove(0);
+        requestBody.setGoal(listOfGoal);
+
+        //when
+        MvcResult mvcResult = mockMvc.perform(post("/test/goal")
+                .contentType(MediaType.APPLICATION_JSON_UTF8)
+                .content(mapper.writeValueAsString(requestBody)))
+                .andExpect(status().is4xxClientError())
+                .andExpect(header().exists("messageError"))
+                .andReturn();
+
+        // then
+        assertTrue(mvcResult.getResponse().getHeader("messageError").contains("Validation failed for argument"));
+    }
+
+
     // ================== /test/quality ================================================================================
     // ================== ResponseEntity<ValueCompatibilityAnswersDto> saveQuality(=====================================
     // ============@RequestBody @NotNull @Valid ValueCompatibilityAnswersDto valueCompatibilityAnswersDto)==============
@@ -298,7 +321,7 @@ class ApiValueCompatibilityAnswersControllerIntegrationTest extends AbstractCont
         User user = (User) populatedObjects.get("user");
 
         ValueCompatibilityAnswersEntity valueCompatibilityAnswersEntity = getValueCompatibilityEntity();
-        valueCompatibilityAnswersEntity = populateDbWithPartialValueCompatibilityAnswersEntity(
+        valueCompatibilityAnswersEntity = populateDbWithValueCompatibilityAnswersEntity(
                 valueCompatibilityAnswersEntity.getUserAnswers(), user, Area.GOAL);
         assertDbBeforeSaveQuality(valueCompatibilityAnswersEntity);
 
@@ -347,7 +370,7 @@ class ApiValueCompatibilityAnswersControllerIntegrationTest extends AbstractCont
         TokenEntity tokenEntity = (TokenEntity) populatedObjects.get("tokenEntity");
 
         ValueCompatibilityAnswersEntity valueCompatibilityAnswersEntity = getValueCompatibilityEntity();
-        valueCompatibilityAnswersEntity = populateDbWithPartialValueCompatibilityAnswersEntity(
+        valueCompatibilityAnswersEntity = populateDbWithValueCompatibilityAnswersEntity(
                 valueCompatibilityAnswersEntity.getUserAnswers(), user, Area.GOAL);
         assertDbBeforeSaveQuality(valueCompatibilityAnswersEntity);
 
@@ -458,7 +481,7 @@ class ApiValueCompatibilityAnswersControllerIntegrationTest extends AbstractCont
         User user = (User) populatedObjects.get("user");
 
         ValueCompatibilityAnswersEntity valueCompatibilityAnswersEntity = getValueCompatibilityEntity();
-        valueCompatibilityAnswersEntity = populateDbWithPartialValueCompatibilityAnswersEntity(
+        valueCompatibilityAnswersEntity = populateDbWithValueCompatibilityAnswersEntity(
                 valueCompatibilityAnswersEntity.getUserAnswers(), user, Area.QUALITY);
         assertDbBeforeSaveState(valueCompatibilityAnswersEntity);
 
@@ -512,7 +535,7 @@ class ApiValueCompatibilityAnswersControllerIntegrationTest extends AbstractCont
         TokenEntity tokenEntity = (TokenEntity) populatedObjects.get("tokenEntity");
 
         ValueCompatibilityAnswersEntity valueCompatibilityAnswersEntity = getValueCompatibilityEntity();
-        valueCompatibilityAnswersEntity = populateDbWithPartialValueCompatibilityAnswersEntity(
+        valueCompatibilityAnswersEntity = populateDbWithValueCompatibilityAnswersEntity(
                 valueCompatibilityAnswersEntity.getUserAnswers(), user, Area.QUALITY);
         assertDbBeforeSaveState(valueCompatibilityAnswersEntity);
 
@@ -613,43 +636,6 @@ class ApiValueCompatibilityAnswersControllerIntegrationTest extends AbstractCont
 
         //then
         assertTrue(mvcResult.getResponse().getHeader("messageError").contains(env.getProperty("error.ItMustBe15TestsForArea")));
-    }
-
-
-    private void assertDbBeforeSaveQuality(ValueCompatibilityAnswersEntity valueCompatibilityAnswersEntity) {
-        assertEquals(1, userRepository.findAll().size());
-        assertEquals(1, credentialsRepository.findAll().size());
-        assertEquals(1, tokenRepository.findAll().size());
-        assertEquals(1, valueCompatibilityAnswersRepository.findAll().size());
-
-        Optional<ValueCompatibilityAnswersEntity> valueCompatibilityAnswersEntityOptional =
-                valueCompatibilityAnswersRepository.findById(valueCompatibilityAnswersEntity.getId());
-        assertTrue(valueCompatibilityAnswersEntityOptional.isPresent());
-        assertEquals(TOTAL_NUMBER_OF_QUESTIONS_FOR_AREA,
-                valueCompatibilityAnswersEntityOptional.get().getUserAnswers().size());
-        assertTrue(valueCompatibilityAnswersEntityOptional
-                .get()
-                .getUserAnswers()
-                .stream()
-                .allMatch(choice -> choice.getArea() == Area.GOAL));
-    }
-
-    private void assertDbBeforeSaveState(ValueCompatibilityAnswersEntity valueCompatibilityAnswersEntity) {
-        assertEquals(1, userRepository.findAll().size());
-        assertEquals(1, credentialsRepository.findAll().size());
-        assertEquals(1, tokenRepository.findAll().size());
-        assertEquals(1, valueCompatibilityAnswersRepository.findAll().size());
-
-        Optional<ValueCompatibilityAnswersEntity> valueCompatibilityAnswersEntityOptional =
-                valueCompatibilityAnswersRepository.findById(valueCompatibilityAnswersEntity.getId());
-        assertTrue(valueCompatibilityAnswersEntityOptional.isPresent());
-        assertEquals(TOTAL_NUMBER_OF_QUESTIONS_FOR_AREA * 2,
-                valueCompatibilityAnswersEntityOptional.get().getUserAnswers().size());
-        assertTrue(valueCompatibilityAnswersEntityOptional
-                .get()
-                .getUserAnswers()
-                .stream()
-                .allMatch(choice -> choice.getArea() == Area.GOAL || choice.getArea() == Area.QUALITY));
     }
 
 
@@ -781,31 +767,205 @@ class ApiValueCompatibilityAnswersControllerIntegrationTest extends AbstractCont
     }
 
 
+    // ======================================== /value-profile =========================================================
+    // =========== ResponseEntity<ValueProfileIndividualDto> getValueProfile(@RequestBody(required = false) ============
+    // ======================================= @NotNull @Valid SimpleUserDto userDto) ==================================
+    @Test
+    void getValueProfileForPrincipalUserSuccess() throws Exception {
+        //given
+        Map<String, Object> populatedObjects = populateDbWithRegisteredUserAndCredentialsAndUserAccountAndToken();
+        User user = (User) populatedObjects.get("user");
+        TokenEntity tokenEntity = (TokenEntity) populatedObjects.get("tokenEntity");
+
+        ValueCompatibilityAnswersEntity valueCompatibilityAnswersEntity = getValueCompatibilityEntity();
+        valueCompatibilityAnswersEntity = populateDbWithValueCompatibilityAnswersEntity(
+                valueCompatibilityAnswersEntity.getUserAnswers(), user, Area.TOTAL);
+
+        assertDbBeforeGetValueProfile(true);
+
+        //when
+        MvcResult mvcResult = mockMvc.perform(post("/test/value-profile")
+                .header("AUTHORIZATION", ACCESS_TOKEN_PREFIX + " " + tokenEntity.getToken()))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8))
+                .andReturn();
+
+        // then
+        ValueProfileIndividualDto responseBody = mapper.readValue(mvcResult.getResponse().getContentAsString(), ValueProfileIndividualDto.class);
+        assertTrue(responseBody.getValueProfile().getIsPrincipalUser());
+        assertEquals(Scale.values().length, responseBody.getValueProfile().getValueProfileElements().size());
+
+        Map<Scale, Result> valueProfile = getValueProfile(valueCompatibilityAnswersEntity);
+
+        assertTrue(responseBody.getValueProfile().getValueProfileElements()
+                .stream()
+                .allMatch(valueProfileElementDto ->
+                        valueProfile.containsValue(new Result(valueProfileElementDto.getPercentResult())))); // 40, 73.3, 46.6, 60, 40, 40
+
+        assertEquals(userRepository.findAll().size(), 1);
+        assertEquals(credentialsRepository.findAll().size(), 1);
+        assertEquals(tokenRepository.findAll().size(), 1);
+        assertEquals(valueCompatibilityAnswersRepository.findAll().size(), 1);
+        assertEquals(userAccountRepository.findAll().size(), 1);
+    }
+
+    @Test
+    void getValueProfileForNoPrincipalUserSuccess() throws Exception {
+        //given
+        //principal user
+        Map<String, Object> populatedObjectsForPrincipalUser = populateDbWithRegisteredUserAndCredentialsAndUserAccountAndToken();
+        User principal = (User) populatedObjectsForPrincipalUser.get("user");
+        TokenEntity tokenEntityForPrincipal = (TokenEntity) populatedObjectsForPrincipalUser.get("tokenEntity");
+
+        //no principal user
+        Map<String, Object> populatedObjectsForNoPrincipalUser = populateDbWithAnonimUserAndCredentialsAndToken();
+        User noPrincipalUser = (User) populatedObjectsForNoPrincipalUser.get("user");
+
+        ValueCompatibilityAnswersEntity valueCompatibilityAnswersEntity = getValueCompatibilityEntity();
+        valueCompatibilityAnswersEntity = populateDbWithValueCompatibilityAnswersEntity(
+                valueCompatibilityAnswersEntity.getUserAnswers(), noPrincipalUser, Area.TOTAL);
+
+        assertDbBeforeGetValueProfile(false);
+        SimpleUserDto requestBody = getSimpleUserDtoForCreatedAnonimUser(noPrincipalUser.getId());
+
+
+        //when
+        MvcResult mvcResult = mockMvc.perform(post("/test/value-profile")
+                .contentType(MediaType.APPLICATION_JSON_UTF8)
+                .content(mapper.writeValueAsString(requestBody))
+                .header("AUTHORIZATION", ACCESS_TOKEN_PREFIX + " " + tokenEntityForPrincipal.getToken()))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8))
+                .andReturn();
+
+        // then
+        ValueProfileIndividualDto responseBody = mapper.readValue(mvcResult.getResponse().getContentAsString(), ValueProfileIndividualDto.class);
+        Map<Scale, Result> valueProfile = getValueProfile(valueCompatibilityAnswersEntity);
+
+        assertFalse(responseBody.getValueProfile().getIsPrincipalUser());
+        assertEquals(Scale.values().length, responseBody.getValueProfile().getValueProfileElements().size());
+        assertTrue(responseBody.getValueProfile().getValueProfileElements()
+                .stream()
+                .allMatch(valueProfileElementDto ->
+                        valueProfile.containsValue(new Result(valueProfileElementDto.getPercentResult())))); // 40, 73.3, 46.6, 60, 40, 40
+
+        assertEquals(userRepository.findAll().size(), 2);
+        assertEquals(credentialsRepository.findAll().size(), 2);
+        assertEquals(tokenRepository.findAll().size(), 2);
+        assertEquals(valueCompatibilityAnswersRepository.findAll().size(), 1);
+        assertEquals(userAccountRepository.findAll().size(), 1);
+    }
+
+
     // =========================================== private =============================================================
     /**
-     * Populates db with partial {@link ValueCompatibilityAnswersEntity} for given user to test entities
-     * that need ValueCompatibilityEntities in db with GOAL or GOAL and QUALITY (or GOAL and STATE) {@link Choice}.
+     * Populates db with partial or full {@link ValueCompatibilityAnswersEntity} for given user to test entities that needs
+     * ValueCompatibilityEntities in db with GOAL, or  GOAL and QUALITY (or GOAL and STATE), or full list of {@link Choice}.
      * Before calling this method, make sure that the list of choices contains only the data necessary for saving.
      * In this method, all data will be inserted into the database.
      * @param choices must not be {@literal null}.
      * @param user must not be {@literal null}.
      * @return new created {@link ValueCompatibilityAnswersEntity} with choices.
      */
-    private ValueCompatibilityAnswersEntity populateDbWithPartialValueCompatibilityAnswersEntity(List<Choice> choices, User user, Area area) {
+    private ValueCompatibilityAnswersEntity populateDbWithValueCompatibilityAnswersEntity(List<Choice> choices, User user, Area area) {
         ValueCompatibilityAnswersEntity answersEntity = new ValueCompatibilityAnswersEntity();
         answersEntity.setUserId(user.getId());
-        if(area == Area.GOAL) {
-            answersEntity.setUserAnswers(choices.stream().filter(choice -> choice.getArea() == Area.GOAL).collect(Collectors.toList()));
-        } else if (area == Area.QUALITY) {
-            answersEntity.setUserAnswers(choices.stream().filter(choice -> choice.getArea() == Area.GOAL || choice.getArea() == Area.QUALITY).collect(Collectors.toList()));
-        } else {
-            answersEntity.setUserAnswers(choices.stream().filter(choice -> choice.getArea() == Area.GOAL || choice.getArea() == Area.STATE).collect(Collectors.toList()));
+        switch (area) {
+            case GOAL:
+                answersEntity.setUserAnswers(choices
+                        .stream()
+                        .filter(choice -> choice.getArea() == Area.GOAL)
+                        .collect(Collectors.toList()));
+                break;
+            case QUALITY:
+                answersEntity.setUserAnswers(choices
+                        .stream()
+                        .filter(choice -> choice.getArea() == Area.GOAL ||
+                                          choice.getArea() == Area.QUALITY)
+                        .collect(Collectors.toList()));
+                break;
+            case STATE:
+                answersEntity.setUserAnswers(choices
+                        .stream()
+                        .filter(choice -> choice.getArea() == Area.GOAL ||
+                                          choice.getArea() == Area.STATE)
+                        .collect(Collectors.toList()));
+                break;
+            case TOTAL:
+                answersEntity.setUserAnswers(choices);
+                break;
         }
         answersEntity.setPassDate(LocalDateTime.now());
         answersEntity.setCreationDate(LocalDateTime.now());
-        answersEntity.setPassed(false);
+
+        if (area == Area.TOTAL) {
+            answersEntity.setPassed(true);
+        } else answersEntity.setPassed(false);
+
         return valueCompatibilityAnswersRepository.insert(answersEntity);
     }
 
+    private void assertDbBeforeSaveQuality(ValueCompatibilityAnswersEntity valueCompatibilityAnswersEntity) {
+        assertEquals(1, userRepository.findAll().size());
+        assertEquals(1, credentialsRepository.findAll().size());
+        assertEquals(1, tokenRepository.findAll().size());
+        assertEquals(1, valueCompatibilityAnswersRepository.findAll().size());
+
+        Optional<ValueCompatibilityAnswersEntity> valueCompatibilityAnswersEntityOptional =
+                valueCompatibilityAnswersRepository.findById(valueCompatibilityAnswersEntity.getId());
+        assertTrue(valueCompatibilityAnswersEntityOptional.isPresent());
+        assertEquals(TOTAL_NUMBER_OF_QUESTIONS_FOR_AREA,
+                valueCompatibilityAnswersEntityOptional.get().getUserAnswers().size());
+        assertTrue(valueCompatibilityAnswersEntityOptional
+                .get()
+                .getUserAnswers()
+                .stream()
+                .allMatch(choice -> choice.getArea() == Area.GOAL));
+    }
+
+    private void assertDbBeforeSaveState(ValueCompatibilityAnswersEntity valueCompatibilityAnswersEntity) {
+        assertEquals(1, userRepository.findAll().size());
+        assertEquals(1, credentialsRepository.findAll().size());
+        assertEquals(1, tokenRepository.findAll().size());
+        assertEquals(1, valueCompatibilityAnswersRepository.findAll().size());
+
+        Optional<ValueCompatibilityAnswersEntity> valueCompatibilityAnswersEntityOptional =
+                valueCompatibilityAnswersRepository.findById(valueCompatibilityAnswersEntity.getId());
+        assertTrue(valueCompatibilityAnswersEntityOptional.isPresent());
+        assertEquals(TOTAL_NUMBER_OF_QUESTIONS_FOR_AREA * 2,
+                valueCompatibilityAnswersEntityOptional.get().getUserAnswers().size());
+        assertTrue(valueCompatibilityAnswersEntityOptional
+                .get()
+                .getUserAnswers()
+                .stream()
+                .allMatch(choice -> choice.getArea() == Area.GOAL || choice.getArea() == Area.QUALITY));
+    }
+
+    private Map<Scale, Result> getValueProfile(ValueCompatibilityAnswersEntity valueCompatibilityAnswersEntity) {
+         Map<Scale, Result> valueProfile = new HashMap<>();
+         final Integer totalNumberOfQuestions = Integer.valueOf(env.getProperty("total.number.of.questions"));
+
+         valueCompatibilityAnswersEntity.getUserAnswers()
+                 .stream()
+                 .collect(groupingBy(Choice::getChosenScale, counting()))
+                 .forEach((scale, value) ->
+                         valueProfile.put(scale, new Result(value.doubleValue()/totalNumberOfQuestions * 100)));
+
+         return valueProfile;
+     }
+
+    private void assertDbBeforeGetValueProfile (Boolean isProfileForPrincipalUser) {
+        int numberOfDocuments = isProfileForPrincipalUser? 1 : 2;
+        assertEquals(numberOfDocuments, userRepository.findAll().size());
+        assertEquals(numberOfDocuments, credentialsRepository.findAll().size());
+        assertEquals(numberOfDocuments, tokenRepository.findAll().size());
+        assertEquals(1, valueCompatibilityAnswersRepository.findAll().size());
+
+        ValueCompatibilityAnswersEntity valueCompatibilityAnswersEntity = valueCompatibilityAnswersRepository.findAll().get(0);
+        assertEquals(TOTAL_NUMBER_OF_QUESTIONS_FOR_AREA * 3, valueCompatibilityAnswersEntity.getUserAnswers().size());
+        assertTrue(userRepository.findAll()
+                .stream()
+                .anyMatch(user -> user.getId().equals(valueCompatibilityAnswersEntity.getUserId())));
+    }
 }
 

@@ -47,7 +47,7 @@ class ApiUserControllerWithSecurityTest extends AbstractControllerTest {
         // add to db anonim user, credentialsEntity and tokenEntity for it
         User anonimUser = populateDbWithAnonimUser();
         CredentialsEntity credentialsEntity = populateDbWithCredentialsEntity(anonimUser, null);
-        TokenEntity tokenEntity = populateDbWithTokenEntity(anonimUser, TokenType.ACCESS_TOKEN);
+        TokenEntity tokenEntity = populateDbWithTokenEntity(anonimUser, TokenType.ACCESS_TOKEN, "someTokenForAnonimUser");
 
         fixtureIncompleteSimpleUserDto();
         SimpleUserDto requestDto = Fixture.from(SimpleUserDto.class).gimme("incompleteSimpleUserDto");
@@ -92,7 +92,7 @@ class ApiUserControllerWithSecurityTest extends AbstractControllerTest {
         // add to db anonim user, credentialsEntity and tokenEntity for it
         User anonimUser = populateDbWithAnonimUser();
         CredentialsEntity credentialsEntity = populateDbWithCredentialsEntity(anonimUser, null);
-        TokenEntity tokenEntity = populateDbWithTokenEntity(anonimUser, TokenType.ACCESS_TOKEN);
+        TokenEntity tokenEntity = populateDbWithTokenEntity(anonimUser, TokenType.ACCESS_TOKEN, "someTokenForAnonimUser");
 
         //when
         MvcResult mvcResult = mockMvc.perform(post("/user/incompleteRegistration")

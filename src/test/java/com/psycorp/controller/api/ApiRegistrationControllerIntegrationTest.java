@@ -216,7 +216,7 @@ class ApiRegistrationControllerIntegrationTest extends AbstractControllerTest{
     private Map<String, Object> populateDbForChangePasswordIntegrationTest() {
         // populate db with user, tokenEntity, credentialsEntity and userAccountEntity
         User user = populateDbWithRegisteredUser();
-        TokenEntity tokenEntity = populateDbWithTokenEntity(user, TokenType.ACCESS_TOKEN);
+        TokenEntity tokenEntity = populateDbWithTokenEntity(user, TokenType.ACCESS_TOKEN, "someTokenForRegisteredUser");
         CredentialsEntity credentialsEntity = populateDbWithCredentialsEntity(user, oldPassword);
         UserAccountEntity userAccountEntity = populateDbWithUserAccountEntity(user);
 

@@ -128,10 +128,10 @@ public abstract class AbstractControllerTest {
         return userRepository.save(user);
     }
 
-    TokenEntity populateDbWithTokenEntity(User user, TokenType tokenType) {
+    TokenEntity populateDbWithTokenEntity(User user, TokenType tokenType, String token) {
         TokenEntity tokenEntity = new TokenEntity();
         tokenEntity.setType(tokenType);
-        tokenEntity.setToken("someToken");
+        tokenEntity.setToken(token);
         tokenEntity.setUserId(user.getId());
         tokenEntity.setExpirationDate(LocalDateTime.now().plusDays(1));
         return tokenRepository.save(tokenEntity);
@@ -156,7 +156,7 @@ public abstract class AbstractControllerTest {
         // add to db anonim user, credentialsEntity and tokenEntity for it
         User user = populateDbWithAnonimUser();
         CredentialsEntity credentialsEntity = populateDbWithCredentialsEntity(user, null);
-        TokenEntity tokenEntity = populateDbWithTokenEntity(user, TokenType.ACCESS_TOKEN);
+        TokenEntity tokenEntity = populateDbWithTokenEntity(user, TokenType.ACCESS_TOKEN, "someTokenForAnonimUser");
 
         Map<String, Object> preparedObjects = new HashMap<>(3);
         preparedObjects.put("user", user);
@@ -168,7 +168,7 @@ public abstract class AbstractControllerTest {
 
     Map<String, Object> populateDbWithRegisteredUserAndCredentialsAndUserAccountAndToken() {
         User user = populateDbWithRegisteredUser();
-        TokenEntity tokenEntity = populateDbWithTokenEntity(user, TokenType.ACCESS_TOKEN);
+        TokenEntity tokenEntity = populateDbWithTokenEntity(user, TokenType.ACCESS_TOKEN, "someTokenForRegisteredUser");
         CredentialsEntity credentialsEntity = populateDbWithCredentialsEntity(user, oldPassword);
         UserAccountEntity userAccountEntity = populateDbWithUserAccountEntity(user);
 
