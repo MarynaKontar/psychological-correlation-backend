@@ -42,7 +42,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * For server uses {@link MockMvc}.
  * Use not embedded mongo database described in application-test.yml
  */
-class ApiRegistrationControllerTest extends AbstractControllerTest{
+class ApiRegistrationControllerWithSecurityTest extends AbstractControllerTest{
 
     @MockBean
     CredentialsServiceImpl credentialsService;

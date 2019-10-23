@@ -9,9 +9,11 @@ import com.psycorp.model.enums.Scale;
 import com.psycorp.model.security.TokenEntity;
 import com.psycorp.service.ValueCompatibilityAnswersService;
 import com.psycorp.сonverter.ValueCompatibilityAnswersDtoConverter;
+import org.bson.types.ObjectId;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
@@ -651,6 +653,7 @@ class ApiValueCompatibilityAnswersControllerIntegrationTest extends AbstractCont
     }
 
 
+    // ============================= /test/goal  &&  /test/quality  &&  /test/state  all together ======================
     @Test
     void saveValueCompatibilityAnswersSuccessForNullToken() throws Exception {
         //given
@@ -677,7 +680,9 @@ class ApiValueCompatibilityAnswersControllerIntegrationTest extends AbstractCont
                     responseBody.getGoal().get(i).getChosenScale().getScale());
         }
 
+        ObjectId goalUserId = responseBody.getUserId();
         String token = mvcResult.getResponse().getHeader("AUTHORIZATION");
+
         assertEquals(1, userRepository.findAll().size());
         assertEquals(1, credentialsRepository.findAll().size());
         assertEquals(1, tokenRepository.findAll().size());
@@ -702,6 +707,8 @@ class ApiValueCompatibilityAnswersControllerIntegrationTest extends AbstractCont
             assertEquals(requestBody.getQuality().get(i).getChosenScale().getScale(),
                     responseBody.getQuality().get(i).getChosenScale().getScale());
         }
+        ObjectId qualityUserId = responseBody.getUserId();
+
         assertEquals(1, userRepository.findAll().size());
         assertEquals(1, credentialsRepository.findAll().size());
         assertEquals(1, tokenRepository.findAll().size());
@@ -727,13 +734,54 @@ class ApiValueCompatibilityAnswersControllerIntegrationTest extends AbstractCont
             assertEquals(requestBody.getState().get(i).getChosenScale().getScale(),
                     responseBody.getState().get(i).getChosenScale().getScale());
         }
+
+        ObjectId stateUserId = responseBody.getUserId();
+
         assertEquals(1, userRepository.findAll().size());
         assertEquals(1, credentialsRepository.findAll().size());
         assertEquals(1, tokenRepository.findAll().size());
         assertEquals(1, valueCompatibilityAnswersRepository.findAll().size());
+        assertEquals(goalUserId, qualityUserId);
+        assertEquals(goalUserId, stateUserId);
 
     }
 
+
+    // ======================================== /test/generateTokenList ================================================
+    // ========================== ResponseEntity<List<String>> generateInviteTokenList() ===============================
+    @Test
+    void generateInviteTokenListSuccess() throws Exception {
+        // given
+        Map<String, Object> populatedObjects = populateDbWithAnonimUserAndCredentialsAndToken();
+        TokenEntity tokenEntity = (TokenEntity) populatedObjects.get("tokenEntity");
+        User user = (User) populatedObjects.get("user");
+
+        // when
+        MvcResult mvcResult = mockMvc.perform(get("/test/generateTokenList")
+                .header("AUTHORIZATION", ACCESS_TOKEN_PREFIX + " " + tokenEntity.getToken()))
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        // then
+        List<String> responseBody = mapper.readValue(mvcResult.getResponse().getContentAsString(), List.class);
+        User updatedUser = userRepository.findById(user.getId()).get();
+
+        assertTrue(updatedUser
+                .getUsersForMatchingId()
+                .stream()
+                .allMatch(userId ->
+                        responseBody.contains(tokenRepository.findByUserId(userId)
+                                .get()
+                                .getToken()) &&
+                        userRepository.findById(userId)
+                                .get()
+                                .getUsersForMatchingId()
+                                .get(0).equals(updatedUser.getId())));
+    }
+
+
+    // =========================================== private =============================================================
     /**
      * Populates db with partial {@link ValueCompatibilityAnswersEntity} for given user to test entities
      * that need ValueCompatibilityEntities in db with GOAL or GOAL and QUALITY (or GOAL and STATE) {@link Choice}.

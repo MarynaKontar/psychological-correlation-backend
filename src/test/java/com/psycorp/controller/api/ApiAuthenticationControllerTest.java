@@ -6,6 +6,7 @@ import com.psycorp.service.security.TokenService;
 import com.psycorp.service.security.implementation.TokenServiceImpl;
 import com.psycorp.сonverter.UserAccountDtoConverter;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
@@ -31,7 +32,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 //@RunWith(SpringRunner.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-public class ApiAuthenticationControllerTest {
+class ApiAuthenticationControllerTest {
     @Autowired
     public WebApplicationContext context;
     private MockMvc mockMvc;
@@ -45,7 +46,7 @@ public class ApiAuthenticationControllerTest {
     private UserAccountService userAccountService;
 
 
-    @BeforeAll
+    @BeforeEach
     public void setUp() throws Exception {
         MockitoAnnotations.initMocks(this);
         mockMvc = MockMvcBuilders.standaloneSetup(apiAuthenticationController).build();

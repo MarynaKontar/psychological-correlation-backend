@@ -113,6 +113,13 @@
             <scope>test</scope>
         </dependency>
 
+        <!--uses for RunAllTests.java-->
+        <dependency>
+            <groupId>org.junit.platform</groupId>
+            <artifactId>junit-platform-launcher</artifactId>
+            <version>1.1.0-RC1</version>
+        </dependency>
+
         <!--Fixture Factory-->
         <!--https://github.com/six2six/fixture-factory-->
         <!--Advised on the courses.edx.org DelftX university:-->
