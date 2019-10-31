@@ -44,12 +44,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  */
 class ApiValueCompatibilityAnswersControllerIntegrationTest extends AbstractControllerTest {
 
-    @Autowired
-    private ValueCompatibilityAnswersService valueCompatibilityAnswersService;
-    @Autowired
-    private ValueCompatibilityAnswersDtoConverter valueCompatibilityAnswersDtoConverter;
-
-
     // ================== /test/initTest ====================================================================================
     // ================== ResponseEntity<ValueCompatibilityAnswersDto> getInitValueCompatibilityAnswers() ==============
     @Test
@@ -204,7 +198,7 @@ class ApiValueCompatibilityAnswersControllerIntegrationTest extends AbstractCont
     @Test
     void saveGoalSuccessForRegisteredUser() throws Exception {
         //given
-        Map<String, Object> populatedObjects = populateDbWithRegisteredUserAndCredentialsAndUserAccountAndToken();
+        Map<String, Object> populatedObjects = populateDbWithRegisteredUserAndCredentialsAndUserAccountAndToken(false);
         TokenEntity tokenEntity = (TokenEntity) populatedObjects.get("tokenEntity");
 
         ValueCompatibilityAnswersDto requestBody = getValueCompatibilityAnswersDto(env);
@@ -365,7 +359,7 @@ class ApiValueCompatibilityAnswersControllerIntegrationTest extends AbstractCont
     @Test
     void saveQualitySuccessForRegisteredUser() throws Exception {
         //given
-        Map<String, Object> populatedObjects = populateDbWithRegisteredUserAndCredentialsAndUserAccountAndToken();
+        Map<String, Object> populatedObjects = populateDbWithRegisteredUserAndCredentialsAndUserAccountAndToken(false);
         User user = (User) populatedObjects.get("user");
         TokenEntity tokenEntity = (TokenEntity) populatedObjects.get("tokenEntity");
 
@@ -530,7 +524,7 @@ class ApiValueCompatibilityAnswersControllerIntegrationTest extends AbstractCont
     @Test
     void saveStateSuccessForRegisteredUser() throws Exception {
         //given
-        Map<String, Object> populatedObjects = populateDbWithRegisteredUserAndCredentialsAndUserAccountAndToken();
+        Map<String, Object> populatedObjects = populateDbWithRegisteredUserAndCredentialsAndUserAccountAndToken(false);
         User user = (User) populatedObjects.get("user");
         TokenEntity tokenEntity = (TokenEntity) populatedObjects.get("tokenEntity");
 
@@ -773,7 +767,7 @@ class ApiValueCompatibilityAnswersControllerIntegrationTest extends AbstractCont
     @Test
     void getValueProfileForPrincipalUserSuccess() throws Exception {
         //given
-        Map<String, Object> populatedObjects = populateDbWithRegisteredUserAndCredentialsAndUserAccountAndToken();
+        Map<String, Object> populatedObjects = populateDbWithRegisteredUserAndCredentialsAndUserAccountAndToken(false);
         User user = (User) populatedObjects.get("user");
         TokenEntity tokenEntity = (TokenEntity) populatedObjects.get("tokenEntity");
 
@@ -813,7 +807,7 @@ class ApiValueCompatibilityAnswersControllerIntegrationTest extends AbstractCont
     void getValueProfileForNoPrincipalUserSuccess() throws Exception {
         //given
         //principal user
-        Map<String, Object> populatedObjectsForPrincipalUser = populateDbWithRegisteredUserAndCredentialsAndUserAccountAndToken();
+        Map<String, Object> populatedObjectsForPrincipalUser = populateDbWithRegisteredUserAndCredentialsAndUserAccountAndToken(false);
         User principal = (User) populatedObjectsForPrincipalUser.get("user");
         TokenEntity tokenEntityForPrincipal = (TokenEntity) populatedObjectsForPrincipalUser.get("tokenEntity");
 
@@ -858,53 +852,6 @@ class ApiValueCompatibilityAnswersControllerIntegrationTest extends AbstractCont
 
 
     // =========================================== private =============================================================
-    /**
-     * Populates db with partial or full {@link ValueCompatibilityAnswersEntity} for given user to test entities that needs
-     * ValueCompatibilityEntities in db with GOAL, or  GOAL and QUALITY (or GOAL and STATE), or full list of {@link Choice}.
-     * Before calling this method, make sure that the list of choices contains only the data necessary for saving.
-     * In this method, all data will be inserted into the database.
-     * @param choices must not be {@literal null}.
-     * @param user must not be {@literal null}.
-     * @return new created {@link ValueCompatibilityAnswersEntity} with choices.
-     */
-    private ValueCompatibilityAnswersEntity populateDbWithValueCompatibilityAnswersEntity(List<Choice> choices, User user, Area area) {
-        ValueCompatibilityAnswersEntity answersEntity = new ValueCompatibilityAnswersEntity();
-        answersEntity.setUserId(user.getId());
-        switch (area) {
-            case GOAL:
-                answersEntity.setUserAnswers(choices
-                        .stream()
-                        .filter(choice -> choice.getArea() == Area.GOAL)
-                        .collect(Collectors.toList()));
-                break;
-            case QUALITY:
-                answersEntity.setUserAnswers(choices
-                        .stream()
-                        .filter(choice -> choice.getArea() == Area.GOAL ||
-                                          choice.getArea() == Area.QUALITY)
-                        .collect(Collectors.toList()));
-                break;
-            case STATE:
-                answersEntity.setUserAnswers(choices
-                        .stream()
-                        .filter(choice -> choice.getArea() == Area.GOAL ||
-                                          choice.getArea() == Area.STATE)
-                        .collect(Collectors.toList()));
-                break;
-            case TOTAL:
-                answersEntity.setUserAnswers(choices);
-                break;
-        }
-        answersEntity.setPassDate(LocalDateTime.now());
-        answersEntity.setCreationDate(LocalDateTime.now());
-
-        if (area == Area.TOTAL) {
-            answersEntity.setPassed(true);
-        } else answersEntity.setPassed(false);
-
-        return valueCompatibilityAnswersRepository.insert(answersEntity);
-    }
-
     private void assertDbBeforeSaveQuality(ValueCompatibilityAnswersEntity valueCompatibilityAnswersEntity) {
         assertEquals(1, userRepository.findAll().size());
         assertEquals(1, credentialsRepository.findAll().size());

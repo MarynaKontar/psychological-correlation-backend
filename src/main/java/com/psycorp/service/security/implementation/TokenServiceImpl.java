@@ -126,7 +126,7 @@ public class TokenServiceImpl implements TokenService {
     public User getUserByToken(String token){
         // TODO решить, что делать, если токена нет или истек срок
         TokenEntity tokenEntity = tokenRepository.findByToken(token)
-                .orElseThrow(() -> new AuthorizationException("", ErrorEnum.TOKEN_EXPIRED));
+                .orElseThrow(() -> new AuthorizationException(ErrorEnum.TOKEN_EXPIRED.getMessage(), ErrorEnum.TOKEN_EXPIRED));
        return userService.findById(tokenEntity.getUserId());
     }
 

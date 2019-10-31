@@ -186,7 +186,7 @@ class ApiRegistrationControllerWithSecurityTest extends AbstractControllerTest{
     @Test
     void changePasswordSuccessForValidTokenAndOldPassword() throws Exception {
         //given
-        Map<String, Object> preparedObjects = populateDbWithRegisteredUserAndCredentialsAndUserAccountAndToken();
+        Map<String, Object> preparedObjects = populateDbWithRegisteredUserAndCredentialsAndUserAccountAndToken(false);
         TokenEntity tokenEntity = (TokenEntity) preparedObjects.get("tokenEntity");
 
         fixtureChangePasswordDto(oldPassword, newPassword);
@@ -219,7 +219,7 @@ class ApiRegistrationControllerWithSecurityTest extends AbstractControllerTest{
     @Test
     void changePasswordThrowsExceptionForNullChangePasswordDto() throws Exception {
         //given
-        Map<String, Object> preparedObjects = populateDbWithRegisteredUserAndCredentialsAndUserAccountAndToken();
+        Map<String, Object> preparedObjects = populateDbWithRegisteredUserAndCredentialsAndUserAccountAndToken(false);
         TokenEntity tokenEntity = (TokenEntity) preparedObjects.get("tokenEntity");
 
         //when

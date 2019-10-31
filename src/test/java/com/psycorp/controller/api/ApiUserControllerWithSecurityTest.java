@@ -45,7 +45,7 @@ class ApiUserControllerWithSecurityTest extends AbstractControllerTest {
     void incompleteRegistrationSuccess() throws Exception {
         //given
         // add to db anonim user, credentialsEntity and tokenEntity for it
-        User anonimUser = populateDbWithAnonimUser();
+        User anonimUser = populateDbWithAnonimUser(null);
         CredentialsEntity credentialsEntity = populateDbWithCredentialsEntity(anonimUser, null);
         TokenEntity tokenEntity = populateDbWithTokenEntity(anonimUser, TokenType.ACCESS_TOKEN, "someTokenForAnonimUser");
 
@@ -90,7 +90,7 @@ class ApiUserControllerWithSecurityTest extends AbstractControllerTest {
     void incompleteRegistrationThrowsExceptionForNullSimpleUserDto() throws Exception {
         //given
         // add to db anonim user, credentialsEntity and tokenEntity for it
-        User anonimUser = populateDbWithAnonimUser();
+        User anonimUser = populateDbWithAnonimUser(null);
         CredentialsEntity credentialsEntity = populateDbWithCredentialsEntity(anonimUser, null);
         TokenEntity tokenEntity = populateDbWithTokenEntity(anonimUser, TokenType.ACCESS_TOKEN, "someTokenForAnonimUser");
 

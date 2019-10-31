@@ -26,19 +26,19 @@ public class FixtureObjectsForTest {
     public static final String ANONIM_NAME = "anonimName";
     private static final String PASSWORD = "somePassword";
 
-    public static void fixtureRegisteredUser() {
+    public static void fixtureRegisteredUser(String name) {
         Fixture.of(User.class).addTemplate("user", new Rule() {{
-            add("name", NAME);
-            add("email", EMAIL);
+            add("name", name == null || name.equals("name") ? NAME : name);
+            add("email", name == null || name.equals("name") ? EMAIL : name + "@gmail.com");
             add("gender", GENDER);
             add("age", AGE);
             add("role", USER_ROLE);
         }});
     }
 
-    public static void fixtureAnonimUser() {
+    public static void fixtureAnonimUser(String name) {
         Fixture.of(User.class).addTemplate("anonimUser", new Rule() {{
-            add("name", ANONIM_NAME);
+            add("name", name == null || name.equals("anonimName") ? ANONIM_NAME : name);
             add("role", ANONIM_ROLE);
         }});
     }

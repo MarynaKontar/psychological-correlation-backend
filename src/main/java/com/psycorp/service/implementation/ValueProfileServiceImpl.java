@@ -72,7 +72,7 @@ public class ValueProfileServiceImpl implements ValueProfileService {
     }
 
     /**
-     * Returns {@link ValueProfileMatching} with comments for  user with noPrincipalUserId and principal user.
+     * Returns {@link ValueProfileMatching} with comments for user with noPrincipalUserId and principal user.
      * @param noPrincipalUserId must not be {@literal null}.
      * @return {@link ValueProfileMatching}.
      */
