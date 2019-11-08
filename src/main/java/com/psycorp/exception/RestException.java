@@ -6,9 +6,6 @@ import lombok.Getter;
 import java.util.HashMap;
 import java.util.Map;
 
-//!!!!!!!!!!! ФАЙЛЫ ДАЛ ВИТАЛИК. ЕЩЕ НЕ РАЗБИРАЛАСЬ
-
-
 @Getter
     public class RestException extends RuntimeException {
         private int responseCode;

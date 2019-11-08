@@ -38,6 +38,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * Use not embedded mongo database described in application-test.yml
  */
 class ApiRegistrationControllerIntegrationTest extends AbstractControllerTest{
+    private final static String oldPassword = "oldPassword";
+    private final static String newPassword = "newPassword";
 
     @Autowired
     private TokenService tokenService;
@@ -106,7 +108,7 @@ class ApiRegistrationControllerIntegrationTest extends AbstractControllerTest{
     @Test
     void registerSuccessForExistsUser() throws Exception {
         //given
-        Map<String, Object> preparedObjects = populateDbWithAnonimUserAndCredentialsAndToken();
+        Map<String, Object> preparedObjects = populateDb.populateDbWithAnonimUserAndCredentialsAndToken();
         User principal = (User) preparedObjects.get("user");
         TokenEntity tokenEntity = (TokenEntity) preparedObjects.get("tokenEntity");
         CredentialsDto credentialsDto = Fixture.from(CredentialsDto.class).gimme("credentialsRegistrationDto");
@@ -215,10 +217,10 @@ class ApiRegistrationControllerIntegrationTest extends AbstractControllerTest{
     //==================== private ==========================================
     private Map<String, Object> populateDbForChangePasswordIntegrationTest() {
         // populate db with user, tokenEntity, credentialsEntity and userAccountEntity
-        User user = populateDbWithRegisteredUser(null, false);
-        TokenEntity tokenEntity = populateDbWithTokenEntity(user, TokenType.ACCESS_TOKEN, "someTokenForRegisteredUser");
-        CredentialsEntity credentialsEntity = populateDbWithCredentialsEntity(user, oldPassword);
-        UserAccountEntity userAccountEntity = populateDbWithUserAccountEntity(user);
+        User user = populateDb.populateDbWithRegisteredUser(null, false);
+        TokenEntity tokenEntity = populateDb.populateDbWithTokenEntity(user, TokenType.ACCESS_TOKEN, "someTokenForRegisteredUser");
+        CredentialsEntity credentialsEntity = populateDb.populateDbWithCredentialsEntity(user, oldPassword);
+        UserAccountEntity userAccountEntity = populateDb.populateDbWithShortUserAccountEntity(user.getId());
 
         Map<String, Object> preparedObjects = new HashMap<>(4);
         preparedObjects.put("user", user);

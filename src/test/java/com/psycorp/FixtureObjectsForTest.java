@@ -8,10 +8,15 @@ import com.psycorp.model.dto.CredentialsDto;
 import com.psycorp.model.dto.SimpleUserDto;
 import com.psycorp.model.dto.ValueCompatibilityAnswersDto;
 import com.psycorp.model.entity.User;
+import com.psycorp.model.entity.UserAccountEntity;
 import com.psycorp.model.entity.ValueCompatibilityAnswersEntity;
+import com.psycorp.model.enums.AccountType;
 import com.psycorp.model.enums.Gender;
 import com.psycorp.model.enums.UserRole;
 import org.bson.types.ObjectId;
+
+import java.util.Arrays;
+import java.util.List;
 
 /**
  * Utils class for creation of fixture for test objects
@@ -26,8 +31,9 @@ public class FixtureObjectsForTest {
     public static final String ANONIM_NAME = "anonimName";
     private static final String PASSWORD = "somePassword";
 
-    public static void fixtureRegisteredUser(String name) {
-        Fixture.of(User.class).addTemplate("user", new Rule() {{
+    public static void fixtureRegisteredUser(ObjectId userId, String name, String label) {
+        Fixture.of(User.class).addTemplate(label == null ? "user" : label, new Rule() {{
+            if(userId != null) {add("id", userId);}
             add("name", name == null || name.equals("name") ? NAME : name);
             add("email", name == null || name.equals("name") ? EMAIL : name + "@gmail.com");
             add("gender", GENDER);
@@ -35,11 +41,52 @@ public class FixtureObjectsForTest {
             add("role", USER_ROLE);
         }});
     }
+    public static void fixtureRegisteredUser(ObjectId userId, String name, List<ObjectId> usersForMatchingId, String label) {
+        if(usersForMatchingId == null) {
+            fixtureRegisteredUser(userId, name, label);
+            return;
+        }
+        Fixture.of(User.class).addTemplate(label == null ? "user" : label, new Rule() {{
+            add("id", userId);
+            add("name", name == null || name.equals("name") ? NAME : name);
+            add("email", name == null || name.equals("name") ? EMAIL : name + "@gmail.com");
+            add("gender", GENDER);
+            add("age", AGE);
+            add("role", USER_ROLE);
+            add("usersForMatchingId", usersForMatchingId);
+        }});
+    }
 
-    public static void fixtureAnonimUser(String name) {
-        Fixture.of(User.class).addTemplate("anonimUser", new Rule() {{
+    public static void fixtureAnonimUser(ObjectId userId, String name, List<ObjectId> usersForMatchingId, String label) {
+        Fixture.of(User.class).addTemplate(label == null ? "anonimUser": label, new Rule() {{
+            add("id", userId);
             add("name", name == null || name.equals("anonimName") ? ANONIM_NAME : name);
             add("role", ANONIM_ROLE);
+            add("usersForMatchingId", usersForMatchingId);
+        }});
+    }
+    public static void fixtureUserAccountEntity(ObjectId id, ObjectId userId,
+                                                List<ObjectId> usersWhoInvitedYouId,
+                                                List<ObjectId> usersWhoYouInviteId,
+                                                String fixtureLabel) {
+        Fixture.of(UserAccountEntity.class).addTemplate(fixtureLabel, new Rule() {{
+            add("id", id);
+            add("userId", userId);
+            add("accountType", AccountType.OPEN);
+            add("usersWhoInvitedYouId", usersWhoInvitedYouId);
+            add("usersWhoYouInviteId", usersWhoYouInviteId);
+        }});
+    }
+
+    public static void fixtureValueCompatibilityAnswersEntity() {
+        Fixture.of(ValueCompatibilityAnswersEntity.class).addTemplate("valueCompatibilityAnswersEntity", new Rule(){{
+            add("id", null);
+            add("userId", null);
+            add("creationDate", null);
+            add("passDate", null);
+            add("passed", null);
+            add("userAnswers", null);
+            //            add("userAnswers", one(Choice.class, "valid"));
         }});
     }
 
@@ -130,18 +177,6 @@ public class FixtureObjectsForTest {
             add("password", PASSWORD);
             add("gender", GENDER);
             add("age", null);
-        }});
-    }
-
-    public static void fixtureValueCompatibilityAnswersEntity() {
-         Fixture.of(ValueCompatibilityAnswersEntity.class).addTemplate("valueCompatibilityAnswersEntity", new Rule(){{
-            add("id", null);
-            add("userId", null);
-            add("creationDate", null);
-            add("passDate", null);
-            add("passed", null);
-            add("userAnswers", null);
-    //            add("userAnswers", one(Choice.class, "valid"));
         }});
     }
 

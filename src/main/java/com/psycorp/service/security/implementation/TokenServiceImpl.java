@@ -220,7 +220,7 @@ public class TokenServiceImpl implements TokenService {
     @Override
     @Transactional
     public List<String> generateInviteTokenList(Integer n){ //n tokens
-        if (n == null || n < 1) { throw new BadRequestException("Number of generated invite tokens must be 1 and more. n = " + n); }
+        if (n == null || n < 1) { throw new BadRequestException("Number of generated invite tokens must be 1 and more, but less or equals than 5. n = " + n); }
         if(n > 5) {n = 5;}
         User principal = userService.getPrincipalUser();
         List<ObjectId> usersForMatchingId = new ArrayList<>(n);
@@ -256,7 +256,7 @@ public class TokenServiceImpl implements TokenService {
         if (userId == null || tokenType == null) {
             throw new BadRequestException("User id or token type cann't be null: userId: " + userId + ", tokenType: " + tokenType);
         }
-        if(!userService.checkIfExistById(userId)) {
+        if(!userService.ifExistById(userId)) {
             throw new BadRequestException(env.getProperty("error.noUserFound") + "for userId: " + userId);
         }
 

@@ -36,7 +36,7 @@ class ApiUserControllerIntegrationTest extends AbstractControllerTest {
     @Test
     void incompleteRegistrationSuccess() throws Exception {
         //given
-        Map<String, Object> preparedObjects = populateDbWithAnonimUserAndCredentialsAndToken();
+        Map<String, Object> preparedObjects = populateDb.populateDbWithAnonimUserAndCredentialsAndToken();
         User anonimUser = (User) preparedObjects.get("user");
         TokenEntity tokenEntity = (TokenEntity) preparedObjects.get("tokenEntity");
 
@@ -63,7 +63,7 @@ class ApiUserControllerIntegrationTest extends AbstractControllerTest {
     @Test
     void incompleteRegistrationThrowsExceptionForNullSimpleUserDtoFields() throws Exception {
         //given
-        Map<String, Object> preparedObjects = populateDbWithAnonimUserAndCredentialsAndToken();
+        Map<String, Object> preparedObjects = populateDb.populateDbWithAnonimUserAndCredentialsAndToken();
         TokenEntity tokenEntity = (TokenEntity) preparedObjects.get("tokenEntity");
 
         fixtureMissingIncompleteSimpleUserDto();

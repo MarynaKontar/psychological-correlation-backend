@@ -171,7 +171,7 @@ public class UserServiceImpl implements UserService {
      */
     @Override
     public User findUserByNameOrEmail(String nameOrEmail) {
-        if(nameOrEmail == null) throw new BadRequestException(env.getProperty("error.noUserFound"));
+        if(nameOrEmail == null) throw new BadRequestException(env.getProperty("error.UserNameOrEmailCan`tBeNull"));
         return userRepository.findUserByNameOrEmail(nameOrEmail, nameOrEmail)
                 .orElseThrow(() -> new BadRequestException(env.getProperty("error.noUserFound") + " for name or email: "
                         + nameOrEmail));
@@ -187,7 +187,7 @@ public class UserServiceImpl implements UserService {
         TokenPrincipal tokenPrincipal = (TokenPrincipal) authService.getAuthPrincipal();
         if(tokenPrincipal != null && tokenPrincipal.getId() != null) { //if token exist
             return findById(tokenPrincipal.getId()); // and for it there is user, than take this user
-        } else { throw new AuthorizationException("User not authorised", ErrorEnum.NOT_AUTHORIZED); } // if token == null or token id == null
+        } else { throw new AuthorizationException(env.getProperty("error.UserNotAuthorised"), ErrorEnum.NOT_AUTHORIZED); } // if token == null or token id == null
     }
 
     /**
@@ -210,10 +210,10 @@ public class UserServiceImpl implements UserService {
      * Returns whether an user with the given id exists.
      * @param userId must not be {@literal null}.
      * @return {@literal true} if an user with the given id exists, {@literal false} otherwise.
-     * @throws IllegalArgumentException if {@code id} is {@literal null}.
+     * @throws IllegalArgumentException if {@code userId} is {@literal null}.
      */
     @Override
-    public boolean checkIfExistById(ObjectId userId) {
+    public boolean ifExistById(ObjectId userId) {
         return userRepository.existsById(userId);
     }
 

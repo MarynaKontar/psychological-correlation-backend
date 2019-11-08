@@ -11,18 +11,13 @@ import com.psycorp.model.entity.ValueCompatibilityAnswersEntity;
 import com.psycorp.model.enums.Area;
 import com.psycorp.model.enums.Scale;
 import com.psycorp.model.security.TokenEntity;
-import com.psycorp.service.ValueCompatibilityAnswersService;
-import com.psycorp.сonverter.ValueCompatibilityAnswersDtoConverter;
 import org.bson.types.ObjectId;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
-import java.time.LocalDateTime;
 import java.util.*;
-import java.util.stream.Collectors;
 
 import static com.psycorp.ObjectsForTests.getSimpleUserDtoForCreatedAnonimUser;
 import static com.psycorp.ObjectsForTests.getValueCompatibilityAnswersDto;
@@ -159,7 +154,7 @@ class ApiValueCompatibilityAnswersControllerIntegrationTest extends AbstractCont
     @Test
     void saveGoalSuccessForAnonimUser() throws Exception {
         //given
-        Map<String, Object> populatedObjects = populateDbWithAnonimUserAndCredentialsAndToken();
+        Map<String, Object> populatedObjects = populateDb.populateDbWithAnonimUserAndCredentialsAndToken();
         TokenEntity tokenEntity = (TokenEntity) populatedObjects.get("tokenEntity");
 
         ValueCompatibilityAnswersDto requestBody = getValueCompatibilityAnswersDto(env);
@@ -198,7 +193,7 @@ class ApiValueCompatibilityAnswersControllerIntegrationTest extends AbstractCont
     @Test
     void saveGoalSuccessForRegisteredUser() throws Exception {
         //given
-        Map<String, Object> populatedObjects = populateDbWithRegisteredUserAndCredentialsAndUserAccountAndToken(false);
+        Map<String, Object> populatedObjects = populateDb.populateDbWithRegisteredUserAndCredentialsAndUserAccountAndToken(false);
         TokenEntity tokenEntity = (TokenEntity) populatedObjects.get("tokenEntity");
 
         ValueCompatibilityAnswersDto requestBody = getValueCompatibilityAnswersDto(env);
@@ -310,12 +305,12 @@ class ApiValueCompatibilityAnswersControllerIntegrationTest extends AbstractCont
     @Test
     void saveQualitySuccessForAnonimUser() throws Exception {
         //given
-        Map<String, Object> populatedObjects = populateDbWithAnonimUserAndCredentialsAndToken();
+        Map<String, Object> populatedObjects = populateDb.populateDbWithAnonimUserAndCredentialsAndToken();
         TokenEntity tokenEntity = (TokenEntity) populatedObjects.get("tokenEntity");
         User user = (User) populatedObjects.get("user");
 
         ValueCompatibilityAnswersEntity valueCompatibilityAnswersEntity = getValueCompatibilityEntity();
-        valueCompatibilityAnswersEntity = populateDbWithValueCompatibilityAnswersEntity(
+        valueCompatibilityAnswersEntity = populateDb.populateDbWithValueCompatibilityAnswersEntity(
                 valueCompatibilityAnswersEntity.getUserAnswers(), user, Area.GOAL);
         assertDbBeforeSaveQuality(valueCompatibilityAnswersEntity);
 
@@ -359,12 +354,12 @@ class ApiValueCompatibilityAnswersControllerIntegrationTest extends AbstractCont
     @Test
     void saveQualitySuccessForRegisteredUser() throws Exception {
         //given
-        Map<String, Object> populatedObjects = populateDbWithRegisteredUserAndCredentialsAndUserAccountAndToken(false);
+        Map<String, Object> populatedObjects = populateDb.populateDbWithRegisteredUserAndCredentialsAndUserAccountAndToken(false);
         User user = (User) populatedObjects.get("user");
         TokenEntity tokenEntity = (TokenEntity) populatedObjects.get("tokenEntity");
 
         ValueCompatibilityAnswersEntity valueCompatibilityAnswersEntity = getValueCompatibilityEntity();
-        valueCompatibilityAnswersEntity = populateDbWithValueCompatibilityAnswersEntity(
+        valueCompatibilityAnswersEntity = populateDb.populateDbWithValueCompatibilityAnswersEntity(
                 valueCompatibilityAnswersEntity.getUserAnswers(), user, Area.GOAL);
         assertDbBeforeSaveQuality(valueCompatibilityAnswersEntity);
 
@@ -425,7 +420,7 @@ class ApiValueCompatibilityAnswersControllerIntegrationTest extends AbstractCont
     @Test
     void saveQualityThrowsExceptionForNullValueCompatibilityAnswersDto() throws Exception {
         //given
-        Map<String, Object> populatedObjects = populateDbWithAnonimUserAndCredentialsAndToken();
+        Map<String, Object> populatedObjects = populateDb.populateDbWithAnonimUserAndCredentialsAndToken();
         TokenEntity tokenEntity = (TokenEntity) populatedObjects.get("tokenEntity");
 
         //when
@@ -443,7 +438,7 @@ class ApiValueCompatibilityAnswersControllerIntegrationTest extends AbstractCont
     @Test
     void saveQualityThrowsExceptionForNullValueCompatibilityAnswersDtoFields() throws Exception {
         //given
-        Map<String, Object> populatedObjects = populateDbWithAnonimUserAndCredentialsAndToken();
+        Map<String, Object> populatedObjects = populateDb.populateDbWithAnonimUserAndCredentialsAndToken();
         TokenEntity tokenEntity = (TokenEntity) populatedObjects.get("tokenEntity");
 
         ValueCompatibilityAnswersDto valueCompatibilityAnswersDto = new ValueCompatibilityAnswersDto();
@@ -470,12 +465,12 @@ class ApiValueCompatibilityAnswersControllerIntegrationTest extends AbstractCont
     @Test
     void saveStateSuccessForAnonimUser() throws Exception {
         //given
-        Map<String, Object> populatedObjects = populateDbWithAnonimUserAndCredentialsAndToken();
+        Map<String, Object> populatedObjects = populateDb.populateDbWithAnonimUserAndCredentialsAndToken();
         TokenEntity tokenEntity = (TokenEntity) populatedObjects.get("tokenEntity");
         User user = (User) populatedObjects.get("user");
 
         ValueCompatibilityAnswersEntity valueCompatibilityAnswersEntity = getValueCompatibilityEntity();
-        valueCompatibilityAnswersEntity = populateDbWithValueCompatibilityAnswersEntity(
+        valueCompatibilityAnswersEntity = populateDb.populateDbWithValueCompatibilityAnswersEntity(
                 valueCompatibilityAnswersEntity.getUserAnswers(), user, Area.QUALITY);
         assertDbBeforeSaveState(valueCompatibilityAnswersEntity);
 
@@ -524,12 +519,12 @@ class ApiValueCompatibilityAnswersControllerIntegrationTest extends AbstractCont
     @Test
     void saveStateSuccessForRegisteredUser() throws Exception {
         //given
-        Map<String, Object> populatedObjects = populateDbWithRegisteredUserAndCredentialsAndUserAccountAndToken(false);
+        Map<String, Object> populatedObjects = populateDb.populateDbWithRegisteredUserAndCredentialsAndUserAccountAndToken(false);
         User user = (User) populatedObjects.get("user");
         TokenEntity tokenEntity = (TokenEntity) populatedObjects.get("tokenEntity");
 
         ValueCompatibilityAnswersEntity valueCompatibilityAnswersEntity = getValueCompatibilityEntity();
-        valueCompatibilityAnswersEntity = populateDbWithValueCompatibilityAnswersEntity(
+        valueCompatibilityAnswersEntity = populateDb.populateDbWithValueCompatibilityAnswersEntity(
                 valueCompatibilityAnswersEntity.getUserAnswers(), user, Area.QUALITY);
         assertDbBeforeSaveState(valueCompatibilityAnswersEntity);
 
@@ -595,7 +590,7 @@ class ApiValueCompatibilityAnswersControllerIntegrationTest extends AbstractCont
     @Test
     void saveStateThrowsExceptionForNullValueCompatibilityAnswersDto() throws Exception {
         //given
-        Map<String, Object> populatedObjects = populateDbWithAnonimUserAndCredentialsAndToken();
+        Map<String, Object> populatedObjects = populateDb.populateDbWithAnonimUserAndCredentialsAndToken();
         TokenEntity tokenEntity = (TokenEntity) populatedObjects.get("tokenEntity");
 
         //when
@@ -613,7 +608,7 @@ class ApiValueCompatibilityAnswersControllerIntegrationTest extends AbstractCont
     @Test
     void saveStateThrowsExceptionForNullValueCompatibilityAnswersDtoFields() throws Exception {
         //given
-        Map<String, Object> populatedObjects = populateDbWithAnonimUserAndCredentialsAndToken();
+        Map<String, Object> populatedObjects = populateDb.populateDbWithAnonimUserAndCredentialsAndToken();
         TokenEntity tokenEntity = (TokenEntity) populatedObjects.get("tokenEntity");
 
         ValueCompatibilityAnswersDto valueCompatibilityAnswersDto = new ValueCompatibilityAnswersDto();
@@ -732,7 +727,7 @@ class ApiValueCompatibilityAnswersControllerIntegrationTest extends AbstractCont
     @Test
     void generateInviteTokenListSuccess() throws Exception {
         // given
-        Map<String, Object> populatedObjects = populateDbWithAnonimUserAndCredentialsAndToken();
+        Map<String, Object> populatedObjects = populateDb.populateDbWithAnonimUserAndCredentialsAndToken();
         TokenEntity tokenEntity = (TokenEntity) populatedObjects.get("tokenEntity");
         User user = (User) populatedObjects.get("user");
 
@@ -767,12 +762,12 @@ class ApiValueCompatibilityAnswersControllerIntegrationTest extends AbstractCont
     @Test
     void getValueProfileForPrincipalUserSuccess() throws Exception {
         //given
-        Map<String, Object> populatedObjects = populateDbWithRegisteredUserAndCredentialsAndUserAccountAndToken(false);
+        Map<String, Object> populatedObjects = populateDb.populateDbWithRegisteredUserAndCredentialsAndUserAccountAndToken(false);
         User user = (User) populatedObjects.get("user");
         TokenEntity tokenEntity = (TokenEntity) populatedObjects.get("tokenEntity");
 
         ValueCompatibilityAnswersEntity valueCompatibilityAnswersEntity = getValueCompatibilityEntity();
-        valueCompatibilityAnswersEntity = populateDbWithValueCompatibilityAnswersEntity(
+        valueCompatibilityAnswersEntity = populateDb.populateDbWithValueCompatibilityAnswersEntity(
                 valueCompatibilityAnswersEntity.getUserAnswers(), user, Area.TOTAL);
 
         assertDbBeforeGetValueProfile(true);
@@ -807,16 +802,16 @@ class ApiValueCompatibilityAnswersControllerIntegrationTest extends AbstractCont
     void getValueProfileForNoPrincipalUserSuccess() throws Exception {
         //given
         //principal user
-        Map<String, Object> populatedObjectsForPrincipalUser = populateDbWithRegisteredUserAndCredentialsAndUserAccountAndToken(false);
+        Map<String, Object> populatedObjectsForPrincipalUser = populateDb.populateDbWithRegisteredUserAndCredentialsAndUserAccountAndToken(false);
         User principal = (User) populatedObjectsForPrincipalUser.get("user");
         TokenEntity tokenEntityForPrincipal = (TokenEntity) populatedObjectsForPrincipalUser.get("tokenEntity");
 
         //no principal user
-        Map<String, Object> populatedObjectsForNoPrincipalUser = populateDbWithAnonimUserAndCredentialsAndToken();
+        Map<String, Object> populatedObjectsForNoPrincipalUser = populateDb.populateDbWithAnonimUserAndCredentialsAndToken();
         User noPrincipalUser = (User) populatedObjectsForNoPrincipalUser.get("user");
 
         ValueCompatibilityAnswersEntity valueCompatibilityAnswersEntity = getValueCompatibilityEntity();
-        valueCompatibilityAnswersEntity = populateDbWithValueCompatibilityAnswersEntity(
+        valueCompatibilityAnswersEntity = populateDb.populateDbWithValueCompatibilityAnswersEntity(
                 valueCompatibilityAnswersEntity.getUserAnswers(), noPrincipalUser, Area.TOTAL);
 
         assertDbBeforeGetValueProfile(false);

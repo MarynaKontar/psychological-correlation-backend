@@ -53,6 +53,10 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+/**
+ * Unit tests for not secured {@link ApiValueCompatibilityAnswersController} methods.
+ * For server uses {@link MockMvc}.
+ */
 //@RunWith(SpringRunner.class)
 //@WebMvcTest(controllers = {ApiValueCompatibilityAnswersController.class})
 ////@Import({TokenAuthProvider.class, AuthorisationToken.class,
@@ -109,7 +113,7 @@ class ApiValueCompatibilityAnswersControllerNotSecuredMethodsTest {
 
 
     @BeforeEach
-    public void setUp() throws Exception {
+    void setUp() throws Exception {
         MockitoAnnotations.initMocks(this);
         mockMvc = MockMvcBuilders
                 .standaloneSetup(apiValueCompatibilityAnswersController)
@@ -150,19 +154,7 @@ class ApiValueCompatibilityAnswersControllerNotSecuredMethodsTest {
     }
 
     @Test
-    void saveGoal() {
-    }
-
-    @Test
-    void saveQuality() {
-    }
-
-    @Test
-    void saveState() {
-    }
-
-    @Test
-    void generateInviteTokenList() throws Exception {
+    void generateInviteTokenListSuccess() throws Exception {
         //given
         List<String> tokenList = new ArrayList<>(Arrays.asList("token1", "token2", "token3"));
         when(tokenService.generateInviteTokenList(3)).thenReturn(tokenList);

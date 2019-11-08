@@ -2,20 +2,24 @@ package com.psycorp.controller.api;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.psycorp.model.dto.SimpleUserDto;
+import com.psycorp.model.dto.UserMatchDto;
 import com.psycorp.model.dto.ValueProfileMatchingDto;
 import com.psycorp.model.entity.User;
 import com.psycorp.model.entity.ValueCompatibilityAnswersEntity;
 import com.psycorp.model.enums.Area;
 import com.psycorp.model.enums.ErrorEnum;
 import com.psycorp.model.security.TokenEntity;
+import org.bson.types.ObjectId;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
+import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import static com.psycorp.ObjectsForTests.getValueCompatibilityEntity;
 import static com.psycorp.security.SecurityConstant.ACCESS_TOKEN_PREFIX;
@@ -26,7 +30,12 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-class ApiUserMatchControllerIntegrartionTest extends AbstractControllerTest {
+/**
+ * Integration tests for {@link ApiUserMatchController}.
+ * For server uses {@link MockMvc}.
+ * Use not embedded mongo database described in application-test.yml
+ */
+class ApiUserMatchControllerIntegrationTest extends AbstractControllerTest {
 
 
     // ================================ /match/getUsersForMatching =====================================================
@@ -36,12 +45,12 @@ class ApiUserMatchControllerIntegrartionTest extends AbstractControllerTest {
     @Test
     void getUsersForMatchingSuccessForNullUserForMatchingToken() throws Exception {
         //given
-        Map<String, Object> populatedObjects = populateDbWithRegisteredUserAndCredentialsAndUserAccountAndToken(true);
+        Map<String, Object> populatedObjects = populateDb.populateDbWithRegisteredUserAndCredentialsAndUserAccountAndToken(true);
         User principal = (User) populatedObjects.get("user");
         TokenEntity tokenEntity = (TokenEntity) populatedObjects.get("tokenEntity");
 
         ValueCompatibilityAnswersEntity valueCompatibilityAnswersEntity = getValueCompatibilityEntity();
-        valueCompatibilityAnswersEntity = populateDbWithValueCompatibilityAnswersEntity(
+        valueCompatibilityAnswersEntity = populateDb.populateDbWithValueCompatibilityAnswersEntity(
                 valueCompatibilityAnswersEntity.getUserAnswers(), principal, Area.TOTAL);
 
         // when
@@ -71,13 +80,13 @@ class ApiUserMatchControllerIntegrartionTest extends AbstractControllerTest {
     @Test
     void getUsersForMatchingSuccessForUserForMatchingToken() throws Exception {
         //given
-        Map<String, Object> populatedObjects = populateDbWithRegisteredUserAndCredentialsAndUserAccountAndToken(true);
+        Map<String, Object> populatedObjects = populateDb.populateDbWithRegisteredUserAndCredentialsAndUserAccountAndToken(true);
         User principal = (User) populatedObjects.get("user");
         TokenEntity tokenEntity = (TokenEntity) populatedObjects.get("tokenEntity");
         TokenEntity tokenEntityForUserForMatching = tokenRepository.findByUserId(principal.getUsersForMatchingId().get(0)).get();
 
         ValueCompatibilityAnswersEntity valueCompatibilityAnswersEntity = getValueCompatibilityEntity();
-        valueCompatibilityAnswersEntity = populateDbWithValueCompatibilityAnswersEntity(
+        valueCompatibilityAnswersEntity = populateDb.populateDbWithValueCompatibilityAnswersEntity(
                 valueCompatibilityAnswersEntity.getUserAnswers(), principal, Area.TOTAL);
 
         // when
@@ -100,12 +109,12 @@ class ApiUserMatchControllerIntegrartionTest extends AbstractControllerTest {
     @Test
     void getUsersForMatchingThrowsAuthorizationExceptionForFailedUserForMatchingToken() throws Exception {
         //given
-        Map<String, Object> populatedObjects = populateDbWithRegisteredUserAndCredentialsAndUserAccountAndToken(true);
+        Map<String, Object> populatedObjects = populateDb.populateDbWithRegisteredUserAndCredentialsAndUserAccountAndToken(true);
         User principal = (User) populatedObjects.get("user");
         TokenEntity tokenEntity = (TokenEntity) populatedObjects.get("tokenEntity");
 
         ValueCompatibilityAnswersEntity valueCompatibilityAnswersEntity = getValueCompatibilityEntity();
-        valueCompatibilityAnswersEntity = populateDbWithValueCompatibilityAnswersEntity(
+        valueCompatibilityAnswersEntity = populateDb.populateDbWithValueCompatibilityAnswersEntity(
                 valueCompatibilityAnswersEntity.getUserAnswers(), principal, Area.TOTAL);
 
         // when
@@ -125,17 +134,17 @@ class ApiUserMatchControllerIntegrartionTest extends AbstractControllerTest {
     @Test
     void getValueProfilesForMatching() throws Exception {
         //given
-        Map<String, Object> populatedObjects = populateDbWithRegisteredUserAndCredentialsAndUserAccountAndToken(true);
+        Map<String, Object> populatedObjects = populateDb.populateDbWithRegisteredUserAndCredentialsAndUserAccountAndToken(true);
         User principal = (User) populatedObjects.get("user");
         TokenEntity tokenEntity = (TokenEntity) populatedObjects.get("tokenEntity");
         User userForMatching = userRepository.findById(principal.getUsersForMatchingId().get(0)).get();
 
         ValueCompatibilityAnswersEntity valueCompatibilityAnswersEntityForPrincipal = getValueCompatibilityEntity();
-        valueCompatibilityAnswersEntityForPrincipal = populateDbWithValueCompatibilityAnswersEntity(
+        valueCompatibilityAnswersEntityForPrincipal = populateDb.populateDbWithValueCompatibilityAnswersEntity(
                 valueCompatibilityAnswersEntityForPrincipal.getUserAnswers(), principal, Area.TOTAL);
 
         ValueCompatibilityAnswersEntity valueCompatibilityAnswersEntityForUserForMatching = getValueCompatibilityEntity();
-        valueCompatibilityAnswersEntityForPrincipal = populateDbWithValueCompatibilityAnswersEntity(
+        valueCompatibilityAnswersEntityForPrincipal = populateDb.populateDbWithValueCompatibilityAnswersEntity(
                 valueCompatibilityAnswersEntityForUserForMatching.getUserAnswers(), userForMatching, Area.TOTAL);
 
         // when
@@ -154,11 +163,34 @@ class ApiUserMatchControllerIntegrartionTest extends AbstractControllerTest {
     }
 
     @Test
-    void getUserMatchPercent() {
+    void getUserMatchPercentSuccessForNullSimpleUserDto() throws Exception {
+        // given
+        Map<String, Object> populatedObjects = populateDb.populateDbWithRegisteredUserAndCredentialsAndUserAccountAndToken(true);
+        User principal = (User) populatedObjects.get("user");
+        TokenEntity tokenEntity = (TokenEntity) populatedObjects.get("tokenEntity");
+        User userForMatching = userRepository.findById(principal.getUsersForMatchingId().get(0)).get();
 
-    }
+        ValueCompatibilityAnswersEntity valueCompatibilityAnswersEntityForPrincipal = getValueCompatibilityEntity();
+        valueCompatibilityAnswersEntityForPrincipal = populateDb.populateDbWithValueCompatibilityAnswersEntity(
+                valueCompatibilityAnswersEntityForPrincipal.getUserAnswers(), principal, Area.TOTAL);
 
-    @Test
-    void handleException() {
+        ValueCompatibilityAnswersEntity valueCompatibilityAnswersEntityForUserForMatching = getValueCompatibilityEntity();
+        valueCompatibilityAnswersEntityForPrincipal = populateDb.populateDbWithValueCompatibilityAnswersEntity(
+                valueCompatibilityAnswersEntityForUserForMatching.getUserAnswers(), userForMatching, Area.TOTAL);
+
+        // when
+        MvcResult mvcResult = mockMvc.perform(post("/match/Percent")
+                .contentType(MediaType.APPLICATION_JSON_UTF8)
+                .header("AUTHORIZATION", ACCESS_TOKEN_PREFIX + " " + tokenEntity.getToken()))
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8))
+                .andExpect(status().isCreated())
+                .andReturn();
+
+        // then
+        UserMatchDto response = mapper.readValue(mvcResult.getResponse().getContentAsString(), UserMatchDto.class);
+        assertEquals(1, userMatchRepository.findAll().size());
+        List<ObjectId> userIds = response.getUsers().stream().map(SimpleUserDto::getId).collect(Collectors.toList());
+        assertTrue(userIds.contains(principal.getId()));
+        assertTrue(userIds.contains(userForMatching.getId()));
     }
 }

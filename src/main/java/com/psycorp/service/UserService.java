@@ -84,7 +84,7 @@ public interface UserService {
      * @return {@literal true} if an user with the given id exists, {@literal false} otherwise.
      * @throws IllegalArgumentException if {@code id} is {@literal null}.
      */
-    boolean checkIfExistById(ObjectId userId);
+    boolean ifExistById(ObjectId userId);
 
     /**
      * Updates fields role, name, age, gender and email for principal user.

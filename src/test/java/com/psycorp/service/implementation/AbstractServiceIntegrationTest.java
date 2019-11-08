@@ -1,8 +1,11 @@
-package com.psycorp.controller.api;
+package com.psycorp.service.implementation;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.psycorp.PopulateDb;
-import com.psycorp.model.entity.*;
+import com.psycorp.model.entity.User;
+import com.psycorp.model.entity.UserAccountEntity;
+import com.psycorp.model.entity.UserMatchEntity;
+import com.psycorp.model.entity.ValueCompatibilityAnswersEntity;
 import com.psycorp.model.security.CredentialsEntity;
 import com.psycorp.model.security.TokenEntity;
 import com.psycorp.repository.UserAccountRepository;
@@ -12,34 +15,25 @@ import com.psycorp.repository.ValueCompatibilityAnswersRepository;
 import com.psycorp.repository.security.CredentialsRepository;
 import com.psycorp.repository.security.TokenRepository;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.core.env.Environment;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.web.servlet.MockMvc;
 
-import static com.psycorp.FixtureObjectsForTest.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
- * Abstract class for integration tests from controllers to db.
- * For server uses {@link MockMvc}.
- * Repository layer uses for populate and clear db.
+ * Abstract class for integration tests of services.
+ * Repository layer uses only for populate and clear db.
  * Use not embedded mongo database described in application-test.yml
  */
 @SpringBootTest
-@AutoConfigureMockMvc
 @ActiveProfiles("test")
-public abstract class AbstractControllerTest {
-    Integer TOTAL_NUMBER_OF_QUESTIONS_FOR_AREA;
+public abstract class AbstractServiceIntegrationTest {
 
-    @Autowired
-    MockMvc mockMvc;
     @Autowired
     private MongoTemplate mongoTemplate;
 
@@ -65,14 +59,6 @@ public abstract class AbstractControllerTest {
     @Autowired
     PopulateDb populateDb;
 
-
-    @BeforeAll
-    static void startUp() {
-        fixtureAnonimUser(null, null, null, null);
-        fixtureCredentialsDto();
-        fixtureRegisteredUser(null, null, null);
-    }
-
     /**
      * Checks if all collections is empty.
      */
@@ -84,8 +70,6 @@ public abstract class AbstractControllerTest {
         assertEquals(0, mongoTemplate.findAll(ValueCompatibilityAnswersEntity.class).size());
         assertEquals(0, mongoTemplate.findAll(UserAccountEntity.class).size());
         assertEquals(0, mongoTemplate.findAll(UserMatchEntity.class).size());
-
-        TOTAL_NUMBER_OF_QUESTIONS_FOR_AREA = Integer.valueOf(env.getProperty("total.number.of.questions")); // 15
     }
 
     /**
@@ -99,6 +83,7 @@ public abstract class AbstractControllerTest {
         mongoTemplate.dropCollection(TokenEntity.class);
         mongoTemplate.dropCollection(ValueCompatibilityAnswersEntity.class);
         mongoTemplate.dropCollection(UserMatchEntity.class);
+        mongoTemplate.getDb().watch();
     }
 
 }

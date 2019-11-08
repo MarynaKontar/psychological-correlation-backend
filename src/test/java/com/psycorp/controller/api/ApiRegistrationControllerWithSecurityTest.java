@@ -6,10 +6,8 @@ import com.psycorp.model.dto.CredentialsDto;
 import com.psycorp.model.dto.SimpleUserDto;
 import com.psycorp.model.dto.UserAccountDto;
 import com.psycorp.model.entity.User;
-import com.psycorp.model.enums.TokenType;
 import com.psycorp.model.enums.UserRole;
 import com.psycorp.model.objects.UserAccount;
-import com.psycorp.model.security.CredentialsEntity;
 import com.psycorp.model.security.TokenEntity;
 import com.psycorp.service.implementation.CredentialsServiceImpl;
 import com.psycorp.service.security.implementation.TokenServiceImpl;
@@ -21,7 +19,6 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
-import java.util.HashMap;
 import java.util.Map;
 
 import static com.psycorp.FixtureObjectsForTest.fixtureChangePasswordDto;
@@ -43,6 +40,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * Use not embedded mongo database described in application-test.yml
  */
 class ApiRegistrationControllerWithSecurityTest extends AbstractControllerTest{
+    private final static String oldPassword = "oldPassword";
+    private final static String newPassword = "newPassword";
 
     @MockBean
     CredentialsServiceImpl credentialsService;
@@ -186,7 +185,7 @@ class ApiRegistrationControllerWithSecurityTest extends AbstractControllerTest{
     @Test
     void changePasswordSuccessForValidTokenAndOldPassword() throws Exception {
         //given
-        Map<String, Object> preparedObjects = populateDbWithRegisteredUserAndCredentialsAndUserAccountAndToken(false);
+        Map<String, Object> preparedObjects = populateDb.populateDbWithRegisteredUserAndCredentialsAndUserAccountAndToken(false);
         TokenEntity tokenEntity = (TokenEntity) preparedObjects.get("tokenEntity");
 
         fixtureChangePasswordDto(oldPassword, newPassword);
@@ -219,7 +218,7 @@ class ApiRegistrationControllerWithSecurityTest extends AbstractControllerTest{
     @Test
     void changePasswordThrowsExceptionForNullChangePasswordDto() throws Exception {
         //given
-        Map<String, Object> preparedObjects = populateDbWithRegisteredUserAndCredentialsAndUserAccountAndToken(false);
+        Map<String, Object> preparedObjects = populateDb.populateDbWithRegisteredUserAndCredentialsAndUserAccountAndToken(false);
         TokenEntity tokenEntity = (TokenEntity) preparedObjects.get("tokenEntity");
 
         //when
@@ -234,10 +233,10 @@ class ApiRegistrationControllerWithSecurityTest extends AbstractControllerTest{
     }
 
 
-    //==================== private ==========================================
+    // ============================================== private ==========================================================
     private Map<String, Object> prepareObjectsForSuccessfulRegistrationTest() {
         // populate db with user, tokenEntity and credentialsEntity
-        Map<String, Object> preparedObjects = populateDbWithAnonimUserAndCredentialsAndToken();
+        Map<String, Object> preparedObjects = populateDb.populateDbWithAnonimUserAndCredentialsAndToken();
         User user = (User) preparedObjects.get("user");
 
         // prepare objects for successful registration test

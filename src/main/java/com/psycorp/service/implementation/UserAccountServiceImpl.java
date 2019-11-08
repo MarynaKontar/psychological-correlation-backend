@@ -3,7 +3,6 @@ package com.psycorp.service.implementation;
 import com.psycorp.exception.BadRequestException;
 import com.psycorp.model.entity.User;
 import com.psycorp.model.entity.UserAccountEntity;
-import com.psycorp.model.entity.ValueCompatibilityAnswersEntity;
 import com.psycorp.model.enums.AccountType;
 import com.psycorp.model.enums.TokenType;
 import com.psycorp.model.objects.UserAccount;
@@ -13,9 +12,9 @@ import com.psycorp.service.UserAccountService;
 import com.psycorp.service.UserService;
 import com.psycorp.service.ValueCompatibilityAnswersService;
 import com.psycorp.service.security.TokenService;
-import lombok.Data;
 import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.env.Environment;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
@@ -47,18 +46,21 @@ public class UserAccountServiceImpl implements UserAccountService {
     private final TokenService tokenService;
     private final UserService userService;
     private final MongoOperations mongoOperations;
+    private final Environment env;
 
     @Autowired
     public UserAccountServiceImpl(UserAccountRepository userAccountRepository,
                                   ValueCompatibilityAnswersService valueCompatibilityAnswersService,
                                   TokenService tokenService,
                                   UserService userService,
-                                  MongoOperations mongoOperations) {
+                                  MongoOperations mongoOperations,
+                                  Environment env) {
         this.userAccountRepository = userAccountRepository;
         this.valueCompatibilityAnswersService = valueCompatibilityAnswersService;
         this.tokenService = tokenService;
         this.userService = userService;
         this.mongoOperations = mongoOperations;
+        this.env = env;
     }
 
     /**
@@ -68,6 +70,9 @@ public class UserAccountServiceImpl implements UserAccountService {
      */
     @Override
     public UserAccountEntity insert(User user) {
+        if (user == null) {
+            throw new BadRequestException(env.getProperty("error.UserCan`tBeNull"));
+        }
         UserAccountEntity userAccountEntity = new UserAccountEntity();
         userAccountEntity.setUserId(user.getId());
         userAccountEntity.setAccountType(AccountType.OPEN);

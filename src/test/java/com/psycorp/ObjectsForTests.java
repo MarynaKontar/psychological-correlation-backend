@@ -5,38 +5,88 @@ import br.com.six2six.fixturefactory.Rule;
 import com.psycorp.model.dto.SimpleUserDto;
 import com.psycorp.model.dto.ValueCompatibilityAnswersDto;
 import com.psycorp.model.entity.Choice;
+import com.psycorp.model.entity.User;
+import com.psycorp.model.entity.UserAccountEntity;
 import com.psycorp.model.entity.ValueCompatibilityAnswersEntity;
-import com.psycorp.model.enums.Area;
-import com.psycorp.model.enums.Scale;
+import com.psycorp.model.enums.*;
+import com.psycorp.model.security.TokenEntity;
+import com.psycorp.security.token.TokenPrincipal;
 import com.psycorp.сonverter.ValueCompatibilityAnswersDtoConverter;
 import org.bson.types.ObjectId;
 import org.springframework.core.env.Environment;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
-import static com.psycorp.FixtureObjectsForTest.ANONIM_NAME;
+import static com.psycorp.FixtureObjectsForTest.*;
 
 /**
  * Utils class for creation of test objects
  */
 public class ObjectsForTests {
 
+    public static Optional<UserAccountEntity> getUserAccountEntity(ObjectId id,
+                                                                   ObjectId userId,
+                                                                   List<ObjectId> usersWhoInvitedYouId,
+                                                                   List<ObjectId> usersWhoYouInviteId) {
+        fixtureUserAccountEntity(id, userId, usersWhoInvitedYouId, usersWhoYouInviteId, "userAccountEntity");
+        return Optional.of(Fixture.from(UserAccountEntity.class).gimme("userAccountEntity"));
+    }
+
+    public static UserAccountEntity getShortUserAccountEntity(ObjectId userId) {
+        UserAccountEntity userAccountEntity = new UserAccountEntity();
+        userAccountEntity.setUserId(userId);
+        userAccountEntity.setAccountType(AccountType.OPEN);
+        return userAccountEntity;
+    }
+
+    public static User getRegisteredUser(ObjectId userId, String name, List<ObjectId> usersForMatchingId, String label) {
+        fixtureRegisteredUser(userId, name, usersForMatchingId, label);
+        return Fixture.from(User.class).gimme(label == null ? "user" : label);
+    }
+
+    public static User getAnonimUser(ObjectId userId, String name, List<ObjectId> usersForMatchingId, String label) {
+        fixtureAnonimUser(userId, name, usersForMatchingId, label);
+        return Fixture.from(User.class).gimme(label);
+    }
+
+    public static User getIncompleteUser() {
+        User user = new User();
+        user.setName("nameForIncompleteUser");
+        user.setGender(Gender.FEMALE);
+        user.setAge(38);
+        return user;
+    }
     public static ValueCompatibilityAnswersEntity getValueCompatibilityEntity() {
         ValueCompatibilityAnswersEntity valueCompatibilityAnswersEntity = new ValueCompatibilityAnswersEntity();
         valueCompatibilityAnswersEntity.setUserAnswers(choiceList());
         valueCompatibilityAnswersEntity.setCreationDate(LocalDateTime.of(2019, 10, 19, 15, 50, 55));
         valueCompatibilityAnswersEntity.setPassed(false);
-//        valueCompatibilityAnswersEntity.setUserId(-);
         return valueCompatibilityAnswersEntity;
+    }
+
+    public static TokenEntity getTokenEntity(ObjectId tokenId, ObjectId userId, TokenType tokenType, String token) {
+        TokenEntity tokenEntity = new TokenEntity();
+        tokenEntity.setId(tokenId);
+        tokenEntity.setType(tokenType);
+        tokenEntity.setToken(token);
+        tokenEntity.setUserId(userId);
+        tokenEntity.setExpirationDate(LocalDateTime.now().plusDays(1));
+        return tokenEntity;
     }
 
     public static ValueCompatibilityAnswersDto getValueCompatibilityAnswersDto(Environment env) {
         ValueCompatibilityAnswersDtoConverter valueCompatibilityAnswersDtoConverter = new ValueCompatibilityAnswersDtoConverter(env);
         return valueCompatibilityAnswersDtoConverter.transform(getValueCompatibilityEntity());
+    }
+
+    public static TokenPrincipal getTokenPrincipal(User user) {
+        TokenPrincipal tokenPrincipal = new TokenPrincipal();
+        tokenPrincipal.setId(user.getId());
+        tokenPrincipal.setUsername(user.getName());
+        tokenPrincipal.setRole(user.getRole());
+        tokenPrincipal.setPassword(null);
+        return tokenPrincipal;
     }
 
     public static SimpleUserDto getSimpleUserDtoForCreatedAnonimUser(ObjectId userId) {
