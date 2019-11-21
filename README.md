@@ -1,6 +1,6 @@
 # PsyMatch
 
-[![PsyMatch](http://http://167.99.133.172)](http://http://167.99.133.172)
+[![PsyMatch](http://167.99.133.172)](http://167.99.133.172)
 
 #### Backend part of the Psy Match project to determine the psychological compatibility of people 
 
