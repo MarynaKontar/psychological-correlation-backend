@@ -30,6 +30,7 @@ import static com.psycorp.FixtureObjectsForTest.fixtureAnonimUser;
 import static com.psycorp.FixtureObjectsForTest.fixtureRegisteredUser;
 import static com.psycorp.ObjectsForTests.getShortUserAccountEntity;
 import static com.psycorp.ObjectsForTests.getTokenEntity;
+import static com.psycorp.ObjectsForTests.getUserAccountEntity;
 
 @Component
 public class PopulateDb {
@@ -42,6 +43,7 @@ public class PopulateDb {
     private final PasswordEncoder passwordEncoder;
     private final ObjectMapper mapper;
     private final Environment env;
+    private static Integer counter = 0;
 
     @Autowired
     public PopulateDb(UserRepository userRepository,
@@ -71,17 +73,17 @@ public class PopulateDb {
         if(isUsersForMatching) {
             ObjectId userId = new ObjectId();
             user.setId(userId);
-            fixtureRegisteredUser(null, "userForMatching1For" + name, null);
+            fixtureRegisteredUser(null, UUID.randomUUID().toString(), null);
             User userForMatching1 = Fixture.from(User.class).gimme("user");
             userForMatching1.setUsersForMatchingId(Collections.singletonList(user.getId()));
             userForMatching1 = userRepository.save(userForMatching1);
             TokenEntity tokenEntityForUserForMatching1 = populateDbWithTokenEntity(userForMatching1, TokenType.ACCESS_TOKEN, "someTokenForUserForMatching1");
 
-            fixtureRegisteredUser(null, "userForMatching2For" + name, null);
+            fixtureRegisteredUser(null, UUID.randomUUID().toString(), null);
             User userForMatching2 = Fixture.from(User.class).gimme("user");
             userForMatching2.setUsersForMatchingId(Collections.singletonList(user.getId()));
             userForMatching2 = userRepository.save(userForMatching2);
-            TokenEntity tokenEntityForUserForMatching2 = populateDbWithTokenEntity(userForMatching2, TokenType.ACCESS_TOKEN, "someTokenForUserForMatching2");
+            TokenEntity tokenEntityForUserForMatching2 = populateDbWithTokenEntity(userForMatching2, TokenType.INVITE_TOKEN, "someTokenForUserForMatching2");
 
             user.setUsersForMatchingId(Arrays.asList(userForMatching1.getId(), userForMatching2.getId()));
         }
@@ -109,6 +111,11 @@ public class PopulateDb {
 
     public UserAccountEntity populateDbWithShortUserAccountEntity(ObjectId userId) {
         UserAccountEntity userAccountEntity = getShortUserAccountEntity(userId);
+        return userAccountRepository.insert(userAccountEntity);
+    }
+
+    public UserAccountEntity populateDbWithUserAccountEntity(ObjectId userId, List<ObjectId> usersWhoInvitedYouId, List<ObjectId> usersWhoYouInviteId) {
+        UserAccountEntity userAccountEntity = getUserAccountEntity(userId, usersWhoInvitedYouId, usersWhoYouInviteId);
         return userAccountRepository.insert(userAccountEntity);
     }
 
@@ -191,4 +198,5 @@ public class PopulateDb {
 
         return valueCompatibilityAnswersRepository.insert(answersEntity);
     }
+
 }

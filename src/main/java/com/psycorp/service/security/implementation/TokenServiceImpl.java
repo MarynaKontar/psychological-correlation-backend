@@ -82,7 +82,7 @@ public class TokenServiceImpl implements TokenService {
 
         validateUserPassword (usernamePassword.getPassword(), credentialsEntity.getPassword());
         ObjectId userId = credentialsEntity.getUserId();
-        tokenRepository.removeAllByUserId(userId);
+        tokenRepository.removeByUserId(userId);
         TokenEntity token =  createUserToken(userId, TokenType.ACCESS_TOKEN);
         LOGGER.trace("generateAccessToken: token: {}", token.getToken());
 

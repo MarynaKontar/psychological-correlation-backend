@@ -1,7 +1,6 @@
 package com.psycorp.service.implementation;
 
 import com.mongodb.MongoClientException;
-import com.mongodb.MongoException;
 import com.psycorp.exception.BadRequestException;
 import com.psycorp.model.entity.User;
 import com.psycorp.model.entity.UserAccountEntity;

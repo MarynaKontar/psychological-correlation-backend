@@ -3,10 +3,13 @@ package com.psycorp.service.implementation;
 import com.psycorp.exception.AuthorizationException;
 import com.psycorp.exception.BadRequestException;
 import com.psycorp.model.entity.User;
+import com.psycorp.model.entity.UserAccountEntity;
 import com.psycorp.model.enums.ErrorEnum;
 import com.psycorp.model.enums.Gender;
+import com.psycorp.model.enums.TokenType;
 import com.psycorp.model.enums.UserRole;
 import com.psycorp.model.security.CredentialsEntity;
+import com.psycorp.model.security.TokenEntity;
 import com.psycorp.security.token.TokenPrincipal;
 import com.psycorp.service.UserService;
 import com.psycorp.service.security.AuthService;
@@ -56,13 +59,13 @@ public class UserServiceImplIntegrationTest extends AbstractServiceIntegrationTe
         assertTrue(savedUserOptional.isPresent());
         assertTrue(savedCredentialsEntityOptional.isPresent());
 
-        assertEquals(savedUserOptional.get().getRole(), UserRole.ANONIM);
+        assertEquals(UserRole.ANONIM, savedUserOptional.get().getRole());
         assertEquals(savedUserOptional.get().getId(), savedCredentialsEntityOptional.get().getUserId());
-        assertNotEquals(savedUserOptional.get().getName(), null);
-        assertEquals(savedUserOptional.get().getEmail(), null);
-        assertEquals(savedUserOptional.get().getGender(), null);
-        assertEquals(savedUserOptional.get().getAge(), null);
-        assertEquals(savedCredentialsEntityOptional.get().getPassword(), null);
+        assertNotNull(savedUserOptional.get().getName());
+        assertNull(savedUserOptional.get().getEmail());
+        assertNull(savedUserOptional.get().getGender());
+        assertNull(savedUserOptional.get().getAge());
+        assertNull(savedCredentialsEntityOptional.get().getPassword());
     }
 
     //  ======================================== addNameAgeAndGender(User user) ========================================
@@ -72,7 +75,6 @@ public class UserServiceImplIntegrationTest extends AbstractServiceIntegrationTe
         User user = populateDb.populateDbWithAnonimUser("anonimUser");
         TokenPrincipal tokenPrincipal = getTokenPrincipal(user);
         User userWithNameAgeAndGender = getIncompleteUser();
-
         // mocked security: getting principal user is mocked
         given(authService.getAuthPrincipal()).willReturn(tokenPrincipal);
 
@@ -95,7 +97,6 @@ public class UserServiceImplIntegrationTest extends AbstractServiceIntegrationTe
         User user = populateDb.populateDbWithRegisteredUser("user", false);
         TokenPrincipal tokenPrincipal = getTokenPrincipal(user);
         User userWithNameAgeAndGender = getIncompleteUser();
-
         // mocked security: getting principal user is mocked
         given(authService.getAuthPrincipal()).willReturn(tokenPrincipal);
 
@@ -150,7 +151,7 @@ public class UserServiceImplIntegrationTest extends AbstractServiceIntegrationTe
 
     // =========== addNewUsersForMatching(User user, List<User> usersForMatching, Update.Position position) ============
     @Test
-    void addNewUsersForMatching() {
+    void addNewUsersForMatchingSuccess() {
         // given
         User user = populateDb.populateDbWithAnonimUser("name");
         User userForMatching1 = populateDb.populateDbWithAnonimUser("userForMatching1");
@@ -321,7 +322,7 @@ public class UserServiceImplIntegrationTest extends AbstractServiceIntegrationTe
     }
 
     @Test
-    void findByNameOrEmailThrowsExceptionForNotExistingName() {
+    void findByNameOrEmailThrowsExceptionForNotExistingNameAndEmail() {
         // NAME
         // when
         Throwable nameException = assertThrows(BadRequestException.class, () -> {
@@ -346,7 +347,6 @@ public class UserServiceImplIntegrationTest extends AbstractServiceIntegrationTe
         // given
         User user = populateDb.populateDbWithAnonimUser("anonimUser");
         TokenPrincipal tokenPrincipal = getTokenPrincipal(user);
-
         // mocked security: getting principal user is mocked
         given(authService.getAuthPrincipal()).willReturn(tokenPrincipal);
 
@@ -442,25 +442,134 @@ public class UserServiceImplIntegrationTest extends AbstractServiceIntegrationTe
 
 
     // ======================================= updateUser(User user) ===================================================
+    @Test
+    void updateUserSuccess() {
+        // given
+        User principalUser = populateDb.populateDbWithAnonimUser("anonimUuser");
+        TokenPrincipal tokenPrincipal = getTokenPrincipal(principalUser);
+        User userForUpdating = getUserForUpdating();
+        // mocked security: getting principal user is mocked
+        given(authService.getAuthPrincipal()).willReturn(tokenPrincipal);
+
+        // when
+        User updatedUser = userService.updateUser(userForUpdating);
+
+        // then
+        assertEquals(principalUser.getId(), updatedUser.getId());
+        assertEquals(userForUpdating.getName(), updatedUser.getName());
+        assertEquals(userForUpdating.getEmail(), updatedUser.getEmail());
+        assertEquals(userForUpdating.getGender(), updatedUser.getGender());
+        assertEquals(userForUpdating.getAge(), updatedUser.getAge());
+        if(userForUpdating.getRole() == null) {
+            assertEquals(principalUser.getRole(), updatedUser.getRole());
+        } else {
+            assertEquals(userForUpdating.getRole(), updatedUser.getRole());
+        }
+    }
+
+    @Test
+    void updateUserThrowsExceptionForNullUser() {
+        // when
+        Throwable exception = assertThrows(BadRequestException.class, () -> userService.updateUser(null));
+        // then
+        assertEquals(env.getProperty("error.UserCan`tBeNull"), exception.getMessage());
+    }
 
 
+    // ==================================== deleteUser(ObjectId userId) ================================================
+    @Test
+    void deleteUser() {
+        // given
+        // principal user with two users for matching, usersWhoInvitedYouId, usersWhoYouInviteId
+        User principalUser = populateDb.populateDbWithRegisteredUser("principalUser", true);
+        TokenEntity tokenEntityPrincipal = populateDb.populateDbWithTokenEntity(principalUser, TokenType.ACCESS_TOKEN, "tokenForPrincipalUser");
+        CredentialsEntity credentialsEntityPrincipal = populateDb.populateDbWithCredentialsEntity(principalUser, "principalPassword");
+        UserAccountEntity userAccountEntityPrincipal = populateDb.populateDbWithUserAccountEntity(
+                principalUser.getId(),
+                principalUser.getUsersForMatchingId(),
+                principalUser.getUsersForMatchingId());
+
+        // retrieve tokenEntity with TokenType.INVITE for users from usersForMatching of principal user
+        Optional<TokenEntity> optionalInviteTokenEntity1 = tokenRepository.findByUserId(principalUser.getUsersForMatchingId().get(0));
+        Optional<TokenEntity> optionalInviteTokenEntity2 = tokenRepository.findByUserId(principalUser.getUsersForMatchingId().get(1));
+        TokenEntity inviteTokenEntityOfUserForMatching =
+                        (optionalInviteTokenEntity1.isPresent() && optionalInviteTokenEntity1.get().getType().equals(TokenType.INVITE_TOKEN)) ?
+                optionalInviteTokenEntity1.get() :
+                        (optionalInviteTokenEntity2.isPresent() && optionalInviteTokenEntity2.get().getType().equals(TokenType.INVITE_TOKEN)) ?
+                optionalInviteTokenEntity2.get() :
+                null;
+        assertNotNull(inviteTokenEntityOfUserForMatching, "Cann't test to removing TokenEntity with TokenType.INVITE for users from usersForMatching of principal user.");
 
 
+        // another user with two users for matching, principalUserId in usersWhoInvitedYouId and usersWhoYouInviteId
+        User user = populateDb.populateDbWithRegisteredUser("anotherUser", true);
+        TokenEntity tokenEntity = populateDb.populateDbWithTokenEntity(user, TokenType.ACCESS_TOKEN, "someTokenForRegisteredUser");
+        CredentialsEntity credentialsEntity = populateDb.populateDbWithCredentialsEntity(user, "oldPassword");
+        UserAccountEntity userAccountEntity = populateDb.populateDbWithUserAccountEntity(
+                user.getId(),
+                Arrays.asList(principalUser.getId(), principalUser.getUsersForMatchingId().get(0)),
+                Arrays.asList(principalUser.getId(), principalUser.getUsersForMatchingId().get(1)));
 
+
+        TokenPrincipal tokenPrincipal = getTokenPrincipal(principalUser);
+        // mocked security: getting principal user is mocked
+        given(authService.getAuthPrincipal()).willReturn(tokenPrincipal);
+
+
+        // when
+        userService.deleteUser(principalUser.getId());
+
+        // then
+        assertEquals(4, userRepository.findAll().size());
+        assertEquals(1, userAccountRepository.findAll().size());
+        assertEquals(1, credentialsRepository.findAll().size());
+        assertEquals(4, tokenRepository.findAll().size());
+        assertEquals(0, valueCompatibilityAnswersRepository.findAll().size());
+        assertEquals(0, userMatchRepository.findAll().size());
+
+        User userForMatching = userRepository.findById(principalUser.getUsersForMatchingId().get(0))
+              .orElseGet(() -> userRepository.findById(principalUser.getUsersForMatchingId().get(1))
+              .orElse(null));
+
+        assertNotNull(userForMatching, "Or userForMatching was incorrect deleted or test was incorrect prepared without usersForMatching with TokenType.INVITE TokenEntity.");
+        assertFalse(userForMatching.getUsersForMatchingId()
+                .contains(principalUser.getId()));
+        assertFalse(userAccountRepository
+                .findById(userAccountEntity.getId())
+                .get()
+                .getUsersWhoInvitedYouId()
+                .contains(principalUser.getId()));
+        assertFalse(userAccountRepository
+                .findById(userAccountEntity.getId())
+                .get()
+                .getUsersWhoYouInviteId()
+                .contains(principalUser.getId()));
+        assertEquals(Optional.empty(), userRepository.findById(inviteTokenEntityOfUserForMatching.getUserId()));
+        assertEquals(Optional.empty(), tokenRepository.findById(inviteTokenEntityOfUserForMatching.getId()));
+    }
 
 
     // ============================================== private ==========================================================
-    private enum UserField {
-        NAME,
-        GENDER,
-        AGE;
-    }
-    private User getNotValidIncompleteUser(UserField notValidUserField) {
-        User notValidUser = new User();
-        notValidUser.setName(notValidUserField.equals(UserField.NAME) ? null : "name");
-        notValidUser.setGender(notValidUserField.equals(UserField.GENDER) ? null : Gender.FEMALE);
-        notValidUser.setAge(notValidUserField.equals(UserField.AGE) ? null : 35);
-        return notValidUser;
+//    private enum UserField {
+//        NAME,
+//        GENDER,
+//        AGE;
+//    }
+//    private User getNotValidIncompleteUser(UserField notValidUserField) {
+//        User notValidUser = new User();
+//        notValidUser.setName(notValidUserField.equals(UserField.NAME) ? null : "name");
+//        notValidUser.setGender(notValidUserField.equals(UserField.GENDER) ? null : Gender.FEMALE);
+//        notValidUser.setAge(notValidUserField.equals(UserField.AGE) ? null : 35);
+//        return notValidUser;
+//    }
+
+    private User getUserForUpdating() {
+        User userForUpdating = new User();
+        userForUpdating.setName("updatedName");
+        userForUpdating.setEmail("updatedemail@gmail.com");
+        userForUpdating.setGender(Gender.FEMALE);
+        userForUpdating.setAge(35);
+        return userForUpdating;
     }
 
 }

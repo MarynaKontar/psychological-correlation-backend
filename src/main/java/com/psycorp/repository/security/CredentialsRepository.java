@@ -15,4 +15,5 @@ import java.util.Optional;
 public interface CredentialsRepository extends MongoRepository<CredentialsEntity, ObjectId> {
 
     Optional<CredentialsEntity> findByUserId(ObjectId objectId);
+    Optional<CredentialsEntity> removeByUserId(ObjectId objectId);
 }

@@ -9,11 +9,15 @@ import com.psycorp.model.entity.User;
 import com.psycorp.model.entity.UserAccountEntity;
 import com.psycorp.model.entity.ValueCompatibilityAnswersEntity;
 import com.psycorp.model.enums.*;
+import com.psycorp.model.security.CredentialsEntity;
 import com.psycorp.model.security.TokenEntity;
 import com.psycorp.security.token.TokenPrincipal;
+import com.psycorp.service.implementation.UserServiceImplIntegrationTest;
 import com.psycorp.сonverter.ValueCompatibilityAnswersDtoConverter;
 import org.bson.types.ObjectId;
 import org.springframework.core.env.Environment;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.time.LocalDateTime;
 import java.util.*;
@@ -24,6 +28,8 @@ import static com.psycorp.FixtureObjectsForTest.*;
  * Utils class for creation of test objects
  */
 public class ObjectsForTests {
+//    Utility class, that doesn't have instances.
+    private ObjectsForTests() {  throw new AssertionError("You cann't create instance of ObjectsForTests class, because it's utility class.");  }
 
     public static Optional<UserAccountEntity> getUserAccountEntity(ObjectId id,
                                                                    ObjectId userId,
@@ -40,11 +46,26 @@ public class ObjectsForTests {
         return userAccountEntity;
     }
 
+    public static UserAccountEntity getUserAccountEntity(ObjectId userId, List<ObjectId> usersWhoInvitedYouId, List<ObjectId> usersWhoYouInviteId) {
+        UserAccountEntity userAccountEntity = new UserAccountEntity();
+        userAccountEntity.setUserId(userId);
+        userAccountEntity.setAccountType(AccountType.OPEN);
+        userAccountEntity.setUsersWhoInvitedYouId(usersWhoInvitedYouId);
+        userAccountEntity.setUsersWhoYouInviteId(usersWhoYouInviteId);
+        return userAccountEntity;
+    }
+
     public static User getRegisteredUser(ObjectId userId, String name, List<ObjectId> usersForMatchingId, String label) {
         fixtureRegisteredUser(userId, name, usersForMatchingId, label);
         return Fixture.from(User.class).gimme(label == null ? "user" : label);
     }
 
+    public static User getAnonimUser() {
+        User user = new User();
+        user.setName(UUID.randomUUID().toString());
+        user.setRole(UserRole.ANONIM);
+        return user;
+    }
     public static User getAnonimUser(ObjectId userId, String name, List<ObjectId> usersForMatchingId, String label) {
         fixtureAnonimUser(userId, name, usersForMatchingId, label);
         return Fixture.from(User.class).gimme(label);
@@ -57,6 +78,28 @@ public class ObjectsForTests {
         user.setAge(38);
         return user;
     }
+
+    public enum UserField {
+        NAME,
+        GENDER,
+        AGE;
+    }
+    public static User getNotValidIncompleteUser(UserField notValidUserField) {
+        User notValidUser = new User();
+        notValidUser.setName(notValidUserField.equals(UserField.NAME) ? null : "name");
+        notValidUser.setGender(notValidUserField.equals(UserField.GENDER) ? null : Gender.FEMALE);
+        notValidUser.setAge(notValidUserField.equals(UserField.AGE) ? null : 35);
+        return notValidUser;
+    }
+
+    public static CredentialsEntity getCredentialsEntity(User user, String password) {
+        CredentialsEntity credentialsEntity = new CredentialsEntity();
+        credentialsEntity.setUserId(user.getId());
+        PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
+        if(password != null) { credentialsEntity.setPassword(passwordEncoder.encode(password)); }
+        return credentialsEntity;
+    }
+
     public static ValueCompatibilityAnswersEntity getValueCompatibilityEntity() {
         ValueCompatibilityAnswersEntity valueCompatibilityAnswersEntity = new ValueCompatibilityAnswersEntity();
         valueCompatibilityAnswersEntity.setUserAnswers(choiceList());

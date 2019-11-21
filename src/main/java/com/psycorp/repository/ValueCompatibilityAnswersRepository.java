@@ -21,5 +21,5 @@ public interface ValueCompatibilityAnswersRepository extends MongoRepository<Val
 
     Boolean existsByUserIdAndPassed(ObjectId userId, Boolean passed);
 
-    void removeAllByUserId (ObjectId userId);
+    Optional<ValueCompatibilityAnswersEntity> removeByUserId (ObjectId userId);
 }

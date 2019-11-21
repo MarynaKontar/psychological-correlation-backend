@@ -25,8 +25,8 @@ public class RunAllTests {
     public void runAll() {
         LauncherDiscoveryRequest request = LauncherDiscoveryRequestBuilder
                 .request()
-//                .selectors(selectPackage("com.psycorp.controller.api"))
-                .selectors(selectPackage("com.psycorp.service.implementation"))
+                .selectors(selectPackage("com.psycorp.controller.api"))
+//                .selectors(selectPackage("com.psycorp.service.implementation"))
 //                .filters(includeClassNamePatterns(".*Test"))
 //                .filters(excludeClassNamePatterns("Abstract.*"))
 //                .filters(excludeClassNamePatterns(".*User.*"))

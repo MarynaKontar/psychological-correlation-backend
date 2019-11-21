@@ -15,4 +15,6 @@ import java.util.Optional;
 public interface UserAccountRepository extends MongoRepository<UserAccountEntity, ObjectId>{
 
     Optional<UserAccountEntity> findByUserId(ObjectId userId);
+
+    Optional<UserAccountEntity> removeByUserId(ObjectId userId);
 }

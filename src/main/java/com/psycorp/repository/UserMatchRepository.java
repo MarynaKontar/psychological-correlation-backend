@@ -24,6 +24,6 @@ public interface UserMatchRepository extends MongoRepository<UserMatchEntity, Ob
     @Query("{'usersId': ?0, 'matches.matchMethod': ?1}")
     List<UserMatchEntity> findByUsersIdContainingAndMatchMethod(ObjectId userId, MatchMethod matchMethod);
 
-    void removeAllByUsersId(ObjectId userId);
+    void removeByUsersIdContaining (ObjectId userId);
 
 }
